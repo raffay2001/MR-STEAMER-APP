@@ -3,8 +3,8 @@ import {View, ViewProps} from 'react-native';
 import {SvgXml} from 'react-native-svg';
 
 type TSvgWrapperProps = {
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   xml: string;
 };
 
