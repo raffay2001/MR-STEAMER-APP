@@ -21,7 +21,7 @@ export const Welcome: React.FC<TWelcomeProps> = ({navigation}) => {
           {/* Buttons container */}
           <View className="w-full absolute bottom-8 items-center justify-center gap-y-2">
             <TouchableOpacity
-              onPress={() => null}
+              onPress={() => navigation.navigate('Drawer')}
               className="rounded-xl bg-[#2D4795] border-white border-[1px] w-[350] h-[56] flex-row justify-center items-center gap-x-4">
               <Text className="text-white text-center font-[Poppins-Medium] text-[18px]">
                 Sign up
