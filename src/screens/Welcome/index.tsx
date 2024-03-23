@@ -5,7 +5,7 @@ import backgroundImage from '../../assets/images/young-man-washing-his-car.png';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import {BlackArrowSvg, WhiteArrowSvg} from '../../assets/svgs';
 
-export const Welcome: React.FC<TWelcomeProps> = ({}) => {
+export const Welcome: React.FC<TWelcomeProps> = ({navigation}) => {
   return (
     <View className="flex-1">
       <ImageBackground
@@ -29,7 +29,7 @@ export const Welcome: React.FC<TWelcomeProps> = ({}) => {
               <SvgWrapper xml={WhiteArrowSvg} width={24} height={24} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => null}
+              onPress={() => navigation.navigate('Vehicle')}
               className="rounded-xl bg-white w-[350] h-[56] flex-row justify-center items-center gap-x-6">
               <Text className="text-black text-center font-[Poppins-Medium] text-[18px]">
                 Login
