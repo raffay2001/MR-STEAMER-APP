@@ -1,14 +1,18 @@
+import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {Home} from '../screens';
+import {SafeAreaView} from 'react-native';
 
 const Drawer = createDrawerNavigator();
 
-function DrawerNavigator() {
+const MyDrawer = () => {
   return (
-    <Drawer.Navigator>
-      {/* Add your screens here */}
-      <Drawer.Screen name="Home" component={Home} />
-    </Drawer.Navigator>
+    <SafeAreaView style={{backgroundColor:'white', flex:1}}>
+      <Drawer.Navigator>
+        <Drawer.Screen name="Home" component={Home} />
+      </Drawer.Navigator>
+    </SafeAreaView>
   );
 };
-export default DrawerNavigator;
+
+export default MyDrawer;
