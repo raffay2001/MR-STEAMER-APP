@@ -1,5 +1,6 @@
 export type RootStackParamList = {
   SplashScreen: undefined;
   Welcome: undefined;
-  Home: undefined;
+  Drawer: undefined;
+  Vehicle: undefined;
 };
