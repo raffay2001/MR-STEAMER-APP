@@ -7,6 +7,7 @@ type TSvgWrapperProps = {
   height?: number | string;
   xml: string;
   icon?: boolean;
+  onPress?: any;
 };
 
 export const SvgWrapper: React.FC<TSvgWrapperProps & ViewProps> = ({
