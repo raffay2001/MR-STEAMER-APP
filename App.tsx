@@ -1,4 +1,4 @@
-/* eslint-disable prettier/prettier */
+/* eslint-disable react/no-unstable-nested-components */
 import 'react-native-gesture-handler';
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
@@ -10,7 +10,6 @@ import Icons from './src/assets/svgs/icons';
 import MyDrawer from './src/navigation/Drawer';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-// const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
   return (
@@ -41,7 +40,6 @@ function App(): React.JSX.Element {
           name="Vehicle"
           component={Vehicle}
         />
-        {/* <Stack.Screen name="Home" component={Home} /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );
