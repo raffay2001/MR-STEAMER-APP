@@ -8,40 +8,44 @@ import {RootStackParamList} from './src/types';
 import {SvgWrapper} from './src/common/SvgWrapper';
 import Icons from './src/assets/svgs/icons';
 import MyDrawer from './src/navigation/Drawer';
+import {Provider} from 'react-redux';
+import {store} from './src/redux/store';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App(): React.JSX.Element {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="SplashScreen">
-        <Stack.Group screenOptions={{headerShown: false}}>
-          <Stack.Screen name="SplashScreen" component={SplashScreen} />
-          <Stack.Screen name="Welcome" component={Welcome} />
-        </Stack.Group>
-        <Stack.Screen
-          name="Drawer"
-          component={MyDrawer}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          options={({navigation}) => ({
-            headerTitleAlign: 'center',
-            headerLeft: () => (
-              <SvgWrapper
-                xml={Icons.backIcon}
-                width={15}
-                height={15}
-                icon={true}
-                onPress={() => navigation.goBack()}
-              />
-            ),
-          })}
-          name="Vehicle"
-          component={Vehicle}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="SplashScreen">
+          <Stack.Group screenOptions={{headerShown: false}}>
+            <Stack.Screen name="SplashScreen" component={SplashScreen} />
+            <Stack.Screen name="Welcome" component={Welcome} />
+          </Stack.Group>
+          <Stack.Screen
+            name="Drawer"
+            component={MyDrawer}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            options={({navigation}) => ({
+              headerTitleAlign: 'center',
+              headerLeft: () => (
+                <SvgWrapper
+                  xml={Icons.backIcon}
+                  width={15}
+                  height={15}
+                  icon={true}
+                  onPress={() => navigation.goBack()}
+                />
+              ),
+            })}
+            name="Vehicle"
+            component={Vehicle}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }
 
