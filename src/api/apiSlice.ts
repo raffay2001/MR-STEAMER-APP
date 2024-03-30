@@ -1,5 +1,12 @@
-import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
+import {
+  BaseQueryFn,
+  FetchArgs,
+  FetchBaseQueryError,
+  createApi,
+  fetchBaseQuery,
+} from '@reduxjs/toolkit/query/react';
 import {RootState} from '../redux/store';
+import {logout, setToken} from '../redux/reducers/auth.reducer';
 
 const baseUrl = 'https://jsonplaceholder.typicode.com';
 
@@ -15,46 +22,45 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
-// const handleAuthFailed = async (args, api, extraOptions) => {
-//   const result = await baseQuery(args, api, extraOptions);
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions);
 
-//   if (result.error?.status === 401) {
-//     // const store = api.getState();
-//     const store = await getItem('@user');
-//     console.log('refreshing token');
-//     const refreshResult = await fetch(`${baseUrl}/refresh`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({
-//         email: store.email,
-//         userId: store.uid,
-//         refreshToken: store.refreshToken,
-//       }),
-//     });
+  if (result.error?.status === 401) {
+    const store = (api.getState() as RootState).auth;
+    // const store = await getItem('@user');
+    const refreshResult = await fetch(`${baseUrl}/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: store.email,
+        userId: store.id,
+        refreshToken: store.refreshToken,
+      }),
+    });
 
-//     let data = await refreshResult.json();
+    let data = await refreshResult.json();
 
-//     if (data.success) {
-//       try {
-//         // await AsyncStorage.setItem('@token', JSON.stringify(data?.token));
-//       } catch (error) {
-//         console.log(error, 'error in setting token');
-//       }
-//       // api.dispatch(setToken(data));
-//       // return baseQuery(args, api, extraOptions);
-//     } else {
-//       // api.dispatch(logout());
-//     }
-//   }
+    if (data.success) {
+      // await AsyncStorage.setItem('@token', JSON.stringify(data?.token));
+      api.dispatch(setToken(data));
+      result = await baseQuery(args, api, extraOptions);
+    } else {
+      api.dispatch(logout());
+    }
+  }
 
-//   return result;
-// };
+  return result;
+};
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: baseQuery,
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Test', 'Auth'],
   endpoints: _ => ({}),
 });
