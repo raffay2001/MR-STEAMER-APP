@@ -4,6 +4,7 @@ import {TWelcomeProps} from './types';
 import backgroundImage from '../../assets/images/young-man-washing-his-car.png';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import {BlackArrowSvg, WhiteArrowSvg} from '../../assets/svgs';
+import Button from '../../components/Button';
 
 export const Welcome: React.FC<TWelcomeProps> = ({navigation}) => {
   return (
@@ -16,26 +17,28 @@ export const Welcome: React.FC<TWelcomeProps> = ({navigation}) => {
         <View className="w-full h-full pt-20">
           {/* Text container */}
           <Text className="text-white text-[54px] font-[Poppins-SemiBold] text-left mb-8 px-4">
-            Now, steam car wash at your door step is just one tap away
+            Premium Car Steam Service At Your Doorstep.
           </Text>
           {/* Buttons container */}
-          <View className="w-full absolute bottom-8 items-center justify-center gap-y-2">
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Drawer', {screen: 'Home'})}
-              className="rounded-xl bg-[#2D4795] border-white border-[1px] w-[350] h-[56] flex-row justify-center items-center gap-x-4">
-              <Text className="text-white text-center font-[Poppins-Medium] text-[18px]">
+          <View className="w-full absolute bottom-8 items-center justify-center gap-y-2 px-4">
+            <Button
+              style={{borderColor: 'white'}}
+              variant="primary"
+              onPress={() => navigation.navigate('SignUpOnBoarding')}>
+              <Text className="text-white text-center font-[Poppins-Medium] text-[18px] mr-4">
                 Sign up
               </Text>
               <SvgWrapper xml={WhiteArrowSvg} width={24} height={24} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Vehicle')}
-              className="rounded-xl bg-white w-[350] h-[56] flex-row justify-center items-center gap-x-6">
-              <Text className="text-black text-center font-[Poppins-Medium] text-[18px]">
+            </Button>
+            <Button
+              style={{backgroundColor: 'white', borderColor: 'white'}}
+              variant="primary"
+              onPress={() => navigation.navigate('Login')}>
+              <Text className="text-black text-center font-[Poppins-Medium] text-[18px] mr-6">
                 Login
               </Text>
               <SvgWrapper xml={BlackArrowSvg} width={15} height={15} />
-            </TouchableOpacity>
+            </Button>
           </View>
         </View>
       </ImageBackground>

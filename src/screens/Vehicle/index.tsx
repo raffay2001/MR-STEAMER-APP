@@ -1,10 +1,16 @@
-/* eslint-disable prettier/prettier */
-import {View, Text, ScrollView, Image, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  Pressable,
+  PressableProps,
+} from 'react-native';
 import React from 'react';
 import SilverCar from '../../assets/images/silver-car.png';
 import RedCar from '../../assets/images/red-car.png';
 import WhiteCar from '../../assets/images/white-car.png';
-import {TcarCardProps} from './types';
+import {TVehicleProps, TcarCardProps} from './types';
 
 const vehiclesData = [
   {
@@ -24,7 +30,7 @@ const vehiclesData = [
   },
 ];
 
-const Vehicle = () => {
+const Vehicle: React.FC<TVehicleProps> = ({navigation}) => {
   return (
     <View className="flex-1 bg-white">
       <ScrollView showsVerticalScrollIndicator={false} className="bg-white">
@@ -32,21 +38,35 @@ const Vehicle = () => {
           <Text className="text-black text-sm">Select Vehicle Type</Text>
         </View>
         {vehiclesData?.map((car, i) => (
-          <CarCard key={i} img={car.img} text={car.text} color={car.color} />
+          <CarCard
+            onPress={() => {
+              navigation.navigate('Drawer', {screen: 'Home'});
+            }}
+            key={i}
+            img={car.img}
+            text={car.text}
+            color={car.color}
+          />
         ))}
       </ScrollView>
     </View>
   );
 };
 
-const CarCard = ({img, text, color}: TcarCardProps) => {
+const CarCard = ({
+  img,
+  text,
+  color,
+  ...props
+}: TcarCardProps & PressableProps) => {
   return (
-    <TouchableOpacity
+    <Pressable
+      {...props}
       style={{backgroundColor: color}}
       className={'mb-7 rounded-xl px-9 py-4 items-center mx-6'}>
       <Image source={img} />
       <Text className="text-black text-xl">{text}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

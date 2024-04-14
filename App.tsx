@@ -3,7 +3,13 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {SplashScreen, Welcome, Vehicle} from './src/screens';
+import {
+  SplashScreen,
+  Welcome,
+  Vehicle,
+  SignUpOnBoarding,
+  Login,
+} from './src/screens';
 import {RootStackParamList} from './src/types';
 import {SvgWrapper} from './src/common/SvgWrapper';
 import Icons from './src/assets/svgs/icons';
@@ -21,6 +27,11 @@ function App(): React.JSX.Element {
           <Stack.Group screenOptions={{headerShown: false}}>
             <Stack.Screen name="SplashScreen" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={Welcome} />
+            <Stack.Screen
+              name="SignUpOnBoarding"
+              component={SignUpOnBoarding}
+            />
+            <Stack.Screen name="Login" component={Login} />
           </Stack.Group>
           <Stack.Screen
             name="Drawer"

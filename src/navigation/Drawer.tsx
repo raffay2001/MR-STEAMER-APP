@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {Home} from '../screens';
@@ -20,7 +21,7 @@ const MyDrawer = () => {
           },
           headerLeft: () => <HeaderLeft navigation={navigation} />,
           headerRight: () => <HeaderRight navigation={navigation} />,
-          title: 'Abdullah Al-Saleem', // replace with user name
+          title: 'Abdullah Al-Saleem',
           headerTitleStyle: {fontSize: 16, letterSpacing: 0.8, fontWeight: 400},
         })}
         drawerContent={props => <CustomDrawerComponent {...props} />}>
@@ -53,7 +54,7 @@ const HeaderRight = ({navigation}: any) => {
       height={22}
       style={{marginRight: 20}}
       icon={true}
-      onPress={() => navigation.toggleDrawer()} // replce functionality here
+      onPress={() => navigation.toggleDrawer()}
     />
   );
 };
