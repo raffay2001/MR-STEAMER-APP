@@ -7,7 +7,7 @@ import Icons from '../assets/svgs/icons';
 import {SvgWrapper} from '../common/SvgWrapper';
 import {CustomDrawerComponent} from '../components/DrawerComponents';
 import {DrawerStackParamList} from '../types/drawerscreens.types';
-
+import {BecomeStreamer} from '../screens/BecomerStreamer';
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
 const MyDrawer = () => {
@@ -26,6 +26,13 @@ const MyDrawer = () => {
         })}
         drawerContent={props => <CustomDrawerComponent {...props} />}>
         <Drawer.Screen name="Home" component={Home} />
+        <Drawer.Screen
+          name="BecomeStreamer"
+          component={BecomeStreamer}
+          options={{
+            headerShown: false, // This hides the header for this screen
+          }}
+        />
       </Drawer.Navigator>
     </SafeAreaView>
   );

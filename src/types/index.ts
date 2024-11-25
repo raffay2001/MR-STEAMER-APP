@@ -7,3 +7,4 @@ export type RootStackParamList = {
   SignUpOnBoarding: undefined;
   Login: undefined;
 };
+

@@ -8,6 +8,7 @@ import {SvgXml} from 'react-native-svg';
 const DrawerItems = [
   {
     text: 'Become Mr.Streamer',
+    route:'BecomeStreamer'
   },
   {
     text: 'Choose Packages',
@@ -27,6 +28,7 @@ const DrawerItems = [
 ];
 
 export const CustomDrawerComponent = (props: any) => {
+  console.log(props.navigation)
   return (
     <View {...props} className="flex-1 pb-12">
       <DrawerHeader navigation={props.navigation} />
@@ -37,6 +39,7 @@ export const CustomDrawerComponent = (props: any) => {
               key={index}
               text={item.text}
               navigation={props.navigation}
+              route={item.route}
             />
           ))}
         </ScrollView>
@@ -73,9 +76,12 @@ const DrawerHeader = ({navigation}) => {
   );
 };
 
-const DrawerButton = ({text, navigation}: {text: string; navigation: any}) => {
+const DrawerButton = ({text, navigation,route}: {text: string; navigation: any; route:any}) => {
+  const handlePress = () =>{
+    navigation.navigate(route)
+  }
   return (
-    <TouchableOpacity className="flex-row items-center justify-between rounded-md px-4 py-2">
+    <TouchableOpacity className="flex-row items-center justify-between rounded-md px-4 py-2" onPress={handlePress}>
       <Text className="text-black text-sm">{text}</Text>
       <SvgXml xml={Icons.arrowRightIcon} width={15} height={15} />
     </TouchableOpacity>
