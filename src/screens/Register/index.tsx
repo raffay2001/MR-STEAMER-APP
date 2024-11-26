@@ -15,12 +15,18 @@ export const Register: React.FC<TRegisterProps> = ({navigation, route}) => {
 
       <Text style={styles.mainHeading}>Register With Us</Text>
       <View style={styles.formContainer}>
-        <View>
-          <Text className='text-white m-2 text-base'>Name</Text>
+        <View style={styles.feildContainer}>
+          <Text className='text-white m-2 text-base font-semibold	'>Name</Text>
           <Input
-            placeholder="Enter Email Address"
-            keyboardType="email-address"
-            preIcon={<SvgWrapper xml={PersonSvg} width={20} height={20} />}
+            placeholder="Enter Name"
+          />
+        </View>
+
+        <View>
+          <Text className='text-white m-2 text-base font-semibold	'>Mobile Number</Text>
+          <Input
+            placeholder="Mobile Number"
+            keyboardType='numeric'
           />
         </View>
       </View>
@@ -44,4 +50,7 @@ const styles = StyleSheet.create({
     marginHorizontal: '5%',
     alignItems: 'center',
   },
+  feildContainer:{
+    margin: 2
+  }
 });
