@@ -3,7 +3,6 @@ import {TLoginProps} from './types';
 import {
   View,
   Text,
-  Image,
   ScrollView,
   SafeAreaView,
   Pressable,

@@ -9,6 +9,7 @@ import {
   Vehicle,
   SignUpOnBoarding,
   Login,
+  Register
 } from './src/screens';
 import {RootStackParamList} from './src/types';
 import {SvgWrapper} from './src/common/SvgWrapper';
@@ -16,6 +17,7 @@ import Icons from './src/assets/svgs/icons';
 import MyDrawer from './src/navigation/Drawer';
 import {Provider} from 'react-redux';
 import {store} from './src/redux/store';
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -53,6 +55,11 @@ function App(): React.JSX.Element {
             })}
             name="Vehicle"
             component={Vehicle}
+          />
+          <Stack.Screen
+          name='Register'
+          component={Register}
+          options={{headerShown:false}}
           />
         </Stack.Navigator>
       </NavigationContainer>
