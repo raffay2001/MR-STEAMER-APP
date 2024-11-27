@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5, // Elevation for Android
+    zIndex: 100,
   },
   labelStyle: {
     color: '#FFFFFF', // Make the dropdown item labels white

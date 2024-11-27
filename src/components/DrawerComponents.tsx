@@ -4,11 +4,12 @@ import {SvgWrapper} from '../common/SvgWrapper';
 import Icons from '../assets/svgs/icons';
 import ProfileImage from '../assets/images/profile.png';
 import {SvgXml} from 'react-native-svg';
+import {TNavProps} from '../types/drawerscreens.types';
 
 const DrawerItems = [
   {
     text: 'Become Mr.Streamer',
-    route:'BecomeStreamer'
+    route: 'BecomeStreamer',
   },
   {
     text: 'Choose Packages',
@@ -18,6 +19,7 @@ const DrawerItems = [
   },
   {
     text: 'Our Feature',
+    route: 'Features',
   },
   {
     text: 'About Us',
@@ -28,10 +30,10 @@ const DrawerItems = [
 ];
 
 export const CustomDrawerComponent = (props: any) => {
-  console.log(props.navigation)
+  console.log(props.navigation);
   return (
     <View {...props} className="flex-1 pb-12">
-      <DrawerHeader navigation={props.navigation} />
+      <DrawerHeader navigation={props.navigation} route={props.route} />
       <View className="flex-1 bg-blue-800">
         <ScrollView className="flex-1 bg-white border-t rounded-t-3xl pt-6 px-4">
           {DrawerItems.map((item, index) => (
@@ -51,7 +53,7 @@ export const CustomDrawerComponent = (props: any) => {
   );
 };
 
-const DrawerHeader = ({navigation}) => {
+const DrawerHeader: React.FC<TNavProps> = ({navigation}) => {
   return (
     <View className="h-[100px] bg-blue-800 justify-center pr-7 pl-2">
       <View className="flex-row justify-between items-center">
@@ -76,12 +78,22 @@ const DrawerHeader = ({navigation}) => {
   );
 };
 
-const DrawerButton = ({text, navigation,route}: {text: string; navigation: any; route:any}) => {
-  const handlePress = () =>{
-    navigation.navigate(route)
-  }
+const DrawerButton = ({
+  text,
+  navigation,
+  route,
+}: {
+  text: string;
+  navigation: any;
+  route: any;
+}) => {
+  const handlePress = () => {
+    navigation.navigate(route);
+  };
   return (
-    <TouchableOpacity className="flex-row items-center justify-between rounded-md px-4 py-2" onPress={handlePress}>
+    <TouchableOpacity
+      className="flex-row items-center justify-between rounded-md px-4 py-2"
+      onPress={handlePress}>
       <Text className="text-black text-sm">{text}</Text>
       <SvgXml xml={Icons.arrowRightIcon} width={15} height={15} />
     </TouchableOpacity>

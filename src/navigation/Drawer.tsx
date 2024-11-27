@@ -8,6 +8,7 @@ import {SvgWrapper} from '../common/SvgWrapper';
 import {CustomDrawerComponent} from '../components/DrawerComponents';
 import {DrawerStackParamList} from '../types/drawerscreens.types';
 import {BecomeStreamer} from '../screens/BecomerStreamer';
+import {Features} from '../screens/Features';
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
 const MyDrawer = () => {
@@ -29,6 +30,13 @@ const MyDrawer = () => {
         <Drawer.Screen
           name="BecomeStreamer"
           component={BecomeStreamer}
+          options={{
+            headerShown: false, // This hides the header for this screen
+          }}
+        />
+        <Drawer.Screen
+          name="Features"
+          component={Features}
           options={{
             headerShown: false, // This hides the header for this screen
           }}

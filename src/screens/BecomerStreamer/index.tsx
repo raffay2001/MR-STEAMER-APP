@@ -7,19 +7,24 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import {TNavProps} from '../../types/drawerscreens.types';
+import {BecomeStreamerScreenProps} from '../../types/drawerscreens.types';
 import Button from '../../components/Button';
-import { useNavigation } from '@react-navigation/native';
-export const BecomeStreamer: React.FC<TNavProps> = ({navigation, route}) => {
+import {useNavigation} from '@react-navigation/native';
+export const BecomeStreamer: React.FC<BecomeStreamerScreenProps> = ({
+  navigation,
+  route,
+}) => {
   const navigator = useNavigation();
   return (
     <ImageBackground
       source={require('../../assets/images/Become_streamer.png')}
       style={styles.background}
       resizeMode="cover">
-        <Pressable style={({pressed})=> pressed? styles.cancelPressed: null } onPress={() => navigation.goBack()}>
+      <Pressable
+        style={({pressed}) => (pressed ? styles.cancelPressed : null)}
+        onPress={() => navigation.goBack()}>
         <Text style={styles.cancel}>Cancel</Text>
-        </Pressable>
+      </Pressable>
       <View style={styles.container}>
         {/* View for Arc bg image  */}
         <View style={{flex: 3}}>
@@ -31,16 +36,26 @@ export const BecomeStreamer: React.FC<TNavProps> = ({navigation, route}) => {
         <View style={styles.bottomRight}>
           <Text style={styles.headingText}>Become Mr Steamer </Text>
           <Text style={styles.text}>
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unc
+            Lorem Ipsum is simply dummy text of the printing and typesetting
+            industry. Lorem Ipsum has been the industry's standard dummy text
+            ever since the 1500s, when an unknown printer took a galley of type
+            and scrambled it to make a type specimen book. It has survived not
+            only five centuries, but also the leap into electronic typesetting,
+            remaining essentially unc
           </Text>
           <Button
-              style={{backgroundColor: 'white', borderColor: 'white',width:'60%',marginVertical: 16}}
-              variant="primary"
-              onPress={() => navigation.navigate('Register')}>
-              <Text className="text-black text-center font-[Poppins-Medium] text-[18px]">
-                Register
-              </Text>
-            </Button>
+            style={{
+              backgroundColor: 'white',
+              borderColor: 'white',
+              width: '60%',
+              marginVertical: 16,
+            }}
+            variant="primary"
+            onPress={() => navigation.navigate('Register')}>
+            <Text className="text-black text-center font-[Poppins-Medium] text-[18px]">
+              Register
+            </Text>
+          </Button>
         </View>
       </View>
       <StatusBar hidden />
@@ -70,22 +85,22 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
   },
-  text:{
-    color:'white',
-    fontSize:18,
-    paddingRight:'10%',
+  text: {
+    color: 'white',
+    fontSize: 18,
+    paddingRight: '10%',
     textAlign: 'justify',
     lineHeight: 24,
   },
-  cancel:{
-    flexDirection:'row',
-    alignSelf:'flex-end',
-    padding:24,
-    color:'white',
-    fontSize:18,
-    fontWeight:'bold'
+  cancel: {
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
+    padding: 24,
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  cancelPressed:{
-    opacity:0.5
-  }
+  cancelPressed: {
+    opacity: 0.5,
+  },
 });
