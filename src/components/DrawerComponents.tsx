@@ -13,9 +13,11 @@ const DrawerItems = [
   },
   {
     text: 'Choose Packages',
+    route: 'Packages',
   },
   {
     text: 'Hire us',
+    route: 'HireUs',
   },
   {
     text: 'Our Feature',
@@ -23,6 +25,7 @@ const DrawerItems = [
   },
   {
     text: 'About Us',
+    route: 'AboutUs',
   },
   {
     text: 'Booking Detail',

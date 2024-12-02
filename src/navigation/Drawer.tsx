@@ -9,6 +9,9 @@ import {CustomDrawerComponent} from '../components/DrawerComponents';
 import {DrawerStackParamList} from '../types/drawerscreens.types';
 import {BecomeStreamer} from '../screens/BecomerStreamer';
 import {Features} from '../screens/Features';
+import {About} from '../screens/AboutUs';
+import {HireUs} from '../screens/HireUs';
+import {Packages} from '../screens/Packages';
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
 const MyDrawer = () => {
@@ -37,6 +40,27 @@ const MyDrawer = () => {
         <Drawer.Screen
           name="Features"
           component={Features}
+          options={{
+            headerShown: false, // This hides the header for this screen
+          }}
+        />
+        <Drawer.Screen
+          name="AboutUs"
+          component={About}
+          options={{
+            headerShown: false, // This hides the header for this screen
+          }}
+        />
+        <Drawer.Screen
+          name="HireUs"
+          component={HireUs}
+          options={{
+            headerShown: false, // This hides the header for this screen
+          }}
+        />
+        <Drawer.Screen
+          name="Packages"
+          component={Packages}
           options={{
             headerShown: false, // This hides the header for this screen
           }}
