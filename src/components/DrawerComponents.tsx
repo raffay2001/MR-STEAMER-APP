@@ -29,6 +29,7 @@ const DrawerItems = [
   },
   {
     text: 'Booking Detail',
+    route: 'BookingDetails',
   },
 ];
 

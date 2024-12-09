@@ -7,6 +7,7 @@ export type DrawerStackParamList = {
   AboutUs: undefined;
   HireUs: undefined;
   Packages: undefined;
+  BookingDetails: undefined;
 };
 
 type ScreenProps<T extends keyof DrawerStackParamList> = NativeStackScreenProps<
@@ -20,3 +21,4 @@ export type TFeaturesScreenProps = ScreenProps<'Features'>;
 export type TAboutScreenProps = ScreenProps<'AboutUs'>;
 export type THireUsScreenProps = ScreenProps<'HireUs'>;
 export type TPackagesScreenProps = ScreenProps<'Packages'>;
+export type TDetailsScreenProps = ScreenProps<'BookingDetails'>;

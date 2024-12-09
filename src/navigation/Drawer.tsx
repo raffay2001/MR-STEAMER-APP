@@ -12,6 +12,7 @@ import {Features} from '../screens/Features';
 import {About} from '../screens/AboutUs';
 import {HireUs} from '../screens/HireUs';
 import {Packages} from '../screens/Packages';
+import {BookingDetails} from '../screens/BookingDetails';
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
 const MyDrawer = () => {
@@ -61,6 +62,13 @@ const MyDrawer = () => {
         <Drawer.Screen
           name="Packages"
           component={Packages}
+          options={{
+            headerShown: false, // This hides the header for this screen
+          }}
+        />
+        <Drawer.Screen
+          name="BookingDetails"
+          component={BookingDetails}
           options={{
             headerShown: false, // This hides the header for this screen
           }}
