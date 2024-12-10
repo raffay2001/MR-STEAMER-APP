@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
-import Icon from 'react-native-vector-icons/AntDesign'; // Ensure you have vector-icons installed
+
 import CheckBox from 'react-native-check-box';
 type CardProps = {
   title: string;
@@ -26,7 +26,7 @@ const Card: React.FC<CardProps> = ({title, description, onPressLink}) => {
 
       {/* Description */}
       <Text style={styles.description}>
-        <Icon name="arrowright" size={24} color="green" />
+        {/* <Icon name="arrowright" size={24} color="green" /> */}
         {description}
       </Text>
 

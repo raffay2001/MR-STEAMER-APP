@@ -2,6 +2,7 @@ import {StyleSheet, Text, View, FlatList} from 'react-native';
 import React from 'react';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import {TDetailsScreenProps} from '../../types/drawerscreens.types';
+import {CarService} from '../../components/CarService';
 const BookingHistory = [
   {
     id: 1,
@@ -39,11 +40,20 @@ export const BookingDetails: React.FC<TDetailsScreenProps> = () => {
         <FlatList
           data={BookingHistory}
           keyExtractor={item => item.id.toString()}
-          renderItem={}
+          renderItem={({item}) => (
+            <CarService item={item?.customerName || ''} />
+          )}
         />
       </SafeAreaView>
     </SafeAreaProvider>
   );
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f2f2f2',
+    paddingTop: 30,
+    paddingHorizontal: 20,
+  },
+});
