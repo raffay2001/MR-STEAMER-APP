@@ -1,12 +1,14 @@
-import {StyleSheet, Text, View, FlatList} from 'react-native';
+import {StyleSheet, Text, View, FlatList, Pressable} from 'react-native';
 import React from 'react';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import {TDetailsScreenProps} from '../../types/drawerscreens.types';
 import {CarService} from '../../components/CarService';
+import {SvgWrapper} from '../../common/SvgWrapper';
+import Icons from '../../assets/svgs/icons';
 const BookingHistory = [
   {
     id: 1,
-    customerName: 'John Doe',
+    serviceeName: 'John Doe',
     date: '2024-12-09',
     time: '14:00',
     service: 'Haircut',
@@ -15,7 +17,7 @@ const BookingHistory = [
   },
   {
     id: 2,
-    customerName: 'Jane Smith',
+    serviceeName: 'Jane Smith',
     date: '2024-12-08',
     time: '10:30',
     service: 'Spa Treatment',
@@ -24,7 +26,7 @@ const BookingHistory = [
   },
   {
     id: 3,
-    customerName: 'Michael Brown',
+    serviceeName: 'Michael Brown',
     date: '2024-12-07',
     time: '18:00',
     service: 'Massage',
@@ -33,19 +35,45 @@ const BookingHistory = [
   },
 ];
 
-export const BookingDetails: React.FC<TDetailsScreenProps> = () => {
+export const BookingDetails: React.FC<TDetailsScreenProps> = ({
+  navigation,
+  route,
+}) => {
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <FlatList
-          data={BookingHistory}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => (
-            <CarService item={item?.customerName || ''} />
-          )}
-        />
-      </SafeAreaView>
-    </SafeAreaProvider>
+    <>
+      <View
+        style={{
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}>
+        <Pressable style={{marginLeft: 12}} onPress={() => navigation.goBack()}>
+          <SvgWrapper
+            xml={Icons.backIcon}
+            width={15}
+            height={15}
+            icon={true}
+            onPress={() => navigation.goBack()}
+          />
+        </Pressable>
+        <View style={{flex: 3}}>
+          <Text className="m-8 text-xl text-center font-bold text-black">
+            Booking Details
+          </Text>
+        </View>
+      </View>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <FlatList
+            data={BookingHistory}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({item}) => (
+              <CarService item={item?.serviceeName || ''} />
+            )}
+          />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </>
   );
 };
 
