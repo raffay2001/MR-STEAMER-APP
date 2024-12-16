@@ -1,10 +1,10 @@
 import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 
-export const CardServices = () => {
+export const CheckOut = () => {
   return (
     <View>
-      <Text>CardServices</Text>
+      <Text>CheckOut</Text>
     </View>
   );
 };

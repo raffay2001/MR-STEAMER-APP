@@ -2,7 +2,7 @@ import {StyleSheet, Text, View, FlatList, Pressable} from 'react-native';
 import React from 'react';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import {TDetailsScreenProps} from '../../types/drawerscreens.types';
-import {CarService} from '../../components/CarService';
+import {BookingDetailsCard, CarService} from '../../common/GencCards';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
 const BookingHistory = [
@@ -68,8 +68,9 @@ export const BookingDetails: React.FC<TDetailsScreenProps> = ({
             data={BookingHistory}
             keyExtractor={item => item.id.toString()}
             renderItem={({item}) => (
-              <CarService item={item?.serviceeName || ''} />
+              <BookingDetailsCard item={item?.serviceeName || ''} />
             )}
+            showsVerticalScrollIndicator={false}
           />
         </SafeAreaView>
       </SafeAreaProvider>

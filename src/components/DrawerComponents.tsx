@@ -31,6 +31,10 @@ const DrawerItems = [
     text: 'Booking Detail',
     route: 'BookingDetails',
   },
+  {
+    text: 'Your Booking',
+    route: 'BookingCheckout',
+  },
 ];
 
 export const CustomDrawerComponent = (props: any) => {
