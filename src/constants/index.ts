@@ -122,3 +122,30 @@ export const VEHICLEDATA = [
     img: RED_CAR,
   },
 ];
+export const PACKAGE_DATA = [
+  {
+    id: '1',
+    title: 'Mr Silver',
+    description: 'Monthly Package - SAR 90',
+  },
+  {
+    id: '2',
+    title: 'Mr Gold',
+    description: 'Monthly Package - SAR 120',
+  },
+  {
+    id: '3',
+    title: 'Mr Platinum',
+    description: 'Monthly Package - SAR 150',
+  },
+  {
+    id: '4',
+    title: 'Mr Platinum',
+    description: 'Monthly Package - SAR 150',
+  },
+  {
+    id: '5',
+    title: 'Mr Platinum',
+    description: 'Monthly Package - SAR 150',
+  },
+];

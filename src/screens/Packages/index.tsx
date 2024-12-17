@@ -11,40 +11,13 @@ import {TPackagesScreenProps} from '../../types/drawerscreens.types';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
 import Card from '../../components/PackageCard';
+import {PACKAGE_DATA} from '../../constants';
 
 export const Packages: React.FC<TPackagesScreenProps> = ({
   navigation,
   route,
 }) => {
-  const data = [
-    {
-      id: '1',
-      title: 'Mr Silver',
-      description: 'Monthly Package - SAR 90',
-    },
-    {
-      id: '2',
-      title: 'Mr Gold',
-      description: 'Monthly Package - SAR 120',
-    },
-    {
-      id: '3',
-      title: 'Mr Platinum',
-      description: 'Monthly Package - SAR 150',
-    },
-    {
-      id: '4',
-      title: 'Mr Platinum',
-      description: 'Monthly Package - SAR 150',
-    },
-    {
-      id: '5',
-      title: 'Mr Platinum',
-      description: 'Monthly Package - SAR 150',
-    },
-  ];
-
-  const renderItem = ({item}: {item: (typeof data)[0]}) => (
+  const renderItem = ({item}: {item: (typeof PACKAGE_DATA)[0]}) => (
     <Card
       title={item.title}
       description={item.description}
@@ -81,10 +54,11 @@ export const Packages: React.FC<TPackagesScreenProps> = ({
         </Text>
         <SafeAreaView style={{flex: 1}}>
           <FlatList
-            data={data}
+            data={PACKAGE_DATA}
             renderItem={renderItem}
             keyExtractor={item => item.id} // Unique key for each item
             contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
           />
         </SafeAreaView>
       </View>
