@@ -7,3 +7,8 @@ export {default as RED_CAR} from './images/red-car.png';
 export {default as SILVER_CAR} from './images/silver-car.png';
 export {default as TYRE} from './images/tyre-rep.png';
 export {default as RECTANGLE} from './images/rectangle.png';
+//Icons
+export {default as APPLE_PAY} from './icons/ApplePay.png';
+export {default as MADA_LOGO} from './icons/madaLogo.png';
+export {default as MASTER_LOGO} from './icons/Master.png';
+export {default as VISA_LOGO} from './icons/Visa.png';

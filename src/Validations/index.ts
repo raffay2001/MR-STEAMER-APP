@@ -27,8 +27,13 @@ export const CardDetailsSchema = yup.object().shape({
     .matches(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Expiry date must be in MM/YY format')
     .required('Expiry date is required'),
 
-  cvv: yup
+  CVV: yup
     .string()
     .matches(/^\d{3,4}$/, 'CVV must be 3 or 4 digits')
     .required('CVV is required'),
+  termsAccepted: yup
+    .boolean()
+    .oneOf([true], 'You must accept the terms and conditions')
+    .required('Required'),
+  saveCard: yup.boolean(),
 });
