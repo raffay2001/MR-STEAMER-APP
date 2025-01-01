@@ -6,7 +6,7 @@ import {SafeAreaView} from 'react-native';
 import Icons from '../assets/svgs/icons';
 import {SvgWrapper} from '../common/SvgWrapper';
 import {CustomDrawerComponent} from '../components/DrawerComponents';
-import {DrawerStackParamList} from '../types/drawerscreens.types';
+import {DrawerStackParamList} from '../services/types/drawerscreens.types';
 import {BecomeStreamer} from '../screens/BecomerStreamer';
 import {Features} from '../screens/Features';
 import {About} from '../screens/AboutUs';

@@ -1,19 +1,31 @@
 import React, {useState} from 'react';
 import {TLoginProps} from './types';
-import {
-  View,
-  Text,
-  ScrollView,
-  SafeAreaView,
-  Pressable,
-} from 'react-native';
+import {View, Text, ScrollView, SafeAreaView, Pressable} from 'react-native';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import {FacebookSvg, GoogleSvg, KeySvg, PersonSvg} from '../../assets/svgs';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import {POST} from '../../services';
+import {
+  ErrorResponse,
+  LoginSignInPayload,
+} from '../../services/types/auth.types';
+import {ROUTES} from '../../routes';
+import {useDispatch} from 'react-redux';
+import {
+  getUserInfo,
+  setAuthState,
+  getAccessToken,
+} from '../../redux/reducers/auth.reducer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO} from '../../constants';
 // import Objects from '../../assets/images/Objects.png';
-
+import {getRefreshToken} from '../../redux/reducers/auth.reducer';
+import {useAppSelector} from '../../redux/store';
+import Toast from 'react-native-toast-message';
 export const Login: React.FC<TLoginProps> = ({navigation}) => {
+  const dispatch = useDispatch();
+  const zajjaj = useAppSelector(getAccessToken);
   const [formErrors, setFormErrors] = useState({
     emailError: false,
     passwordError: false,
@@ -23,7 +35,7 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
 
   const validateFormFields = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).+$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/;
     if (!emailRegex.test(email)) {
       setFormErrors(prevFormErrors => ({...prevFormErrors, emailError: true}));
     }
@@ -36,10 +48,60 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
     return emailRegex.test(email) && passwordRegex.test(password);
   };
 
-  const LoginHandler = () => {
+  const LoginHandler = async () => {
     if (validateFormFields()) {
-      console.log(JSON.stringify({email, password}));
-      navigation.navigate('Vehicle');
+      try {
+        // Validating; the input using LoginSchema
+        // Calling the login API if validation passes
+        const loginPayload = await POST<LoginSignInPayload & ErrorResponse>(
+          ROUTES.LOGIN,
+          {
+            email,
+            password,
+          },
+        );
+
+        dispatch(setAuthState(loginPayload.data));
+        await AsyncStorage.setItem(
+          ACCESS_TOKEN,
+          JSON.stringify(loginPayload.data?.tokens?.access?.token),
+        );
+        await AsyncStorage.setItem(
+          REFRESH_TOKEN,
+          JSON.stringify(loginPayload.data?.tokens.refresh?.token),
+        );
+        await AsyncStorage.setItem(
+          USER_INFO,
+          JSON.stringify(loginPayload.data.user),
+        );
+        navigation.navigate('Vehicle');
+        //making input feilds empty
+        setEmail('');
+        setPassword('');
+      } catch (error: any) {
+        // logging the error
+        console.log(JSON.stringify(error));
+        // setIsLoading(false);
+        // if (error.name === 'ValidationError') {
+        //   Alert.alert('Validation Error', error.message, [
+        //     {text: 'OK', onPress: () => console.log('OK Pressed')},
+        //   ]);
+        // } else {
+        //   Alert.alert(
+        //     'Invalid Email Or Password',
+        //     'Please enter a valid email address and password',
+        //     [{text: 'OK', onPress: () => console.log('OK Pressed')}],
+        //   );
+        Toast.show({
+          type: 'success', // or 'error' or 'delete'
+          text1: 'Item Saved!',
+          text2: 'Your item has been successfully saved.',
+        });
+      }
+      return;
+      // } finally {
+      //   setIsLoading(false);
+      // }
     }
   };
 

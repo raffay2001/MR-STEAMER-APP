@@ -1,9 +1,8 @@
 import {Pressable, StyleSheet, Text, View, Image} from 'react-native';
 import React from 'react';
-import {TAboutScreenProps} from '../../types/drawerscreens.types';
+import {TAboutScreenProps} from '../../services/types/drawerscreens.types';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
-
 export const About: React.FC<TAboutScreenProps> = ({navigation, route}) => {
   return (
     <View>

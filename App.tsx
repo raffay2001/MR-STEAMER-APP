@@ -12,13 +12,14 @@ import {
   Register,
   CheckOut,
 } from './src/screens';
-import {RootStackParamList} from './src/types';
+import {RootStackParamList} from './src/services/types';
 import {SvgWrapper} from './src/common/SvgWrapper';
 import Icons from './src/assets/svgs/icons';
 import MyDrawer from './src/navigation/Drawer';
 import {Provider} from 'react-redux';
 import {store} from './src/redux/store';
-
+import Toast from 'react-native-toast-message';
+import toastConfig from './src/utils/toastConfig';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App(): React.JSX.Element {

@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import {BecomeStreamerScreenProps} from '../../types/drawerscreens.types';
+import {BecomeStreamerScreenProps} from '../../services/types/drawerscreens.types';
 import Button from '../../components/Button';
 import {useNavigation} from '@react-navigation/native';
 export const BecomeStreamer: React.FC<BecomeStreamerScreenProps> = ({

@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import {THireUsScreenProps} from '../../types/drawerscreens.types';
+import {THireUsScreenProps} from '../../services/types/drawerscreens.types';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
 import {ServiceSelector} from '../../components/ServiceSelector';

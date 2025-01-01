@@ -7,7 +7,7 @@ import {
   FlatList,
 } from 'react-native';
 import React from 'react';
-import {TPackagesScreenProps} from '../../types/drawerscreens.types';
+import {TPackagesScreenProps} from '../../services/types/drawerscreens.types';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
 import Card from '../../components/PackageCard';

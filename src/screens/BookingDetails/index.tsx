@@ -1,7 +1,7 @@
 import {StyleSheet, Text, View, FlatList, Pressable} from 'react-native';
 import React from 'react';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-import {TDetailsScreenProps} from '../../types/drawerscreens.types';
+import {TDetailsScreenProps} from '../../services/types/drawerscreens.types';
 import {BookingDetailsCard, CarService} from '../../common/GencCards';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';

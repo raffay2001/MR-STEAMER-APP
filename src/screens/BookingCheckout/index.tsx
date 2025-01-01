@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import {TCheckoutScreenProps} from '../../types/drawerscreens.types';
+import {TCheckoutScreenProps} from '../../services/types/drawerscreens.types';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
 import Button from '../../components/Button';

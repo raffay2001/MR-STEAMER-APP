@@ -4,8 +4,11 @@ import {SvgWrapper} from '../common/SvgWrapper';
 import Icons from '../assets/svgs/icons';
 import ProfileImage from '../assets/images/profile.png';
 import {SvgXml} from 'react-native-svg';
-import {TNavProps} from '../types/drawerscreens.types';
-
+import {TNavProps} from '../services/types/drawerscreens.types';
+import {LogOut} from '../utils/helper';
+import {useDispatch, UseDispatch} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {logout} from '../redux/reducers/auth.reducer';
 const DrawerItems = [
   {
     text: 'Become Mr.Streamer',
@@ -38,7 +41,22 @@ const DrawerItems = [
 ];
 
 export const CustomDrawerComponent = (props: any) => {
-  console.log(props.navigation);
+  console.log('Hello World', props.navigation);
+  const dispatch = useDispatch();
+  const handleLogout = async () => {
+    dispatch(logout());
+    try {
+      await AsyncStorage.multiRemove([
+        'ACCESS_TOKEN',
+        'REFRESH_TOKEN',
+        'USER_INFO',
+      ]);
+      console.log('Multiple keys removed from AsyncStorage!');
+    } catch (e) {
+      console.error('Failed to remove multiple keys:', e);
+    }
+    props.navigation.navigate('Login');
+  };
   return (
     <View {...props} className="flex-1 pb-12">
       <DrawerHeader navigation={props.navigation} route={props.route} />
@@ -54,7 +72,9 @@ export const CustomDrawerComponent = (props: any) => {
           ))}
         </ScrollView>
       </View>
-      <TouchableOpacity className="w-[90%] bg-blue-800 h-[56px] self-center flex justify-center items-center rounded-[10px]">
+      <TouchableOpacity
+        className="w-[90%] bg-blue-800 h-[56px] self-center flex justify-center items-center rounded-[10px]"
+        onPress={handleLogout}>
         <Text className="text-white text-lg tracking-[0.5px]">Logout</Text>
       </TouchableOpacity>
     </View>

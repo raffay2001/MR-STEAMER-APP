@@ -7,7 +7,7 @@ import {
   Image,
 } from 'react-native';
 import React from 'react';
-import {TFeaturesScreenProps} from '../../types/drawerscreens.types';
+import {TFeaturesScreenProps} from '../../services/types/drawerscreens.types';
 import LinearGradient from 'react-native-linear-gradient';
 import {goBackWhiteSvg} from '../../assets/svgs';
 import {SvgWrapper} from '../../common/SvgWrapper';

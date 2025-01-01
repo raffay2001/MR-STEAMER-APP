@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {TNavProps} from '../../types/drawerscreens.types';
+import {TNavProps} from '../../services/types/drawerscreens.types';
 import SearchInput from '../../components/SearchInput';
 import BlackCar from '../../assets/images/black-car.png';
 
