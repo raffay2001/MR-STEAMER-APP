@@ -9,20 +9,7 @@ interface CustomToastProps extends BaseToastProps {
 
 const toastConfig = {
   error: ({text1, text2}: CustomToastProps) => (
-    <View
-      style={{
-        position: 'absolute',
-        bottom: 10, // 10px from the bottom
-        left: '5%',
-        right: '5%',
-        height: 52,
-        backgroundColor: '#FEF3F2',
-        borderColor: '#D92D20',
-        borderWidth: 1,
-        padding: 10,
-        borderRadius: 8,
-        justifyContent: 'center',
-      }}>
+    <View className="flex-row items-center justify-start w-[90%] h-[52px] border border-[#D92D20] bg-[##FEF3F2] p-3 rounded-lg">
       {text1 && (
         <Text className="text-[#D92D20] text-[12px] font-semibold">
           {text1}

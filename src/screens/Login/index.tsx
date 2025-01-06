@@ -23,6 +23,8 @@ import {ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO} from '../../constants';
 import {getRefreshToken} from '../../redux/reducers/auth.reducer';
 import {useAppSelector} from '../../redux/store';
 import Toast from 'react-native-toast-message';
+import toastConfig from '../../utils/toastConfig';
+import {ErrorSuccessToast} from '../../utils/helper';
 export const Login: React.FC<TLoginProps> = ({navigation}) => {
   const dispatch = useDispatch();
   const zajjaj = useAppSelector(getAccessToken);
@@ -81,21 +83,10 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
       } catch (error: any) {
         // logging the error
         console.log(JSON.stringify(error));
-        // setIsLoading(false);
-        // if (error.name === 'ValidationError') {
-        //   Alert.alert('Validation Error', error.message, [
-        //     {text: 'OK', onPress: () => console.log('OK Pressed')},
-        //   ]);
-        // } else {
-        //   Alert.alert(
-        //     'Invalid Email Or Password',
-        //     'Please enter a valid email address and password',
-        //     [{text: 'OK', onPress: () => console.log('OK Pressed')}],
-        //   );
-        Toast.show({
-          type: 'success', // or 'error' or 'delete'
-          text1: 'Item Saved!',
-          text2: 'Your item has been successfully saved.',
+        ErrorSuccessToast({
+          type: 'error',
+          message1: 'Invalid Username or Password',
+          message2: 'Please insert correct credentials',
         });
       }
       return;
@@ -114,7 +105,7 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
           <Text className="text-white pt-6 ml-2 text-4xl font-[Poppins-SemiBold] mb-6">
             Hi, Welcome Back!
           </Text>
-
+          <Toast config={toastConfig} />
           <View className="px-2 pb-12 flex-1 gap-y-6">
             <View className="gap-y-2">
               <Button className="mb-2" variant="outlined" onPress={() => {}}>

@@ -69,6 +69,7 @@ function App(): React.JSX.Element {
           />
         </Stack.Navigator>
       </NavigationContainer>
+      <Toast config={toastConfig} />
     </Provider>
   );
 }
