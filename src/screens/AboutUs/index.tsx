@@ -1,9 +1,21 @@
 import {Pressable, StyleSheet, Text, View, Image} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {TAboutScreenProps} from '../../services/types/drawerscreens.types';
 import {SvgWrapper} from '../../common/SvgWrapper';
 import Icons from '../../assets/svgs/icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ACCESS_TOKEN} from '../../constants';
 export const About: React.FC<TAboutScreenProps> = ({navigation, route}) => {
+  useEffect(() => {
+    const logout = async () => {
+      try {
+        await AsyncStorage.removeItem(ACCESS_TOKEN);
+      } catch (e) {
+        console.error('Error fetching data:', e);
+      }
+    };
+    logout();
+  }, []);
   return (
     <View>
       <View

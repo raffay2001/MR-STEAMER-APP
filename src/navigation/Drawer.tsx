@@ -14,9 +14,13 @@ import {HireUs} from '../screens/HireUs';
 import {Packages} from '../screens/Packages';
 import {BookingDetails} from '../screens/BookingDetails';
 import {BookingCheckout} from '../screens/BookingCheckout';
+import {useAppSelector} from '../redux/store';
+import {getUserInfo} from '../redux/reducers/vehicle.reducer';
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
 const MyDrawer = () => {
+  const userDetail = useAppSelector(getUserInfo);
+  console.log(userDetail);
   return (
     <SafeAreaView style={{backgroundColor: 'white', flex: 1}}>
       <Drawer.Navigator
@@ -27,7 +31,7 @@ const MyDrawer = () => {
           },
           headerLeft: () => <HeaderLeft navigation={navigation} />,
           headerRight: () => <HeaderRight navigation={navigation} />,
-          title: 'Abdullah Al-Saleem',
+          title: userDetail?.name || 'No Name',
           headerTitleStyle: {fontSize: 16, letterSpacing: 0.8, fontWeight: 400},
         })}
         drawerContent={props => <CustomDrawerComponent {...props} />}>

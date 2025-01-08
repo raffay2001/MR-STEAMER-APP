@@ -12,21 +12,38 @@ import {SvgWrapper} from '../../common/SvgWrapper';
 import {FacebookSvg, GoogleSvg, KeySvg, PersonSvg} from '../../assets/svgs';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import {POST} from '../../services';
+import {
+  ErrorResponse,
+  LoginSignInPayload,
+} from '../../services/types/auth.types';
+import {ROUTES} from '../../routes';
+import {useDispatch} from 'react-redux';
+import {setAuthState} from '../../redux/reducers/auth.reducer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO} from '../../constants';
+import {ErrorSuccessToast} from '../../utils/helper';
 // import Objects from '../../assets/images/Objects.png';
 
 export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({
   navigation,
 }) => {
+  const dispatch = useDispatch();
   const [formErrors, setFormErrors] = useState({
     emailError: false,
     passwordError: false,
+    nameError: false,
+    confirmPasswordError: false,
   });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const validateFormFields = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).+$/;
+    let isValid = true;
     if (!emailRegex.test(email)) {
       setFormErrors(prevFormErrors => ({...prevFormErrors, emailError: true}));
     }
@@ -36,13 +53,58 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({
         passwordError: true,
       }));
     }
-    return emailRegex.test(email) && passwordRegex.test(password);
+    if (password !== confirmPassword) {
+      setFormErrors(prevFormErrors => ({
+        ...prevFormErrors,
+        confirmPasswordError: true,
+      }));
+      isValid = false;
+    }
+    return emailRegex.test(email) && passwordRegex.test(password) && isValid;
   };
 
-  const signUpHandler = () => {
+  const signUpHandler = async () => {
     if (validateFormFields()) {
-      console.log(JSON.stringify({email, password}));
-      navigation.navigate('Login');
+      try {
+        // Validating; the input using LoginSchema
+        // Calling the login API if validation passes
+        const signUpPayload = await POST<LoginSignInPayload & ErrorResponse>(
+          ROUTES.SIGNUP,
+          {
+            email,
+            password,
+            name,
+          },
+        );
+
+        dispatch(setAuthState(signUpPayload.data));
+        await AsyncStorage.setItem(
+          ACCESS_TOKEN,
+          signUpPayload.data?.tokens?.access?.token,
+        );
+        await AsyncStorage.setItem(
+          REFRESH_TOKEN,
+          signUpPayload.data?.tokens.refresh?.token,
+        );
+        await AsyncStorage.setItem(
+          USER_INFO,
+          JSON.stringify(signUpPayload.data.user),
+        );
+        navigation.navigate('Vehicle');
+        //making input feilds empty
+        setEmail('');
+        setPassword('');
+      } catch (error: any) {
+        // logging the error
+        console.log(JSON.stringify(error.response.data));
+        ErrorSuccessToast({
+          type: 'error',
+          message1: `${error.response.data.message}`,
+          message2: '',
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -93,7 +155,7 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({
             </View>
 
             <View>
-              <View className="mb-4">
+              <View className="mb-2">
                 <Text className="text-white text-[16px] mb-2">
                   Email Address
                 </Text>
@@ -119,6 +181,29 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({
                   </Text>
                 )}
               </View>
+              <View className="mb-2">
+                <Text className="text-white text-[16px] mb-2">Name</Text>
+                <Input
+                  onFocus={() => {
+                    setFormErrors(prevFormErrors => ({
+                      ...prevFormErrors,
+                      nameError: false,
+                    }));
+                  }}
+                  error={formErrors.nameError}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter Name"
+                  preIcon={
+                    <SvgWrapper xml={PersonSvg} width={20} height={20} />
+                  }
+                />
+                {formErrors.nameError && (
+                  <Text className="text-red-600 text-[16px] mt-2">
+                    Name is required.
+                  </Text>
+                )}
+              </View>
 
               <View>
                 <Text className="text-white text-[16px] mb-2">Password</Text>
@@ -140,6 +225,30 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({
                   <Text className="text-red-600 text-[16px] mt-2">
                     Password should contain atleast one uppercase letter. one
                     digit and one special character.
+                  </Text>
+                )}
+              </View>
+              <View>
+                <Text className="text-white text-[16px] mb-2 mt-4">
+                  Confirm Password
+                </Text>
+                <Input
+                  onFocus={() => {
+                    setFormErrors(prevFormErrors => ({
+                      ...prevFormErrors,
+                      confirmPasswordError: false,
+                    }));
+                  }}
+                  error={formErrors.confirmPasswordError}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm Password"
+                  passwordInput
+                  preIcon={<SvgWrapper xml={KeySvg} width={20} height={20} />}
+                />
+                {formErrors.confirmPasswordError && (
+                  <Text className="text-red-600 text-[16px] mt-2">
+                    Passwords do not match.
                   </Text>
                 )}
               </View>

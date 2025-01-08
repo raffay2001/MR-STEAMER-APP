@@ -17,58 +17,19 @@ import {SvgWrapper} from './src/common/SvgWrapper';
 import Icons from './src/assets/svgs/icons';
 import MyDrawer from './src/navigation/Drawer';
 import {Provider} from 'react-redux';
-import {store} from './src/redux/store';
+import {store, persistor} from './src/redux/store';
 import Toast from 'react-native-toast-message';
 import toastConfig from './src/utils/toastConfig';
+import Main from './src/navigation/Main';
+import {PersistGate} from 'redux-persist/integration/react';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App(): React.JSX.Element {
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="SplashScreen">
-          <Stack.Group screenOptions={{headerShown: false}}>
-            <Stack.Screen name="SplashScreen" component={SplashScreen} />
-            <Stack.Screen name="Welcome" component={Welcome} />
-            <Stack.Screen
-              name="SignUpOnBoarding"
-              component={SignUpOnBoarding}
-            />
-            <Stack.Screen name="Login" component={Login} />
-          </Stack.Group>
-          <Stack.Screen
-            name="Drawer"
-            component={MyDrawer}
-            options={{headerShown: false}}
-          />
-          <Stack.Screen
-            options={({navigation}) => ({
-              headerTitleAlign: 'center',
-              headerLeft: () => (
-                <SvgWrapper
-                  xml={Icons.backIcon}
-                  width={15}
-                  height={15}
-                  icon={true}
-                  onPress={() => navigation.goBack()}
-                />
-              ),
-            })}
-            name="Vehicle"
-            component={Vehicle}
-          />
-          <Stack.Screen
-            name="Register"
-            component={Register}
-            options={{headerShown: false}}
-          />
-          <Stack.Screen
-            name="CheckOut"
-            component={CheckOut}
-            options={{headerShown: false}}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <PersistGate loading={null} persistor={persistor}>
+        <Main />
+      </PersistGate>
       <Toast config={toastConfig} />
     </Provider>
   );

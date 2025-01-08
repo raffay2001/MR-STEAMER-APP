@@ -34,10 +34,10 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
   });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [loading, setLoading] = useState(false);
   const validateFormFields = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).+$/;
     if (!emailRegex.test(email)) {
       setFormErrors(prevFormErrors => ({...prevFormErrors, emailError: true}));
     }
@@ -51,6 +51,7 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
   };
 
   const LoginHandler = async () => {
+    setLoading(true);
     if (validateFormFields()) {
       try {
         // Validating; the input using LoginSchema
@@ -66,11 +67,11 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
         dispatch(setAuthState(loginPayload.data));
         await AsyncStorage.setItem(
           ACCESS_TOKEN,
-          JSON.stringify(loginPayload.data?.tokens?.access?.token),
+          loginPayload.data?.tokens?.access?.token,
         );
         await AsyncStorage.setItem(
           REFRESH_TOKEN,
-          JSON.stringify(loginPayload.data?.tokens.refresh?.token),
+          loginPayload.data?.tokens.refresh?.token,
         );
         await AsyncStorage.setItem(
           USER_INFO,
@@ -85,14 +86,13 @@ export const Login: React.FC<TLoginProps> = ({navigation}) => {
         console.log(JSON.stringify(error));
         ErrorSuccessToast({
           type: 'error',
-          message1: 'Invalid Username or Password',
-          message2: 'Please insert correct credentials',
+          message1: `${error.response.data.message}`,
+          message2: '',
         });
+      } finally {
+        setLoading(false);
       }
       return;
-      // } finally {
-      //   setIsLoading(false);
-      // }
     }
   };
 

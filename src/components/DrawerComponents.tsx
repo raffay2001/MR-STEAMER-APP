@@ -1,5 +1,5 @@
 import {View, Text, Image, ScrollView, TouchableOpacity} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {SvgWrapper} from '../common/SvgWrapper';
 import Icons from '../assets/svgs/icons';
 import ProfileImage from '../assets/images/profile.png';
@@ -9,6 +9,8 @@ import {LogOut} from '../utils/helper';
 import {useDispatch, UseDispatch} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {logout} from '../redux/reducers/auth.reducer';
+import {useAppSelector} from '../redux/store';
+import {getUserInfo} from '../redux/reducers/vehicle.reducer';
 const DrawerItems = [
   {
     text: 'Become Mr.Streamer',
@@ -55,7 +57,7 @@ export const CustomDrawerComponent = (props: any) => {
     } catch (e) {
       console.error('Failed to remove multiple keys:', e);
     }
-    props.navigation.navigate('Login');
+    props.navigation.navigate('Auth_Screen', {screen: 'Login'});
   };
   return (
     <View {...props} className="flex-1 pb-12">
@@ -82,14 +84,22 @@ export const CustomDrawerComponent = (props: any) => {
 };
 
 const DrawerHeader: React.FC<TNavProps> = ({navigation}) => {
+  const userDetail = useAppSelector(getUserInfo);
   return (
     <View className="h-[100px] bg-blue-800 justify-center pr-7 pl-2">
       <View className="flex-row justify-between items-center">
         <View className="flex-row gap-x-0.5 items-center">
-          <Image source={ProfileImage} height={20} width={20} />
+          {userDetail && userDetail?.image !== null ? (
+            <Image source={ProfileImage} height={20} width={20} />
+          ) : (
+            <Image source={ProfileImage} height={20} width={20} />
+          )}
           <View className="gap-y-0">
-            <Text className="text-white text-xl font-semibold">John Doe</Text>
+            <Text className="text-white text-xl font-semibold">
+              {userDetail?.name}
+            </Text>
             <Text className="text-white text-xs">
+              {/* get timeStamp from backend */}
               Last Sign in today at 1:44pm
             </Text>
           </View>
