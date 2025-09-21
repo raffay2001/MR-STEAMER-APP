@@ -1,38 +1,43 @@
-import {StyleSheet} from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {useAppSelector} from '../redux/store';
-import {getAccessToken} from '../redux/reducers/auth.reducer';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ACCESS_TOKEN} from '../constants';
+import { StyleSheet, View, StatusBar } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import App_Screens from './App_Screens';
 import Auth_Screens from './Auth_screens';
+import { getAccessToken } from '../hooks/useAuthStorage';
+import SplashScreenImg from '../assets/svgs/SplashScreenImgNew.svg';
 
 const Main = () => {
-  const authState = useAppSelector(getAccessToken);
-  const [storedAccessToken, setStoredAccessToken] = useState<string | null>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [storedAccessToken, setStoredAccessToken] = useState<string | null>(null);
+  const [boot, setBoot] = useState(true);
+
+  const refreshTokenFromStorage = React.useCallback(async () => {
+    const t = await getAccessToken();
+    setStoredAccessToken(t);
+  }, []);
+
+  useEffect(() => { refreshTokenFromStorage(); }, [refreshTokenFromStorage]);
 
   useEffect(() => {
-    const fetchAndSetAccessToken = async () => {
-      const storedToken = await AsyncStorage.getItem(ACCESS_TOKEN);
-      console.log('This is called', storedToken);
-      setStoredAccessToken(storedToken);
-    };
-    fetchAndSetAccessToken();
+    const id = setTimeout(() => setBoot(false), 2000);
+    return () => clearTimeout(id);
+  }, []);
 
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [authState]);
+  if (boot) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <SplashScreenImg width={309} height={91} />
+      </View>
+    );
+  }
 
   return (
-    <NavigationContainer>
-      {(authState && authState !== '') || storedAccessToken ? (
+    <NavigationContainer
+      onReady={refreshTokenFromStorage}
+      onStateChange={refreshTokenFromStorage}
+      key={storedAccessToken ? 'app' : 'auth'}
+    >
+      {storedAccessToken ? (
         <>
           <App_Screens />
         </>

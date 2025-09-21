@@ -155,3 +155,7 @@ export const ACCESS_TOKEN = 'access_token';
 export const REFRESH_TOKEN = 'refresh_token';
 
 export const USER_INFO = 'data';
+
+export const CAR_PROFILE = 'CAR_PROFILE';
+export const VEHICLE_SETUP_DONE = 'VEHICLE_SETUP_DONE';
+export const HOME_AD_SEEN = 'HOME_AD_SEEN';

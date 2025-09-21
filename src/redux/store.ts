@@ -1,33 +1,40 @@
-import {combineReducers, configureStore} from '@reduxjs/toolkit';
-import {persistStore, persistReducer} from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // Default: localStorage for web
+// src/redux/store.ts
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { persistStore, persistReducer,
+  FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import authReducer from './reducers/auth.reducer';
 import vehicleReducer from './reducers/vehicle.reducer';
-import {TypedUseSelectorHook, useSelector} from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TypedUseSelectorHook, useSelector } from 'react-redux';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   vehicle: vehicleReducer,
 });
-// Persist Configuration
+
 const persistConfig = {
-  key: 'root', // Key for the persist
-  storage: AsyncStorage, // Storage engine
-  whitelist: ['auth'], // Specify reducers to persist (e.g., 'auth')
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['auth'],
 };
 
-const persistedState = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// Configure Store
 export const store = configureStore({
-  reducer: persistedState,
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredActionPaths: ['register', 'rehydrate'],
+        ignoredPaths: ['_persist'],
+      },
+    }),
 });
 
-// Persistor
 export const persistor = persistStore(store);
 
-// Types
+// types / hooks
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

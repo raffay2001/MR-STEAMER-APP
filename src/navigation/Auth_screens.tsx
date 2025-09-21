@@ -9,7 +9,7 @@ const Auth_Screens: React.FC = () => {
   const Stack = createNativeStackNavigator<AuthNavStackParamList>();
 
   return (
-    <Stack.Navigator initialRouteName="SplashScreen">
+    <Stack.Navigator initialRouteName="Welcome">
       <Stack.Group screenOptions={{headerShown: false}}>
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={Welcome} />

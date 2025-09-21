@@ -7,59 +7,431 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Modal,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import {TNavProps} from '../../services/types/drawerscreens.types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSlots, type SlotItem } from '../../hooks/useSlots';
+import HomePageAd from '../../assets/svgs/HomePageAd.svg';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { TNavProps } from '../../services/types/drawerscreens.types';
 import SearchInput from '../../components/SearchInput';
 import BlackCar from '../../assets/images/black-car.png';
-
+import { HOME_AD_SEEN } from '../../constants';
 import Rectangle from '../../assets/images/rectangle.png';
-import {CarService} from '../../common/GencCards';
-import {TimePicker} from '../../components/TimePicker';
-import {SERVICES} from '../../constants';
-import ArrivalTime from '../../common/ArrivalTime';
-
-const showModal = () => {
-  return <TimePicker />;
-};
+import { useEnums } from '../../hooks/useEnums';
+import { BACKEND_URL } from '../../api';
+import { useServices } from '../../hooks/useServices';
+import { getCarProfile } from '../../hooks/useCarStorage';
+import LinearGradient from 'react-native-linear-gradient';
+import PackageCardImg from "../../assets/svgs/PackageCardImg.svg"
 
 export const Home: React.FC<TNavProps> = () => {
+  const navigation = useNavigation<any>();
+  const { loading: servicesLoading, fetchServices, fetchPackagesByService } = useServices();
+  const [services, setServices] = React.useState<any[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = React.useState<string | null>(null);
+  const [packages, setPackages] = React.useState<any[]>([]);
+  const [packagesLoading, setPackagesLoading] = React.useState(false);
+  const [selectedVehicleType, setSelectedVehicleType] = React.useState<{ id: string; label: string } | null>(null);
+  const [vehicleInitDone, setVehicleInitDone] = React.useState(false);
+
+  const KEY_HOME_AD = HOME_AD_SEEN;
+  const [showAd, setShowAd] = React.useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      const seen = await AsyncStorage.getItem(KEY_HOME_AD);
+      if (!seen) {
+        setShowAd(true);
+        await AsyncStorage.setItem(KEY_HOME_AD, '1');
+      }
+    })();
+  }, []);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const car = await getCarProfile();
+        const typeId = car?.type || car?.vehicleType;
+        if (typeId) {
+          setSelectedVehicleType(prev =>
+            prev?.id === String(typeId) ? prev : { id: String(typeId), label: prev?.label || '' }
+          );
+        }
+      } finally {
+        setVehicleInitDone(true);
+      }
+    })();
+  }, []);
+
+  const loadPackages = React.useCallback(async (serviceId: string, vehicleTypeId?: string) => {
+    setPackagesLoading(true);
+    try {
+      const res = await fetchPackagesByService(serviceId, {
+        page: 1,
+        limit: 50,
+        ...(vehicleTypeId ? { vehicleType: vehicleTypeId } : {}),
+      });
+      setPackages(res?.results ?? []);
+    } finally {
+      setPackagesLoading(false);
+    }
+  }, [fetchPackagesByService]);
+
+  const loadedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    (async () => {
+      try {
+        const res = await fetchServices({ limit: 20, page: 1 });
+        const list = res?.results ?? [];
+        setServices(list);
+        if (list.length > 0) {
+          setSelectedServiceId(list[0].id);
+        }
+      } catch { }
+    })();
+  }, [fetchServices]);
+
+  React.useEffect(() => {
+    if (!selectedServiceId || !vehicleInitDone) return;
+    loadPackages(selectedServiceId, selectedVehicleType?.id);
+  }, [selectedServiceId, selectedVehicleType?.id, vehicleInitDone, loadPackages]);
+
+  const groupedPackages = React.useMemo(() => {
+    const map = new Map<
+      string,
+      { name: string; types: string[]; minPrice: number; sample: any; ids: string[] }
+    >();
+    packages.forEach((pkg: any) => {
+      const key = pkg.name || 'Package';
+      const type = pkg.type || '';
+      const price = Number(pkg.pricing ?? 0);
+      const exist = map.get(key);
+      if (exist) {
+        if (type && !exist.types.includes(type)) exist.types.push(type);
+        if (!Number.isNaN(price)) exist.minPrice = Math.min(exist.minPrice, price);
+        if (pkg.id && !exist.ids.includes(pkg.id)) exist.ids.push(pkg.id);
+      } else {
+        map.set(key, {
+          name: key,
+          types: type ? [type] : [],
+          minPrice: Number.isNaN(price) ? 0 : price,
+          sample: pkg,
+          ids: pkg.id ? [pkg.id] : [],
+        });
+      }
+    });
+    return Array.from(map.values());
+  }, [packages]);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1 mt-3">
         <View className="px-5">
           <SearchInput
             placeholder="Search Company"
-            onChangeText={(text: string) => console.log(text)}
           />
         </View>
+
         <View className="px-5 mt-6">
           <DealCard />
         </View>
+
         <View className="pl-5 mt-6">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {SERVICES?.map(service => (
-              <ServiceCard service={service} key={service.label} />
-            ))}
+            {servicesLoading && services.length === 0 ? (
+              <View className="justify-center items-center pr-3">
+                <ActivityIndicator />
+              </View>
+            ) : (
+              services.map((s: any) => (
+                <ServiceCard
+                  key={s.id}
+                  item={s}
+                  active={selectedServiceId === s.id}
+                  onPress={async () => {
+                    setSelectedServiceId(s.id);
+                    await loadPackages(s.id, selectedVehicleType?.id);
+                  }}
+                />
+              ))
+            )}
           </ScrollView>
         </View>
-        <View className="px-5 my-6 flex-row justify-between items-center">
-          <HomeButtons />
+
+        <View className="px-5 mt-6 w-full flex justify-center items-center">
+          <HomeButtons
+            onVehicleChange={(id, label) => setSelectedVehicleType({ id, label })}
+          />
         </View>
-        <CarService item="Cars Detailing" />
+
+        <View className="px-5 mt-6 w-full">
+          {packagesLoading ? (
+            <ActivityIndicator />
+          ) : packages.length === 0 ? (
+            <Text className="text-black/60">No packages for this service.</Text>
+          ) : (
+            groupedPackages.map((g) => {
+              const p = g.sample;
+              return (
+                <TouchableOpacity
+                  key={p.id || g.name}
+                  className="bg-[#fff] rounded-[10px] px-4 py-5 mb-3"
+                  style={{ elevation: 2 }}
+                  activeOpacity={0.85}
+                  onPress={() =>
+                    navigation.navigate('Package', {
+                      packageIds: g.ids,
+                      name: g.name,
+                    })
+                  }
+                >
+                  <View className="flex flex-row justify-between items-start gap-3">
+                    <View className="flex-1 flex-row items-start">
+                      <View className="w-[84px] h-[76px] bg-[#231F20] rounded-[5px] justify-center items-center">
+                        <PackageCardImg width={72} height={32} />
+                      </View>
+
+                      <View className="flex-1 flex flex-col justify-start items-start gap-2 pl-2">
+                        {/* Name */}
+                        <Text className="text-black text-[16px] font-medium">
+                          {g.name}
+                        </Text>
+
+                        {/* rating + count */}
+                        <View className="flex-row items-center">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Ionicons
+                              key={i}
+                              name={i < (p.avgRating ?? 0) ? 'star' : 'star-outline'}
+                              size={16}
+                              color={i < (p.avgRating ?? 0) ? '#FACC15' : '#9CA3AF'}
+                              style={{ marginRight: 2 }}
+                            />
+                          ))}
+                          <Text className="text-black ml-1">
+                            ({p.ratings?.length ?? 0})
+                          </Text>
+                        </View>
+
+                        {/* Certified pill */}
+                        {/* {p.isCertified ? ( */}
+                        <View className="mt-1 bg-[#2E9E00] rounded-full px-3 py-1 self-start">
+                          <Text className="text-white text-[12px] font-semibold">Certified</Text>
+                        </View>
+                        {/* ) : null} */}
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { }}
+                      className="w-8 h-8 rounded-full items-center justify-center"
+                      style={{ borderWidth: 1, borderColor: '#9CA3AF' }}
+                    >
+                      <Ionicons name="heart-outline" size={16} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View className='w-full justify-center items-center h-[1px] bg-[#EAE5E5] rounded-full mt-5 mb-4' />
+
+                  <View className='flex flex-row items-center justify-between'>
+                    <View>
+                      <Text className='text-black text-[14px] font-medium'>Packages</Text>
+                    </View>
+
+                    <View className='flex flex-col justify-start items-start gap-1' style={{ width: '50%' }}>
+                      {g.types.length > 0 ? (
+                        g.types.map((t) => (
+                          <Text key={t} className='text-[#232323] text-[11px] font-light'>{t}</Text>
+                        ))
+                      ) : (
+                        <Text className='text-[#232323] text-[11px] font-light'>—</Text>
+                      )}
+                    </View>
+                  </View>
+
+                  <View className='w-full justify-center items-center h-[1px] bg-[#EAE5E5] rounded-full mt-5 mb-4' />
+
+                  <View className='flex flex-row items-center justify-between'>
+                    <View>
+                      <Text className='text-black text-[14px] font-medium'>{g.name}</Text>
+                    </View>
+
+                    <View className='pr-2'>
+                      <Text className='text-[#000] text-[14px] font-medium'>{`${g.minPrice} SAR`}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )
+            })
+          )}
+        </View>
       </ScrollView>
+
+      {/* FAB: Filters */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Filters')}
+        activeOpacity={0.85}
+        style={{
+          position: 'absolute',
+          right: 16,
+          bottom: 24,
+          width: 45,
+          height: 45,
+          borderRadius: 28,
+          backgroundColor: '#2C4694',
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 6,
+          shadowColor: '#000',
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+        }}
+      >
+        <Ionicons name="options-outline" size={30} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Ad Modal */}
+      <Modal
+        visible={showAd}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAd(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+          <View style={{ width: '88%', maxWidth: 420, backgroundColor: '#00163B', borderRadius: 16, padding: 14 }}>
+            <TouchableOpacity
+              onPress={() => setShowAd(false)}
+              style={{
+                position: 'absolute', top: 10, right: 10,
+                width: 28, height: 28, borderRadius: 8,
+                backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+              }}>
+              <Ionicons name="close" size={18} color="#00163B" />
+            </TouchableOpacity>
+
+            <View style={{ paddingVertical: 14, alignItems: 'center' }}>
+              <HomePageAd width={220} height={200} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-const ServiceCard = ({service}: {service: {label: string; img: any}}) => {
+const DealCard = () => {
+  const slides = React.useMemo(
+    () => [
+      { id: '1', img: BlackCar, title: 'Enjoy our Aug\nDeals', badge: '30% off' },
+      { id: '2', img: BlackCar, title: 'Premium wash\nanytime', badge: 'Save 20%' },
+      { id: '3', img: BlackCar, title: 'Detailing & Wax\nSpecial', badge: 'From $19' },
+    ],
+    []
+  );
+
+  const scrollRef = React.useRef<ScrollView>(null);
+  const [index, setIndex] = React.useState(0);
+  const cardW = Dimensions.get('window').width - 40;
+
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      const next = (index + 1) % slides.length;
+      scrollRef.current?.scrollTo({ x: next * cardW, animated: true });
+      setIndex(next);
+    }, 3000);
+    return () => clearInterval(id);
+  }, [index, slides.length, cardW]);
+
+  const onMomentumEnd = (e: any) => {
+    const x = e.nativeEvent.contentOffset.x;
+    const i = Math.round(x / cardW);
+    setIndex(i);
+  };
+
   return (
-    <TouchableOpacity key={service.label} className="pr-3">
-      <View className="w-[132px] h-[88px] rounded-3xl">
+    <View
+      style={{ width: cardW, height: 189, overflow: 'hidden' }}
+      className="bg-[#F5F7FA] rounded-3xl"
+    >
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onMomentumEnd}
+      >
+        {slides.map((s) => (
+          <View key={s.id} style={{ width: cardW }} className="flex-row px-4 justify-center items-center">
+            <View className="flex-1 justify-center">
+              <Image source={s.img} style={{ width: '100%', height: 150, resizeMode: 'contain' }} />
+            </View>
+
+            <View className="flex-1 items-center justify-center pr-2">
+              <Text className="text-black text-lg font-semibold text-center leading-6">{s.title}</Text>
+              <View className="rounded-full px-4 py-2 mt-2 bg-[#223671]">
+                <Text className="text-white text-sm">{s.badge}</Text>
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* dots */}
+      <View className="absolute bottom-4 left-0 right-0 flex-row justify-center items-center">
+        {slides.map((_, i) => (
+          <View
+            key={i}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              marginHorizontal: 4,
+              backgroundColor: i === index ? '#223671' : '#D1D5DB',
+            }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const ServiceCard = ({
+  item,
+  onPress,
+  active,
+}: {
+  item: { id: string; name: string; mediaPath?: string };
+  onPress?: () => void;
+  active?: boolean;
+}) => {
+  const uri = item.mediaPath ? `${BACKEND_URL}${item.mediaPath}` : undefined;
+  return (
+    <TouchableOpacity className="pr-5" onPress={onPress}>
+      <View className="w-[132px] h-[88px] rounded-[10px] overflow-hidden">
         <ImageBackground
-          source={service.img}
-          className="flex-1 justify-end items-center pb-2">
-          <Text className="text-white text-lg font-bold text-center">
-            {service.label}
+          source={uri ? { uri } : Rectangle}
+          style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 10 }}
+        >
+          <View
+            style={{
+              position: 'absolute',
+              top: 0, right: 0, bottom: 0, left: 0,
+              backgroundColor: active ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.35)',
+            }}
+          />
+          <Text
+            className="text-[16px] font-bold text-center px-2"
+            style={{ color: active ? '#fff' : '#fff' }}
+          >
+            {item.name}
           </Text>
         </ImageBackground>
       </View>
@@ -67,33 +439,238 @@ const ServiceCard = ({service}: {service: {label: string; img: any}}) => {
   );
 };
 
-const HomeButtons = () => {
-  return (
-    <>
-      <TouchableOpacity
-        style={{elevation: 10}}
-        className="w-[47%] bg-white h-[70px] justify-center items-center rounded-lg">
-        <Text className="text-lg text-black">Vehicle Sedan</Text>
-      </TouchableOpacity>
-      <ArrivalTime />
-    </>
-  );
-};
+const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label: string) => void }) => {
+  const [vehicleName, setVehicleName] = React.useState<string>('Sedan');
+  const { fetchEnumById, fetchEnumsByType } = useEnums();
+  const [showVehicleModal, setShowVehicleModal] = React.useState(false);
+  const [vehicleTypes, setVehicleTypes] = React.useState<any[]>([]);
+  const [vtLoading, setVtLoading] = React.useState(false);
 
-const DealCard = () => {
+  // slots
+  const { loading: slotsLoading, fetchAvailableSlots } = useSlots();
+  const [showPicker, setShowPicker] = React.useState(false);
+  const [slots, setSlots] = React.useState<SlotItem[]>([]);
+  const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
+
+  const [selectedSlot, setSelectedSlot] = React.useState<SlotItem | null>(null);
+  const [showSlotModal, setShowSlotModal] = React.useState(false);
+
+  const dayLabel = (d: Date) => {
+    const today = new Date();
+    const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff = (dd.getTime() - t.getTime()) / (1000 * 60 * 60 * 24);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return d.toLocaleDateString(undefined, { weekday: 'long' });
+  };
+
+  React.useEffect(() => {
+    (async () => {
+      const car = await getCarProfile();
+      // console.log('car: ', car);
+      const typeId = car?.type || car?.vehicleType;
+      if (typeId) {
+        try {
+          const en = await fetchEnumById(String(typeId));
+          const label = en?.displayName || en?.name;
+          setVehicleName(label || 'Sedan');
+          onVehicleChange?.(String(typeId), label || 'Sedan');
+          return;
+        } catch { }
+      }
+      setVehicleName('Sedan');
+    })();
+  }, []);
+
+  const fmtDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate()
+    ).padStart(2, '0')}`;
+
+  const onPickDate = async (_: any, date?: Date) => {
+    setShowPicker(false);
+    if (!date) return;
+    setSelectedDate(date);
+    try {
+      const res = await fetchAvailableSlots({ date: fmtDate(date) });
+      setSlots(res?.slots ?? []);
+      setShowSlotModal(true);
+    } catch (e) {
+      setSlots([]);
+      setShowSlotModal(false);
+    }
+  };
+
   return (
-    <View className="bg-[#F5F7FA] rounded-3xl py-4 pr-4 items-center justify-center">
-      <View className="flex-row items-center ">
-        <Image source={BlackCar} />
-        <View className="justify-between items-center flex-1">
-          <Text className="text-base font-semibold  text-black text-center">
-            Enjoy Our Aug Deals
-          </Text>
-          <View className="rounded-3xl p-2 mt-2 bg-[#223671] items-center justify-center w-[100px]">
-            <Text className="text-white text-sm">30% off</Text>
+    <View className="w-full" style={{ position: 'relative' }}>
+      {/* Row of 2 cards */}
+      <View className="flex flex-row items-center w-full" style={{ columnGap: 16 }}>
+        <TouchableOpacity
+          style={{ elevation: 5, minWidth: 0 }}
+          className="bg-white h-[70px] flex-1 flex-col justify-center items-center rounded-[10px] px-3"
+          onPress={() => {
+            setShowVehicleModal(true);
+            if (vehicleTypes.length === 0) {
+              (async () => {
+                setVtLoading(true);
+                try {
+                  const res = await fetchEnumsByType('VEHICLE_TYPE', { limit: 50 });
+                  setVehicleTypes(res?.results ?? []);
+                } finally {
+                  setVtLoading(false);
+                }
+              })();
+            }
+          }}
+        >
+          <Text className="text-[15px] text-black font-normal">Vehicle</Text>
+          <Text className="text-[15px] text-black font-medium">{vehicleName}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ elevation: 5, minWidth: 0 }}
+          className="flex-1 h-[70px] rounded-[10px] overflow-hidden"
+          onPress={() => {
+            if (selectedDate && slots.length > 0) setShowSlotModal(true);
+            else setShowPicker(true);
+          }}
+        >
+          <LinearGradient
+            colors={['#000000', '#2C4694']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              flex: 1,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 12,
+            }}
+          >
+            <Text className="text-white text-[14px] font-semibold text-center">
+              Availability Slot
+            </Text>
+            <Text className="text-white text-[14px] text-center">
+              {selectedDate
+                ? `${dayLabel(selectedDate)}${selectedSlot ? `, ${selectedSlot.displayTime}` : ', Select a slot'}`
+                : 'Select Slot'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+
+      {/* Date picker */}
+      {showPicker && (
+        <DateTimePicker
+          value={selectedDate || new Date()}
+          mode="date"
+          display="default"
+          onChange={onPickDate}
+          minimumDate={new Date()}
+        />
+      )}
+
+      {/* Slots modal */}
+      <Modal
+        visible={showSlotModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSlotModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 12, elevation: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>
+                {selectedDate ? `${dayLabel(selectedDate)} — Pick a time` : 'Pick a time'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowSlotModal(false)} style={{ padding: 6 }}>
+                <Ionicons name="close" size={20} color="#111" />
+              </TouchableOpacity>
+            </View>
+            {slotsLoading ? (
+              <ActivityIndicator />
+            ) : slots.length === 0 ? (
+              <Text style={{ color: '#555', paddingVertical: 10 }}>No slots available for this date.</Text>
+            ) : (
+              <ScrollView>
+                {slots.map((s, i) => {
+                  const disabled = !s.isAvailable;
+                  const active = selectedSlot?.startTime === s.startTime && selectedSlot?.endTime === s.endTime;
+                  return (
+                    <TouchableOpacity
+                      key={`${s.startTime}-${s.endTime}-${i}`}
+                      disabled={disabled}
+                      onPress={() => { setSelectedSlot(s); setShowSlotModal(false); }}
+                      style={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 14,
+                        backgroundColor: active ? '#F1F5F9' : '#fff',
+                        opacity: disabled ? 0.5 : 1,
+                        borderTopWidth: i === 0 ? 0 : 1,
+                        borderColor: '#eee',
+                      }}
+                    >
+                      <Text style={{ color: '#111' }}>{s.displayTime}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
           </View>
         </View>
-      </View>
+      </Modal>
+
+      {/* Vehicle type modal */}
+      <Modal
+        visible={showVehicleModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowVehicleModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 12, elevation: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>Select vehicle type</Text>
+              <TouchableOpacity onPress={() => setShowVehicleModal(false)} style={{ padding: 6 }}>
+                <Ionicons name="close" size={20} color="#111" />
+              </TouchableOpacity>
+            </View>
+            {vtLoading ? (
+              <ActivityIndicator />
+            ) : (
+              <ScrollView>
+                {vehicleTypes.map((vt: any) => {
+                  const label = vt.displayName || vt.name;
+                  const selected = label === vehicleName;
+                  return (
+                    <TouchableOpacity
+                      key={vt.id || label}
+                      onPress={() => {
+                        setVehicleName(label || 'Sedan');
+                        onVehicleChange?.(String(vt.id), label || 'Sedan');
+                        setShowVehicleModal(false);
+                      }}
+                      style={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 14,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderTopWidth: 1,
+                        borderColor: '#eee',
+                      }}
+                    >
+                      <Text style={{ color: '#111' }}>{label}</Text>
+                      {selected ? <Ionicons name="checkmark" size={18} color="#2C4694" /> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

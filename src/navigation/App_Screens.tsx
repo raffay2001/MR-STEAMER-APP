@@ -1,40 +1,92 @@
-import React, {Fragment, useState} from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {AppNavStackParamList} from './navigation.types';
+import React, { useEffect, useState } from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AppNavStackParamList } from './navigation.types';
 import {
-  SplashScreen,
-  Welcome,
   Vehicle,
-  SignUpOnBoarding,
-  Login,
   Register,
   CheckOut,
+  Filters,
+  Package,
+  YourBooking,
+  Success,
+  BookingDetailsPage,
 } from '../screens';
 import MyDrawer from './Drawer';
-import {SvgWrapper} from '../common/SvgWrapper';
-import Icons from '../assets/svgs/icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { VEHICLE_SETUP_DONE } from '../constants';
+
 const Stack = createNativeStackNavigator<AppNavStackParamList>();
 
 const App_Screens: React.FC = () => {
+  const [ready, setReady] = useState(false);
+  const [firstRoute, setFirstRoute] = useState<'Vehicle' | 'Drawer'>('Vehicle');
+
+  useEffect(() => {
+    (async () => {
+      const done = await AsyncStorage.getItem(VEHICLE_SETUP_DONE);
+      setFirstRoute(done ? 'Drawer' : 'Vehicle');
+      setReady(true);
+    })();
+  }, []);
+
+  if (!ready) return null;
+
   return (
-    <Stack.Navigator initialRouteName="Vehicle">
+    <Stack.Navigator initialRouteName={firstRoute}>
       <Stack.Screen
         name="Drawer"
         component={MyDrawer}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
-        options={({navigation}) => ({
+        name="Filters"
+        component={Filters}
+        options={{
+          title: 'Filters',
           headerTitleAlign: 'center',
-          headerLeft: () => (
-            <SvgWrapper
-              xml={Icons.backIcon}
-              width={15}
-              height={15}
-              icon={true}
-              onPress={() => navigation.goBack()}
-            />
-          ),
+        }}
+      />
+      <Stack.Screen
+        name="Package"
+        component={Package}
+        options={({ route }) => ({
+          // title: (route?.params as any)?.name ?? 'Package',
+          title: 'Packages',
+          headerTitleAlign: 'center',
+        })}
+      />
+      <Stack.Screen
+        name="YourBooking"
+        component={YourBooking}
+        options={{ title: 'Your Booking', headerTitleAlign: 'center' }}
+      />
+      <Stack.Screen
+        name="Success"
+        component={Success}
+        options={{
+          title: 'Successful Booking',
+          headerTitleAlign: 'center',
+          headerBackVisible: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="BookingDetailsPage"
+        component={BookingDetailsPage}
+        options={{ title: 'Booking Details', headerTitleAlign: 'center' }}
+      />
+      <Stack.Screen
+        options={({ navigation }) => ({
+          headerTitleAlign: 'center',
+          // headerLeft: () => (
+          //   <SvgWrapper
+          //     xml={Icons.backIcon}
+          //     width={15}
+          //     height={15}
+          //     icon={true}
+          //     onPress={() => navigation.goBack()}
+          //   />
+          // ),
         })}
         name="Vehicle"
         component={Vehicle}
@@ -42,12 +94,12 @@ const App_Screens: React.FC = () => {
       <Stack.Screen
         name="Register"
         component={Register}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CheckOut"
         component={CheckOut}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

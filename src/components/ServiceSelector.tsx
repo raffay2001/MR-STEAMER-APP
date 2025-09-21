@@ -29,7 +29,7 @@ export const ServiceSelector = ({
     {label: 'Item 8', value: '8'},
   ];
   const [values, setValues] = useState<String | null>(null);
-  console.log(values);
+  // console.log(values);
   return (
     <View style={styles.container}>
       <Text style={styles.headingText}>{name}</Text>
