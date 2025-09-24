@@ -10,6 +10,7 @@ import {
   YourBooking,
   Success,
   BookingDetailsPage,
+  PrePackage,
 } from '../screens';
 import MyDrawer from './Drawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -47,10 +48,17 @@ const App_Screens: React.FC = () => {
         }}
       />
       <Stack.Screen
+        name="PrePackage"
+        component={PrePackage}
+        options={{
+          title: 'Car Service',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
         name="Package"
         component={Package}
         options={({ route }) => ({
-          // title: (route?.params as any)?.name ?? 'Package',
           title: 'Packages',
           headerTitleAlign: 'center',
         })}

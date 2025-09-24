@@ -159,3 +159,14 @@ export const USER_INFO = 'data';
 export const CAR_PROFILE = 'CAR_PROFILE';
 export const VEHICLE_SETUP_DONE = 'VEHICLE_SETUP_DONE';
 export const HOME_AD_SEEN = 'HOME_AD_SEEN';
+
+export const SAUDI_CITIES = [
+  'Riyadh','Jeddah','Makkah','Madinah','Dammam','Al-Khobar','Dhahran','Qatif','Jubail',
+  'Hofuf','Al Mubarraz','Al Ahsa','Taif','Tabuk','Hail','Abha','Khamis Mushait','Jazan','Najran',
+  'Buraidah','Unaizah','Ar Rass','Al Kharj','Al Majmaah','Sakaka','Arar','Rafha','Turaif','Rabigh',
+  'Yanbu','Umluj','Al Wajh','NEOM','Al Bahah','Baljurashi','Qunfudhah','Al Lith','Al Qunfudhah',
+  'Mahd adh Dhahab','Bisha','Turabah','Wadi ad-Dawasir','Al Dawadmi','Afif','Al Zulfi','Al Bukayriyah',
+  'Al Badayea','Hotat Bani Tamim','Sharurah','Abqaiq','Al Nairyah','Qarya Al Ulya','Khafji','Hafar Al-Batin',
+  'Al Taif','Muzahmiyah','Al Quwaiiyah','Thadiq','Durma','Huraymila','Al Hariq','Layla','Tendaha',
+  'Ahad Rafidah','Sarat Abidah','Tanomah','Al Namas','Muhayil','Bariq','Rijal Alma','Farasan','Sabya'
+];

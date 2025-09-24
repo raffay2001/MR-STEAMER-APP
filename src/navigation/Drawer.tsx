@@ -7,7 +7,6 @@ import Icons from '../assets/svgs/icons';
 import { SvgWrapper } from '../common/SvgWrapper';
 import { CustomDrawerComponent } from '../components/DrawerComponents';
 import { DrawerStackParamList } from '../services/types/drawerscreens.types';
-import { BecomeStreamer } from '../screens/BecomerStreamer';
 import { HireUs } from '../screens/HireUs';
 import BookingDetailsPage from '../screens/BookingDetailsPage';
 import { getUserData } from '../hooks/useAuthStorage';
@@ -17,6 +16,8 @@ import ChoosePackages from '../screens/ChoosePackages';
 import OurFeatures from '../screens/OurFeatures';
 import AboutUs from '../screens/AboutUs';
 import Profile from '../screens/Profile';
+import BecomeStreamer from '../screens/BecomeStreamer';
+import RegisterSteamer from '../screens/RegisterSteamer';
 
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
@@ -48,9 +49,32 @@ const MyDrawer = () => {
         <Drawer.Screen
           name="BecomeStreamer"
           component={BecomeStreamer}
-          options={{
-            headerShown: false,
-          }}
+          options={({ navigation }) => ({
+            headerShown: true,
+            headerTransparent: true,
+            title: '',
+            headerLeft: () => null,
+            headerRight: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+            ),
+          })}
+        />
+        <Drawer.Screen
+          name="RegisterSteamer"
+          component={RegisterSteamer}
+          options={({ navigation }) => ({
+            headerShown: true,
+            headerTransparent: true,
+            title: '',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+            ),
+            headerRight: () => null,
+          })}
         />
         <Drawer.Screen
           name="ChoosePackages"

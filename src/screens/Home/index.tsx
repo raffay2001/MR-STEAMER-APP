@@ -10,6 +10,7 @@ import {
   Modal,
   Dimensions,
   ActivityIndicator,
+  DeviceEventEmitter,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -28,6 +29,9 @@ import { useServices } from '../../hooks/useServices';
 import { getCarProfile } from '../../hooks/useCarStorage';
 import LinearGradient from 'react-native-linear-gradient';
 import PackageCardImg from "../../assets/svgs/PackageCardImg.svg"
+import { getUserData } from '../../hooks/useAuthStorage';
+import { useFavourites } from '../../hooks/useFavourites';
+import { useRating } from '../../hooks/useRating';
 
 export const Home: React.FC<TNavProps> = () => {
   const navigation = useNavigation<any>();
@@ -39,8 +43,28 @@ export const Home: React.FC<TNavProps> = () => {
   const [selectedVehicleType, setSelectedVehicleType] = React.useState<{ id: string; label: string } | null>(null);
   const [vehicleInitDone, setVehicleInitDone] = React.useState(false);
 
+  // favourites modal state
+  const { togglePackageFavourite, loading: favLoading } = useFavourites();
+  const [userId, setUserId] = React.useState<string | null>(null);
+  const [pendingFavId, setPendingFavId] = React.useState<string | null>(null);
+  const [favModalVisible, setFavModalVisible] = React.useState(false);
+  const [favModalTitle, setFavModalTitle] = React.useState('');
+  const [favModalItems, setFavModalItems] = React.useState<any[]>([]);
+  const [localFavIds, setLocalFavIds] = React.useState<Set<string>>(new Set());
+
+  // Rating States
+  const { loading: ratingLoading, fetchRatingsByPackageName } = useRating();
+  const [ratingsMap, setRatingsMap] = React.useState<Record<string, { avg: number; count: number }>>({});
+
   const KEY_HOME_AD = HOME_AD_SEEN;
   const [showAd, setShowAd] = React.useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      const u = await getUserData();
+      setUserId(u?.id || null);
+    })();
+  }, []);
 
   React.useEffect(() => {
     (async () => {
@@ -130,6 +154,105 @@ export const Home: React.FC<TNavProps> = () => {
     return Array.from(map.values());
   }, [packages]);
 
+  // Rating
+  React.useEffect(() => {
+    if (groupedPackages.length === 0) return;
+
+    (async () => {
+      try {
+        const entries = await Promise.all(
+          groupedPackages.map(async (g) => {
+            const data = await fetchRatingsByPackageName(g.name, { page: 1, limit: 50 });
+            const list = data?.results ?? [];
+            const count = list.length;
+            const avg = count ? list.reduce((s, r) => s + Number(r.star || 0), 0) / count : 0;
+            return [g.name, { avg, count }] as const;
+          })
+        );
+        setRatingsMap(Object.fromEntries(entries));
+      } catch {
+        // noop
+      }
+    })();
+  }, [groupedPackages, fetchRatingsByPackageName]);
+
+  // Favourites
+  const openFavModalForGroup = React.useCallback((group: { name: string; ids: string[] }) => {
+    const groupPkgs = packages.filter((p: any) => group.ids.includes(p.id));
+    setFavModalItems(groupPkgs);
+    setFavModalTitle(group.name);
+
+    const init = new Set<string>();
+    if (userId) {
+      groupPkgs.forEach((p: any) => {
+        const arr = Array.isArray(p?.isFav) ? p.isFav : [];
+        if (arr.includes(userId)) init.add(p.id);
+      });
+    }
+    setLocalFavIds(init);
+    setFavModalVisible(true);
+    console.log('[FavModal] open for group:', group.name, 'ids:', group.ids);
+  }, [packages, userId]);
+
+  const onToggleFavourite = React.useCallback(async (pkgId: string) => {
+    try {
+      setPendingFavId(pkgId);
+      const res = await togglePackageFavourite(pkgId); // expects { isFav: boolean }
+      const isFav = !!res?.isFav;
+
+      // update local modal state
+      setLocalFavIds(prev => {
+        const next = new Set(prev);
+        isFav ? next.add(pkgId) : next.delete(pkgId);
+        return next;
+      });
+
+      // reflect in main list
+      setPackages(prev =>
+        prev.map((p: any) => {
+          if (p.id !== pkgId || !userId) return p;
+          const arr = Array.isArray(p?.isFav) ? [...p.isFav] : [];
+          const i = arr.indexOf(userId);
+          if (isFav && i < 0) arr.push(userId);
+          if (!isFav && i >= 0) arr.splice(i, 1);
+          return { ...p, isFav: arr };
+        })
+      );
+
+      // 🔊 broadcast to other screens
+      if (userId) DeviceEventEmitter.emit('FAV_CHANGED', { packageId: pkgId, isFav, userId });
+    } catch (e) {
+      console.log('[Favourite] ERROR for package:', pkgId, e);
+    } finally {
+      setPendingFavId(null);
+    }
+  }, [togglePackageFavourite, userId]);
+
+  React.useEffect(() => {
+    if (!userId) return;
+    const sub = DeviceEventEmitter.addListener('FAV_CHANGED', ({ packageId, isFav, userId: emitterUid }) => {
+      if (emitterUid !== userId) return;
+
+      setPackages(prev =>
+        prev.map((p: any) => {
+          if (p.id !== packageId) return p;
+          const arr = Array.isArray(p?.isFav) ? [...p.isFav] : [];
+          const i = arr.indexOf(userId);
+          if (isFav && i < 0) arr.push(userId);
+          if (!isFav && i >= 0) arr.splice(i, 1);
+          return { ...p, isFav: arr };
+        })
+      );
+
+      setLocalFavIds(prev => {
+        const next = new Set(prev);
+        isFav ? next.add(packageId) : next.delete(packageId);
+        return next;
+      });
+    });
+    return () => sub.remove();
+  }, [userId]);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1 mt-3">
@@ -185,10 +308,17 @@ export const Home: React.FC<TNavProps> = () => {
                   className="bg-[#fff] rounded-[10px] px-4 py-5 mb-3"
                   style={{ elevation: 2 }}
                   activeOpacity={0.85}
+                  // onPress={() =>
+                  //   navigation.navigate('Package', {
+                  //     packageIds: g.ids,
+                  //     name: g.name,
+                  //   })
+                  // }
                   onPress={() =>
-                    navigation.navigate('Package', {
+                    navigation.navigate('PrePackage', {
                       packageIds: g.ids,
                       name: g.name,
+                      packages: packages.filter((p: any) => g.ids.includes(p.id)),
                     })
                   }
                 >
@@ -206,31 +336,33 @@ export const Home: React.FC<TNavProps> = () => {
 
                         {/* rating + count */}
                         <View className="flex-row items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Ionicons
-                              key={i}
-                              name={i < (p.avgRating ?? 0) ? 'star' : 'star-outline'}
-                              size={16}
-                              color={i < (p.avgRating ?? 0) ? '#FACC15' : '#9CA3AF'}
-                              style={{ marginRight: 2 }}
-                            />
-                          ))}
+                          {Array.from({ length: 5 }).map((_, i) => {
+                            const r = ratingsMap[g.name];
+                            const avg = Math.round(r?.avg ?? 0);
+                            return (
+                              <Ionicons
+                                key={i}
+                                name={i < avg ? 'star' : 'star-outline'}
+                                size={16}
+                                color={i < avg ? '#FACC15' : '#9CA3AF'}
+                                style={{ marginRight: 2 }}
+                              />
+                            );
+                          })}
                           <Text className="text-black ml-1">
-                            ({p.ratings?.length ?? 0})
+                            ({ratingsMap[g.name]?.count ?? 0})
                           </Text>
                         </View>
 
                         {/* Certified pill */}
-                        {/* {p.isCertified ? ( */}
                         <View className="mt-1 bg-[#2E9E00] rounded-full px-3 py-1 self-start">
                           <Text className="text-white text-[12px] font-semibold">Certified</Text>
                         </View>
-                        {/* ) : null} */}
                       </View>
                     </View>
 
                     <TouchableOpacity
-                      onPress={() => { }}
+                      onPress={() => openFavModalForGroup(g)}
                       className="w-8 h-8 rounded-full items-center justify-center"
                       style={{ borderWidth: 1, borderColor: '#9CA3AF' }}
                     >
@@ -273,6 +405,78 @@ export const Home: React.FC<TNavProps> = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Favourite Modal */}
+      <Modal
+        visible={favModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFavModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111' }}>{favModalTitle} — Packages</Text>
+              <TouchableOpacity onPress={() => setFavModalVisible(false)} style={{ padding: 6 }}>
+                <Ionicons name="close" size={20} color="#111" />
+              </TouchableOpacity>
+            </View>
+
+            {favModalItems.length === 0 ? (
+              <Text style={{ color: '#555' }}>No packages.</Text>
+            ) : (
+              <ScrollView>
+                {favModalItems.map((pkg: any) => {
+                  const isFav = localFavIds.has(pkg.id);
+                  return (
+                    <View
+                      key={pkg.id}
+                      style={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 8,
+                        borderTopWidth: 1,
+                        borderColor: '#eee',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <View style={{ flex: 1, paddingRight: 12 }}>
+                        <Text style={{ color: '#111', fontWeight: '600' }}>{pkg.type || '—'}</Text>
+                        <Text style={{ color: '#666', marginTop: 2 }}>{`${pkg.pricing ?? 0} SAR`}</Text>
+                      </View>
+
+                      <TouchableOpacity
+                        onPress={() => onToggleFavourite(pkg.id)}
+                        disabled={favLoading || pendingFavId === pkg.id}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: localFavIds.has(pkg.id) ? '#EF4444' : '#9CA3AF',
+                        }}
+                      >
+                        {pendingFavId === pkg.id ? (
+                          <ActivityIndicator size="small" />
+                        ) : (
+                          <Ionicons
+                            name={localFavIds.has(pkg.id) ? 'heart' : 'heart-outline'}
+                            size={18}
+                            color={localFavIds.has(pkg.id) ? '#EF4444' : '#9CA3AF'}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* FAB: Filters */}
       <TouchableOpacity

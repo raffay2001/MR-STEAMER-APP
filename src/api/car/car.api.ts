@@ -7,6 +7,7 @@ export type CreateCarPayload = {
   brand: string;
   number: string;
   name?: string;
+  city: string; 
 };
 
 export const createCar = async (payload: CreateCarPayload) => {

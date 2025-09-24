@@ -18,11 +18,17 @@ import { useCar } from '../../hooks/useCar';
 import { BACKEND_URL } from '../../api';
 import { getAccessToken, clearAuth } from '../../hooks/useAuthStorage';
 import { setCarProfile } from '../../hooks/useCarStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SAUDI_CITIES } from '../../constants';
 
 const SWATCHES = [
   '#000000', '#FFFFFF', '#FF0000', '#0000FF', '#008000',
   '#FFFF00', '#FFA500', '#800080', '#808080', '#A52A2A',
 ];
+
+const CITY_KEY = 'SELECTED_CITY';
+const CITY_OPTIONS = SAUDI_CITIES;
 
 const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   const { loading, fetchEnumsByType } = useEnums();
@@ -34,6 +40,11 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   // modal state
   const [showModal, setShowModal] = React.useState(false);
   const [pickedType, setPickedType] = React.useState<any>(null);
+
+  // City Modal
+  const [showCityModal, setShowCityModal] = React.useState(false);
+  const [cityQuery, setCityQuery] = React.useState('');
+  const [selectedCity, setSelectedCity] = React.useState<string | null>(null);
 
   // form state
   const [color, setColor] = React.useState<string>(''); // chosen swatch or custom hex/name
@@ -81,6 +92,24 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
       }
     }
   }, [fetchEnumsByType, navigation]);
+
+  React.useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem(CITY_KEY);
+      if (saved) {
+        setSelectedCity(saved);
+        setShowCityModal(false);
+      } else {
+        setShowCityModal(true); // force user to pick
+      }
+    })();
+  }, []);
+
+  const onPickCity = React.useCallback(async (city: string) => {
+    setSelectedCity(city);
+    await AsyncStorage.setItem(CITY_KEY, city);
+    setShowCityModal(false);
+  }, []);
 
   React.useEffect(() => {
     if (loadedRef.current) return;
@@ -143,6 +172,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
       brand: selectedBrandId,
       number: carNumber.trim(),
       name: carName.trim(),
+      city: selectedCity as string,
     };
     console.log('🚗 [Vehicle] createCar payload:', payload);
 
@@ -161,9 +191,9 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
         return;
       }
     }
-  }, [pickedType, color, selectedBrandId, carNumber, carName, createCar, navigation]);
+  }, [pickedType, color, selectedBrandId, carNumber, carName, selectedCity, createCar, navigation]);
 
-  const canSubmit = !!(pickedType && selectedBrandId && carNumber.trim() && color && carName.trim());
+  const canSubmit = !!(pickedType && selectedBrandId && carNumber.trim() && color && carName.trim() && selectedCity);
 
   const Row = ({
     title,
@@ -239,6 +269,55 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
           })
         )}
       </ScrollView>
+
+      {/* Full-screen City Picker Modal */}
+      <Modal
+        visible={showCityModal}
+        transparent={false}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => { /* block back: must choose a city */ }}
+      >
+        <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: 24, paddingHorizontal: 16 }}>
+          {/* Search bar */}
+          <View
+            style={{
+              backgroundColor: '#F1F5F9',
+              height: 48,
+              borderRadius: 24,
+              paddingHorizontal: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 8,
+              marginBottom: 12,
+            }}
+          >
+            <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 6 }} />
+            <TextInput
+              placeholder="Search Area"
+              placeholderTextColor="#9CA3AF"
+              value={cityQuery}
+              onChangeText={setCityQuery}
+              style={{ flex: 1, color: '#111' }}
+            />
+          </View>
+
+          {/* City list */}
+          <ScrollView keyboardShouldPersistTaps="handled">
+            {CITY_OPTIONS
+              .filter(c => c.toLowerCase().includes(cityQuery.trim().toLowerCase()))
+              .map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  onPress={() => onPickCity(c)}
+                  style={{ paddingVertical: 14 }}
+                >
+                  <Text style={{ color: '#111', fontSize: 16 }}>{c}</Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* Centered Modal */}
       <Modal

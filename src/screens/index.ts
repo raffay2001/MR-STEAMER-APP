@@ -2,8 +2,9 @@ import {Welcome} from './Welcome';
 import {Home} from './Home';
 import {SplashScreen} from './SplashScreen';
 import Vehicle from './Vehicle';
-import Filters from './Filters'
-import Package from './Package'
+import Filters from './Filters';
+import PrePackage from './PrePackage';
+import Package from './Package';
 import YourBooking from './YourBooking';
 import Success from './Success'
 import BookingDetailsPage from './BookingDetailsPage';
@@ -21,6 +22,7 @@ export {
   Register,
   CheckOut,
   Filters,
+  PrePackage,
   Package,
   YourBooking,
   Success,
