@@ -56,6 +56,9 @@ export const Home: React.FC<TNavProps> = () => {
   const { loading: ratingLoading, fetchRatingsByPackageName } = useRating();
   const [ratingsMap, setRatingsMap] = React.useState<Record<string, { avg: number; count: number }>>({});
 
+  const [sortBy, setSortBy] = React.useState<'popularity' | 'rating' | 'price_desc' | 'price_asc'>('popularity');
+  const [filterNames, setFilterNames] = React.useState<string[]>([]);
+
   const KEY_HOME_AD = HOME_AD_SEEN;
   const [showAd, setShowAd] = React.useState(false);
 
@@ -154,6 +157,42 @@ export const Home: React.FC<TNavProps> = () => {
     return Array.from(map.values());
   }, [packages]);
 
+  // apply name filters, then sort
+  const sortedGroups = React.useMemo(() => {
+    let base = [...groupedPackages];
+    if (filterNames.length > 0) {
+      const set = new Set(filterNames);
+      base = base.filter(g => set.has(g.name));
+    }
+    const copy = [...base];
+    if (sortBy === 'rating') {
+      // higher avg first; if tie, more reviews first; then by price asc
+      copy.sort((a, b) => {
+        const ra = ratingsMap[a.name]?.avg ?? 0;
+        const rb = ratingsMap[b.name]?.avg ?? 0;
+        if (rb !== ra) return rb - ra;
+        const ca = ratingsMap[a.name]?.count ?? 0;
+        const cb = ratingsMap[b.name]?.count ?? 0;
+        if (cb !== ca) return cb - ca;
+        return (a.minPrice ?? 0) - (b.minPrice ?? 0);
+      });
+    } else if (sortBy === 'price_asc') {
+      copy.sort((a, b) => (a.minPrice ?? 0) - (b.minPrice ?? 0));
+    } else if (sortBy === 'price_desc') {
+      copy.sort((a, b) => (b.minPrice ?? 0) - (a.minPrice ?? 0));
+    }
+    return copy;
+  }, [groupedPackages, ratingsMap, sortBy, filterNames]);
+
+  // listen for "Apply" from Filters (sort + names)
+  React.useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('HOME_FILTERS', ({ sortBy: s, names }: { sortBy: typeof sortBy, names: string[] }) => {
+      if (s) setSortBy(s);
+      setFilterNames(Array.isArray(names) ? names : []);
+    });
+    return () => sub.remove();
+  }, []);
+
   // Rating
   React.useEffect(() => {
     if (groupedPackages.length === 0) return;
@@ -197,17 +236,15 @@ export const Home: React.FC<TNavProps> = () => {
   const onToggleFavourite = React.useCallback(async (pkgId: string) => {
     try {
       setPendingFavId(pkgId);
-      const res = await togglePackageFavourite(pkgId); // expects { isFav: boolean }
+      const res = await togglePackageFavourite(pkgId);
       const isFav = !!res?.isFav;
 
-      // update local modal state
       setLocalFavIds(prev => {
         const next = new Set(prev);
         isFav ? next.add(pkgId) : next.delete(pkgId);
         return next;
       });
 
-      // reflect in main list
       setPackages(prev =>
         prev.map((p: any) => {
           if (p.id !== pkgId || !userId) return p;
@@ -219,7 +256,6 @@ export const Home: React.FC<TNavProps> = () => {
         })
       );
 
-      // 🔊 broadcast to other screens
       if (userId) DeviceEventEmitter.emit('FAV_CHANGED', { packageId: pkgId, isFav, userId });
     } catch (e) {
       console.log('[Favourite] ERROR for package:', pkgId, e);
@@ -300,7 +336,7 @@ export const Home: React.FC<TNavProps> = () => {
           ) : packages.length === 0 ? (
             <Text className="text-black/60">No packages for this service.</Text>
           ) : (
-            groupedPackages.map((g) => {
+            sortedGroups.map((g) => {
               const p = g.sample;
               return (
                 <TouchableOpacity
@@ -308,12 +344,6 @@ export const Home: React.FC<TNavProps> = () => {
                   className="bg-[#fff] rounded-[10px] px-4 py-5 mb-3"
                   style={{ elevation: 2 }}
                   activeOpacity={0.85}
-                  // onPress={() =>
-                  //   navigation.navigate('Package', {
-                  //     packageIds: g.ids,
-                  //     name: g.name,
-                  //   })
-                  // }
                   onPress={() =>
                     navigation.navigate('PrePackage', {
                       packageIds: g.ids,

@@ -1,5 +1,7 @@
-import React, { useLayoutEffect, useState } from 'react';
-import { SafeAreaView, View, Text, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { SafeAreaView, View, Text, ScrollView, TouchableOpacity, Pressable, DeviceEventEmitter } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePackage } from '../../hooks/usePackage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import PricingDown from "../../assets/svgs/PricingDown.svg";
@@ -25,8 +27,17 @@ const Filters: React.FC = () => {
     const navigation = useNavigation();
     const [selected, setSelected] = useState<Record<string, boolean>>({});
     const [sortBy, setSortBy] = useState<string>('popularity');
+    const [pkgNames, setPkgNames] = useState<string[]>([]);
+    const [selectedPkgs, setSelectedPkgs] = useState<Record<string, boolean>>({});
+    const { fetchPackages } = usePackage();
+    const KEY = 'FILTERS_V1';
 
-    const reset = () => setSelected({});
+    const reset = async () => {
+        setSelected({});
+        setSelectedPkgs({});
+        setSortBy('popularity');
+        await AsyncStorage.removeItem(KEY);
+    };
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -40,21 +51,44 @@ const Filters: React.FC = () => {
         });
     }, [navigation]);
 
+    useEffect(() => {
+        (async () => {
+            try {
+                // packages for names
+                const res = await fetchPackages({ page: 1, limit: 100 });
+                const names = Array.from(new Set((res?.results || []).map((p: any) => p?.name).filter(Boolean)));
+                setPkgNames(names);
+            } catch { }
+        })();
+    }, [fetchPackages]);
+
+    useEffect(() => {
+        const unsub = navigation.addListener('focus', async () => {
+            try {
+                const raw = await AsyncStorage.getItem(KEY);
+                if (!raw) return;
+                const saved = JSON.parse(raw);
+                setSortBy(saved.sortBy || 'popularity');
+                setSelected(saved.selected || {});
+                setSelectedPkgs(saved.selectedPkgs || {});
+            } catch { }
+        });
+        return unsub;
+    }, [navigation]);
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#EFEFEF' }}>
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-                {/* Section heading */}
-                <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+                {/* Packages (from backend) */}
+                <View style={{ paddingHorizontal: 16, paddingVertical: 12, marginTop: 16 }}>
                     <Text style={{ color: '#111', fontSize: 16, fontWeight: '600' }}>Services</Text>
                 </View>
-
-                {/* Services list (dummy) */}
-                {SERVICES.map(s => {
-                    const checked = !!selected[s.id];
+                {pkgNames.map((name) => {
+                    const checked = !!selectedPkgs[name];
                     return (
                         <Pressable
-                            key={s.id}
-                            onPress={() => !s.disabled && setSelected(prev => ({ ...prev, [s.id]: !checked }))}
+                            key={name}
+                            onPress={() => setSelectedPkgs(prev => ({ ...prev, [name]: !checked }))}
                             style={{
                                 backgroundColor: '#fff',
                                 paddingHorizontal: 16,
@@ -65,20 +99,9 @@ const Filters: React.FC = () => {
                                 borderColor: '#EEE',
                             }}
                         >
-                            <Ionicons
-                                name={checked ? 'checkbox' : 'square-outline'}
-                                size={20}
-                                color={s.disabled ? '#0000004D' : '#000'}
-                            />
-                            <Text
-                                style={{
-                                    marginLeft: 12,
-                                    color: s.disabled ? '#0000004D' : '#000',
-                                    fontSize: 16,
-                                    fontWeight: '400',
-                                }}
-                            >
-                                {s.label}
+                            <Ionicons name={checked ? 'checkbox' : 'square-outline'} size={20} color="#000" />
+                            <Text style={{ marginLeft: 12, color: '#000', fontSize: 16, fontWeight: '400' }}>
+                                {name}
                             </Text>
                         </Pressable>
                     );
@@ -129,7 +152,16 @@ const Filters: React.FC = () => {
                 {/* Apply button */}
                 <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
                     <TouchableOpacity
-                        onPress={() => navigation.goBack()}
+                        onPress={async () => {
+                            const names = Object.keys(selectedPkgs).filter(k => selectedPkgs[k]);
+                            await AsyncStorage.setItem(KEY, JSON.stringify({
+                                sortBy,
+                                selected,
+                                selectedPkgs,
+                            }));
+                            DeviceEventEmitter.emit('HOME_FILTERS', { sortBy, names });
+                            navigation.goBack();
+                        }}
                         style={{
                             height: 48,
                             borderRadius: 12,
