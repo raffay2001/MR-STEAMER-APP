@@ -159,6 +159,7 @@ export const USER_INFO = 'data';
 export const CAR_PROFILE = 'CAR_PROFILE';
 export const VEHICLE_SETUP_DONE = 'VEHICLE_SETUP_DONE';
 export const HOME_AD_SEEN = 'HOME_AD_SEEN';
+export const SELECTED_CITY = 'SELECTED_CITY';
 
 export const SAUDI_CITIES = [
   'Riyadh','Jeddah','Makkah','Madinah','Dammam','Al-Khobar','Dhahran','Qatif','Jubail',

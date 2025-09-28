@@ -1,10 +1,14 @@
-// src/hooks/useAuth.ts
 import { useState, useCallback } from 'react';
-import { loginUser, registerUser, registerSteamerUser } from '../api/auth/auth.api';
+import {
+  loginUser,
+  registerUser,
+  registerSteamerUser,
+  requestPasswordReset,
+  resetPasswordWithCode,
+} from '../api/auth/auth.api';
 
 type LoginBody = { email: string; password: string };
 type RegisterBody = { email: string; password: string; role: string; name: string };
-
 type RegisterSteamerBody = {
   name: string;
   email: string;
@@ -12,6 +16,8 @@ type RegisterSteamerBody = {
   phoneNumber: string;
   companyName: 'Individual' | 'Company';
 };
+
+type ResetCodeBody = { email: string; code: string; password: string };
 
 export const useAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -46,5 +52,32 @@ export const useAuth = () => {
     }
   }, []);
 
-  return { loading, handleLogin, handleRegister, handleRegisterSteamer };
+  const handleRequestPasswordReset = useCallback(async (email: string) => {
+    setLoading(true);
+    try {
+      const res = await requestPasswordReset(email);
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleResetPasswordWithCode = useCallback(async (data: ResetCodeBody) => {
+    setLoading(true);
+    try {
+      const res = await resetPasswordWithCode(data);
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    loading,
+    handleLogin,
+    handleRegister,
+    handleRegisterSteamer,
+    handleRequestPasswordReset,
+    handleResetPasswordWithCode,
+  };
 };

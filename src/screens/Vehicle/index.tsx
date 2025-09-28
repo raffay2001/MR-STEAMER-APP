@@ -20,14 +20,14 @@ import { getAccessToken, clearAuth } from '../../hooks/useAuthStorage';
 import { setCarProfile } from '../../hooks/useCarStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { SAUDI_CITIES } from '../../constants';
+import { SAUDI_CITIES, SELECTED_CITY } from '../../constants';
 
 const SWATCHES = [
   '#000000', '#FFFFFF', '#FF0000', '#0000FF', '#008000',
   '#FFFF00', '#FFA500', '#800080', '#808080', '#A52A2A',
 ];
 
-const CITY_KEY = 'SELECTED_CITY';
+const CITY_KEY = SELECTED_CITY;
 const CITY_OPTIONS = SAUDI_CITIES;
 
 const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
@@ -96,11 +96,12 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   React.useEffect(() => {
     (async () => {
       const saved = await AsyncStorage.getItem(CITY_KEY);
-      if (saved) {
+      if (!saved || !SAUDI_CITIES.includes(saved)) {
+        setShowCityModal(true);
+        setSelectedCity(null);
+      } else {
         setSelectedCity(saved);
         setShowCityModal(false);
-      } else {
-        setShowCityModal(true); // force user to pick
       }
     })();
   }, []);

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ACCESS_TOKEN, CAR_PROFILE, HOME_AD_SEEN, REFRESH_TOKEN, USER_INFO, VEHICLE_SETUP_DONE } from '../constants';
+import { ACCESS_TOKEN, CAR_PROFILE, HOME_AD_SEEN, REFRESH_TOKEN, SELECTED_CITY, USER_INFO, VEHICLE_SETUP_DONE } from '../constants';
 
 export type StoredUser = {
   id?: string;
@@ -65,7 +65,7 @@ export const setAuth = async (opts: {
 /** Clear */
 export const clearAuth = async () => {
   try {
-    await AsyncStorage.multiRemove([ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO, CAR_PROFILE, VEHICLE_SETUP_DONE, HOME_AD_SEEN]);
+    await AsyncStorage.multiRemove([ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO, CAR_PROFILE, VEHICLE_SETUP_DONE, HOME_AD_SEEN, SELECTED_CITY]);
   } catch (err) {
     console.error('Failed to clear auth data:', err);
   }

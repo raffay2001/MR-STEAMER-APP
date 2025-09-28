@@ -3,6 +3,8 @@ export type AuthNavStackParamList = {
   SplashScreen: undefined;
   SignUpOnBoarding: undefined;
   Login: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { email?: string } | undefined;
 };
 
 export type AppNavStackParamList = {

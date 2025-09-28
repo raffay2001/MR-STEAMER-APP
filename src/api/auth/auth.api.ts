@@ -25,3 +25,12 @@ export const registerSteamerUser = (data: {
     phoneNumber: data.phoneNumber,
     companyName: data.companyName,
   });
+
+export const requestPasswordReset = (email: string) =>
+  apiClient.post('/auth/forgot-password', { email });
+
+export const resetPasswordWithCode = (data: {
+  email: string;
+  code: string;   
+  password: string;
+}) => apiClient.post('/auth/reset-password', data);

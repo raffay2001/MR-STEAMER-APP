@@ -125,7 +125,7 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
                 </Text>
               </Button>
 
-              <Pressable onPress={() => { /* forgot password flow */ }}>
+              <Pressable onPress={() => navigation.navigate('ForgotPassword')}>
                 <Text className="text-[#A4A4A4] text-center text-[16px] mt-1 font-[Poppins-Regular]">Forgot Password?</Text>
               </Pressable>
             </View>
