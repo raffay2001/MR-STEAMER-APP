@@ -23,6 +23,5 @@ export type AppNavStackParamList = {
   Success: { bookingId: string };
   BookingDetailsPage: { id?: string } | undefined;
   Vehicle: undefined;
-  Register: undefined;
   CheckOut: undefined;
 };

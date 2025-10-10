@@ -1,12 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity, TextInput
+  View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity, TextInput, Platform
 } from 'react-native';
 import { TSignUpOnBoardingProps } from './types';
 import { SvgWrapper } from '../../common/SvgWrapper';
-import { GoogleSvg, KeySvg, PersonSvg } from '../../assets/svgs';
+import { GoogleSvg } from '../../assets/svgs';
 import Button from '../../components/Button';
-import Input from '../../components/Input';
 import { ErrorSuccessToast } from '../../utils/helper';
 import FacebookLogo from '../../assets/svgs/FacebookLogo.svg';
 import AppleLogo from '../../assets/svgs/AppleIcon.svg';
@@ -15,9 +14,10 @@ import { persistAuthResponse } from '../../hooks/useAuthStorage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import i18n from '../../i18n';
 import { useTranslation } from 'react-i18next';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation }) => {
-  const { loading, handleRegister } = useAuth();
+  const { loading, handleRegister, handleGoogleLogin } = useAuth();
 
   const { t } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
@@ -68,6 +68,24 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
     }
   }, [email, password, name, validateFormFields, handleRegister, navigation]);
 
+  const onPressGoogle = useCallback(async () => {
+    try {
+      const hasPS = await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      console.log('hasPlayServices:', hasPS);
+      await GoogleSignin.signOut();
+      const res = await GoogleSignin.signIn();
+      console.log('Google signIn result:', JSON.stringify(res, null, 2));
+      const idToken = res?.data?.idToken || (res as any)?.idToken;
+      if (!idToken) throw new Error('No idToken from Google');
+      const apiResp = await handleGoogleLogin(idToken);
+      await persistAuthResponse(apiResp);
+      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+    } catch (e: any) {
+      console.log('🔴 Google sign-in error details:', e?.code, e?.message, e);
+      ErrorSuccessToast?.({ type: 'error', message1: e?.message || 'Google sign-in failed', message2: '' });
+    }
+  }, [handleGoogleLogin, navigation]);
+
   return (
     <SafeAreaView className="flex-1 bg-black">
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
@@ -89,7 +107,7 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
           <View className="px-2 pb-12 flex-1 gap-y-6">
             {/* Social */}
             <View className="gap-y-2">
-              <Button className="mb-2" variant="outlined" onPress={() => { }}>
+              <Button className="mb-2" variant="outlined" onPress={onPressGoogle}>
                 <SvgWrapper className="mr-4" xml={GoogleSvg} width={24} height={24} />
                 <Text className="text-white text-[16px] font-[Poppins-Medium]">{t('signup.continueGoogle')}</Text>
               </Button>

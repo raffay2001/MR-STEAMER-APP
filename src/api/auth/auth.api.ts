@@ -10,6 +10,9 @@ export const registerUser = (data: {
   name: string;
 }) => apiClient.post('/auth/register', data);
 
+export const googleSignInApi = (idToken: string) =>
+  apiClient.post('/auth/google', { idToken });
+
 export const registerSteamerUser = (data: {
   name: string;
   email: string;

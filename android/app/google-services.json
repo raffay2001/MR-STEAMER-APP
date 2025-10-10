@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "613815714497",
+    "project_id": "mrsteamer-cb2ef",
+    "storage_bucket": "mrsteamer-cb2ef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613815714497:android:145ec3491819903b850a40",
+        "android_client_info": {
+          "package_name": "com.mrsteamerapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "613815714497-7li2mp01g7tptbrrcg39523e7a6toq41.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mrsteamerapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "613815714497-neapamv21sgtnp1hk6ou67uhtgga9aom.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBk4VDiw2qiZwkXpM2MmOYthrBi5Qki-mk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "613815714497-neapamv21sgtnp1hk6ou67uhtgga9aom.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "613815714497-gt3e4h80qsc58u0cknghuk5p8ckrsqbq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mrsteamerapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

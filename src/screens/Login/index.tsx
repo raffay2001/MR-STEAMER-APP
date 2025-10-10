@@ -61,7 +61,7 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
 
         {/* Top bar: language toggle */}
-        <View className="flex-row justify-end px-4 pt-4">
+        <View className="flex-row justify-end px-4 pt-6">
           <Pressable
             onPress={toggleLanguage}
             style={{ paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: '#3a3a3a', borderRadius: 8 }}
@@ -72,7 +72,7 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
           </Pressable>
         </View>
 
-        <View className="relative pt-6 px-2">
+        <View className="relative pt-3 px-2">
           <Text className="text-white text-center pt-6 text-4xl font-[Poppins-SemiBold] mb-1">
             {t('login.title')}
           </Text>
@@ -84,7 +84,7 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
 
           <View className="px-2 pb-12 flex-1 gap-y-6">
             {/* Social */}
-            <View className="gap-y-2">
+            {/* <View className="gap-y-2">
               <Button className="mb-2" variant="outlined" onPress={() => { }}>
                 <SvgWrapper className="mr-2" xml={GoogleSvg} width={24} height={24} />
                 <Text className="text-white text-[16px] font-[Poppins-Medium]">
@@ -99,16 +99,16 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
                   </Text>
                 </View>
               </Button>
-            </View>
+            </View> */}
 
             {/* Divider */}
-            <View className="flex-row items-center w-full">
+            {/* <View className="flex-row items-center w-full">
               <View className="flex-1 h-[0.6px] bg-[#A4A4A4]" />
               <Text className="text-[#A4A4A4] mx-3 text-xl font-[Poppins-Regular]">
                 {t('login.or')}
               </Text>
               <View className="flex-1 h-[0.6px] bg-[#A4A4A4]" />
-            </View>
+            </View> */}
 
             {/* Form */}
             <View>

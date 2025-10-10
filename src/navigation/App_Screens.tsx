@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppNavStackParamList } from './navigation.types';
 import {
   Vehicle,
-  Register,
   CheckOut,
   Filters,
   Package,
@@ -94,11 +93,6 @@ const App_Screens: React.FC = () => {
           headerTitleAlign: 'center',
           title: i18n.language?.startsWith('ar') ? 'المركبة' : 'Vehicle',
         }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={Register}
-        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CheckOut"

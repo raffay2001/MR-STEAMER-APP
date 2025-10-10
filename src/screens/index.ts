@@ -10,7 +10,6 @@ import Success from './Success'
 import BookingDetailsPage from './BookingDetailsPage';
 import {SignUpOnBoarding} from './SignUpOnBoarding';
 import {Login} from './Login';
-import {Register} from './Register';
 import {CheckOut} from './CheckOut';
 export {
   SplashScreen,
@@ -19,7 +18,6 @@ export {
   Vehicle,
   SignUpOnBoarding,
   Login,
-  Register,
   CheckOut,
   Filters,
   PrePackage,

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   loginUser,
   registerUser,
+  googleSignInApi,
   registerSteamerUser,
   requestPasswordReset,
   resetPasswordWithCode,
@@ -26,6 +27,16 @@ export const useAuth = () => {
     setLoading(true);
     try {
       const res = await loginUser(data);
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleGoogleLogin = useCallback(async (idToken: string) => {
+    setLoading(true);
+    try {
+      const res = await googleSignInApi(idToken);
       return res.data;
     } finally {
       setLoading(false);
@@ -75,6 +86,7 @@ export const useAuth = () => {
   return {
     loading,
     handleLogin,
+    handleGoogleLogin,  
     handleRegister,
     handleRegisterSteamer,
     handleRequestPasswordReset,
