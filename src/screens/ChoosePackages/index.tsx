@@ -3,9 +3,13 @@ import { SafeAreaView, View, Text, ActivityIndicator, ScrollView, Pressable, Tou
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { usePackage } from '../../hooks/usePackage';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const ChoosePackages: React.FC = () => {
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
     const { loading, fetchPackages } = usePackage();
     const [items, setItems] = React.useState<any[]>([]);
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
@@ -13,10 +17,10 @@ const ChoosePackages: React.FC = () => {
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerShown: true,
-            title: 'Choose Packages',
+            title: t('choosePackages.title'),
             headerTitleAlign: 'center',
         });
-    }, [navigation]);
+    }, [navigation, t]);
 
     React.useEffect(() => {
         (async () => {
@@ -35,8 +39,11 @@ const ChoosePackages: React.FC = () => {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-                <Text style={{ marginTop: 8, color: '#000', fontSize: 14, fontWeight: '400' }}>
-                    Choose a package for the best service
+                <Text style={{
+                    marginTop: 8, color: '#000', fontSize: 14, fontWeight: '400',
+                    textAlign: isAr ? 'right' : 'left'
+                }}>
+                    {t('choosePackages.helper')}
                 </Text>
 
                 {loading && items.length === 0 ? (
@@ -44,7 +51,9 @@ const ChoosePackages: React.FC = () => {
                         <ActivityIndicator />
                     </View>
                 ) : items.length === 0 ? (
-                    <Text style={{ marginTop: 16, color: '#666' }}>No items.</Text>
+                    <Text style={{ marginTop: 16, color: '#666', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('choosePackages.noItems')}
+                    </Text>
                 ) : (
                     items.map(it => {
                         const active = selectedId === it.id;
@@ -117,7 +126,7 @@ const ChoosePackages: React.FC = () => {
                                         style={{ marginTop: 20, justifyContent: 'center', alignItems: 'center', width: '100%', opacity: active ? 1 : 0.5 }}
                                     >
                                         <Text style={{ color: active ? '#2D4795' : '#9CA3AF', fontWeight: '500', textDecorationLine: 'underline', fontSize: 16 }}>
-                                            Steam it
+                                            {t('choosePackages.steamIt')}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>

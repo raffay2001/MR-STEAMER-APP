@@ -18,11 +18,16 @@ import { usePackage } from '../../hooks/usePackage';
 import { useSlots, type SlotItem } from '../../hooks/useSlots';
 import { useBooking } from '../../hooks/useBooking';
 
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
+
 type RouteParams = { packageId: string };
 
 const YourBooking: React.FC = () => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
     const { packageId } = (route?.params || {}) as RouteParams;
 
     // Package details
@@ -108,10 +113,10 @@ const YourBooking: React.FC = () => {
     };
 
     const onCheckout = async () => {
-        if (!pkg?.id) return Alert.alert('Missing info', 'Package not loaded yet.');
-        if (!phone.trim()) return Alert.alert('Missing info', 'Please enter mobile number.');
-        if (!selectedDate) return Alert.alert('Missing info', 'Please select a date.');
-        if (!selectedSlot) return Alert.alert('Missing info', 'Please select a time slot.');
+        if (!pkg?.id) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noPackage'));
+        if (!phone.trim()) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noPhone'));
+        if (!selectedDate) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noDate'));
+        if (!selectedSlot) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noSlot'));
 
         const timeIso = buildTimeIso(selectedDate, selectedSlot);
         const payload = {
@@ -130,7 +135,7 @@ const YourBooking: React.FC = () => {
             navigation.navigate('Success', { bookingId: result.id });
         } catch (e) {
             console.log('[YourBooking] booking failed:', e);
-            Alert.alert('Error', 'Failed to create booking. Please try again.');
+            Alert.alert(t('booking.errorTitle'), t('booking.errors.createFail'));
         }
     };
 
@@ -153,7 +158,7 @@ const YourBooking: React.FC = () => {
 
                     <Text style={{ fontSize: 14, color: '#111' }}>
                         {pkg?.type ? `${pkg.type} • ` : ''}
-                        {typeof pkg?.pricing === 'number' ? `${pkg.pricing} SAR` : '—'}
+                        {typeof pkg?.pricing === 'number' ? `${pkg.pricing} ${t('common.sar')}` : '—'}
                     </Text>
 
                     {!!pkg?.detail && (
@@ -163,48 +168,37 @@ const YourBooking: React.FC = () => {
 
                 {/* Inputs */}
                 <View style={{ marginTop: 16 }}>
-                    <Text style={{ color: '#111', marginBottom: 8, fontWeight: '600' }}>
-                        Mobile Number
+                    <Text style={{ color: '#111', marginBottom: 8, fontWeight: '600', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('booking.mobileLabel')}
                     </Text>
                     <TextInput
-                        placeholder="Enter mobile number"
+                        placeholder={t('booking.mobilePlaceholder')}
                         placeholderTextColor="#9CA3AF"
                         keyboardType="phone-pad"
                         value={phone}
                         onChangeText={setPhone}
                         style={{
-                            height: 48,
-                            borderRadius: 10,
-                            borderWidth: 1,
-                            borderColor: '#E5E7EB',
-                            paddingHorizontal: 12,
-                            backgroundColor: '#fff',
-                            color: '#111',
+                            height: 48, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB',
+                            paddingHorizontal: 12, backgroundColor: '#fff', color: '#111', textAlign: isAr ? 'right' : 'left'
                         }}
                     />
                 </View>
 
                 <View style={{ marginTop: 16 }}>
-                    <Text style={{ color: '#111', marginBottom: 8, fontWeight: '600' }}>
-                        Message (optional)
+                    <Text style={{ color: '#111', marginBottom: 8, fontWeight: '600', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('booking.messageLabel')}
                     </Text>
                     <TextInput
-                        placeholder="Write a message for the provider"
+                        placeholder={t('booking.messagePlaceholder')}
                         placeholderTextColor="#9CA3AF"
                         value={message}
                         onChangeText={setMessage}
                         multiline
                         numberOfLines={4}
                         style={{
-                            minHeight: 100,
-                            textAlignVertical: 'top',
-                            borderRadius: 10,
-                            borderWidth: 1,
-                            borderColor: '#E5E7EB',
-                            paddingHorizontal: 12,
-                            paddingVertical: 10,
-                            backgroundColor: '#fff',
-                            color: '#111',
+                            minHeight: 100, textAlignVertical: 'top', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB',
+                            paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#111',
+                            textAlign: isAr ? 'right' : 'left'
                         }}
                     />
                 </View>
@@ -230,14 +224,13 @@ const YourBooking: React.FC = () => {
                                 paddingHorizontal: 12,
                             }}
                         >
-                            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>
-                                Availability Slot
+                            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', textAlign: 'center' }}>
+                                {t('booking.slotTitle')}
                             </Text>
-                            <Text style={{ color: '#fff', fontSize: 14 }}>
+                            <Text style={{ color: '#fff', fontSize: 14, textAlign: 'center' }}>
                                 {selectedDate
-                                    ? `${dayLabel(selectedDate)}${selectedSlot ? `, ${selectedSlot.displayTime}` : ', Select a slot'
-                                    }`
-                                    : 'Select Slot'}
+                                    ? `${dayLabel(selectedDate)}${selectedSlot ? `, ${selectedSlot.displayTime}` : `, ${t('booking.selectSlot')}`}`
+                                    : t('booking.selectSlot')}
                             </Text>
                         </LinearGradient>
                     </TouchableOpacity>
@@ -258,7 +251,7 @@ const YourBooking: React.FC = () => {
                         }}
                     >
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
-                            {creating ? 'Processing…' : 'Check out'}
+                            {creating ? t('booking.processing') : t('booking.checkout')}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -286,7 +279,7 @@ const YourBooking: React.FC = () => {
                     setSelectedSlot(s);
                     setShowSlotModal(false);
                 }}
-                title={selectedDate ? `${dayLabel(selectedDate)} — Pick a time` : 'Pick a time'}
+                title={selectedDate ? t('booking.pickTime', { day: dayLabel(selectedDate) }) : t('booking.pickTimeSimple')}
             />
         </SafeAreaView>
     );
@@ -312,6 +305,7 @@ const ModalSlots = ({
     onSelect: (s: SlotItem) => void;
     title: string;
 }) => {
+    const { t } = useTranslation();
     return (
         <React.Fragment>
             {visible && (
@@ -353,7 +347,7 @@ const ModalSlots = ({
                             <ActivityIndicator />
                         ) : slots.length === 0 ? (
                             <Text style={{ color: '#555', paddingVertical: 10 }}>
-                                No slots available for this date.
+                                {t('booking.noSlots')}
                             </Text>
                         ) : (
                             <ScrollView>

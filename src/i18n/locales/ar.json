@@ -1,0 +1,282 @@
+{
+  "common": {
+    "english": "English",
+    "arabic": "العربية",
+    "changeLanguage": "English",
+    "or": "أو",
+    "sar": "ر.س",
+    "cancel": "إلغاء"
+  },
+  "welcome": {
+    "title": "خدمات سيارات فاخرة إلى باب منزلك",
+    "signup": "إنشاء حساب",
+    "login": "تسجيل الدخول"
+  },
+  "login": {
+    "title": "مرحبًا بعودتك!",
+    "subtitle": "اشتقنا إليك",
+    "google": "تسجيل الدخول عبر جوجل",
+    "facebook": "تسجيل الدخول عبر فيسبوك",
+    "or": "أو",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "أدخل البريد الإلكتروني",
+    "emailError": "يرجى إدخال بريد إلكتروني صالح.",
+    "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "passwordError": "يجب أن تحتوي كلمة المرور على حرف كبير ورقم ورمز خاص على الأقل.",
+    "cta": "تسجيل الدخول",
+    "loggingIn": "جاري تسجيل الدخول...",
+    "forgot": "هل نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "signup": "إنشاء حساب",
+    "toastLoginFail": "فشل تسجيل الدخول. حاول مرة أخرى."
+  },
+  "signup": {
+    "title": "إنشاء حساب",
+    "continueGoogle": "تابع باستخدام جوجل",
+    "continueFacebook": "تابع باستخدام فيسبوك",
+    "continueApple": "تابع باستخدام آبل",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "أدخل البريد الإلكتروني",
+    "emailError": "يرجى إدخال بريد إلكتروني صالح.",
+    "nameLabel": "الاسم",
+    "namePlaceholder": "أدخل الاسم",
+    "nameError": "الاسم مطلوب.",
+    "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "passwordError": "يجب أن تحتوي كلمة المرور على حرف كبير ورقم ورمز خاص على الأقل.",
+    "confirmPasswordLabel": "تأكيد كلمة المرور",
+    "confirmPasswordPlaceholder": "أعد إدخال كلمة المرور",
+    "confirmPasswordError": "كلمتا المرور غير متطابقتين.",
+    "cta": "إنشاء حساب",
+    "signingUp": "جاري إنشاء الحساب...",
+    "already": "لديك حساب بالفعل؟",
+    "login": "تسجيل الدخول"
+  },
+  "forgot": {
+    "title": "نسيت كلمة المرور",
+    "subtitle": "أدخل بريد حسابك وسنرسل رمز التحقق.",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "أدخل البريد الإلكتروني",
+    "sending": "جارٍ الإرسال…",
+    "sendCode": "إرسال الرمز",
+    "remembered": "تذكّرت كلمة المرور؟",
+    "login": "تسجيل الدخول",
+    "missingTitle": "ناقص",
+    "missingDesc": "يرجى إدخال بريدك الإلكتروني.",
+    "errorTitle": "خطأ",
+    "errorFallback": "فشل إرسال الرمز."
+  },
+  "reset": {
+    "title": "إعادة تعيين كلمة المرور",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "أدخل البريد الإلكتروني",
+    "codeLabel": "رمز التحقق",
+    "codePlaceholder": "رمز من 6 أرقام",
+    "passwordLabel": "كلمة المرور الجديدة",
+    "passwordPlaceholder": "أدخل كلمة مرور جديدة",
+    "cta": "إعادة التعيين",
+    "resetting": "جارٍ إعادة التعيين…",
+    "missingTitle": "ناقص",
+    "missingDesc": "يرجى تعبئة جميع الحقول.",
+    "successTitle": "تم",
+    "successDesc": "تمت إعادة تعيين كلمة المرور.",
+    "ok": "حسناً",
+    "errorTitle": "خطأ",
+    "errorFallback": "فشل في إعادة تعيين كلمة المرور."
+  },
+  "vehicle": {
+    "selectType": "اختر نوع المركبة",
+    "noTypes": "لم يتم العثور على أنواع مركبات.",
+    "searchArea": "ابحث عن المنطقة",
+    "modal": { "title": "معلومات السيارة" },
+    "fields": {
+      "color": "لون السيارة",
+      "brand": "العلامة التجارية",
+      "name": "اسم السيارة",
+      "number": "رقم السيارة"
+    },
+    "noBrands": "لا توجد علامات متاحة.",
+    "placeholders": {
+      "name": "مثال: كورولا غراند",
+      "number": "أدخل رقم اللوحة / التسجيل"
+    },
+    "submit": "إرسال"
+  },
+  "drawer": {
+    "becomeStreamer": "كن مستريمر",
+    "choosePackages": "اختر الباقات",
+    "hireUs": "وظّفنا",
+    "ourFeatures": "مميزاتنا",
+    "aboutUs": "من نحن",
+    "bookingDetail": "تفاصيل الحجز",
+    "logout": "تسجيل الخروج"
+  },
+  "home": {
+    "searchPlaceholder": "ابحث عن شركة",
+    "services": {
+      "noPackages": "لا توجد باقات لهذه الخدمة."
+    },
+    "card": {
+      "certified": "معتمد",
+      "packagesLabel": "الباقات"
+    },
+    "fav": {
+      "titleSuffix": "الباقات",
+      "noPackages": "لا توجد باقات."
+    },
+    "vehicle": {
+      "label": "المركبة",
+      "modalTitle": "اختر نوع المركبة"
+    },
+    "slots": {
+      "availability": "مواعيد التوفر",
+      "selectSlot": "اختر موعدًا",
+      "today": "اليوم",
+      "tomorrow": "غدًا",
+      "pickTime": "اختر وقتًا",
+      "noSlots": "لا توجد مواعيد متاحة لهذا التاريخ."
+    }
+  },
+  "filters": {
+    "title": "الفلاتر",
+    "reset": "إعادة ضبط",
+    "services": "الخدمات",
+    "sortBy": "ترتيب حسب",
+    "apply": "تطبيق",
+    "sort": {
+      "popularity": "الأكثر شيوعًا",
+      "rating": "التقييم",
+      "discount": "الخصم",
+      "price_desc": "السعر",
+      "price_asc": "السعر"
+    }
+  },
+  "prePackage": {
+        "fallbackName": "الباقة",
+        "reviews_one": "{{count}} مراجعة",
+        "reviews_other": "{{count}} مراجعات",
+        "avg": "متوسط {{avg}} / 5",
+        "noReviews": "لا توجد مراجعات بعد.",
+        "packageLabel": "الباقة",
+        "cta": "ابدأ التبخير",
+        "modalTitle": "{{name}} — الباقات",
+        "noPackages": "لا توجد باقات."
+    },
+    "package": {
+        "title": "الباقات",
+        "choose": "اختر باقة للحصول على أفضل خدمة",
+        "noItems": "لا توجد عناصر.",
+        "cta": "ابدأ التبخير"
+    },
+    "booking": {
+        "mobileLabel": "رقم الجوال",
+        "mobilePlaceholder": "أدخل رقم الجوال",
+        "messageLabel": "رسالة (اختياري)",
+        "messagePlaceholder": "اكتب رسالة للمزود",
+        "slotTitle": "موعد التوفر",
+        "selectSlot": "اختر موعدًا",
+        "checkout": "إتمام الحجز",
+        "processing": "جارٍ المعالجة…",
+        "pickTime": "{{day}} — اختر الوقت",
+        "pickTimeSimple": "اختر الوقت",
+        "noSlots": "لا توجد مواعيد متاحة لهذا التاريخ.",
+        "errorTitle": "بيانات ناقصة",
+        "errors": {
+            "noPackage": "الباقة غير محمّلة بعد.",
+            "noPhone": "يرجى إدخال رقم الجوال.",
+            "noDate": "يرجى اختيار التاريخ.",
+            "noSlot": "يرجى اختيار وقت الموعد.",
+            "createFail": "فشل إنشاء الحجز. حاول مرة أخرى."
+        }
+    },
+    "success": {
+        "bookingId": "رقم الحجز",
+        "email": "البريد الإلكتروني",
+        "payment": "الدفع",
+        "paymentOnSite": "عند الموقع",
+        "successful": "تم بنجاح!",
+        "tip": "نصيحة: التقط لقطة شاشة لهذه الصفحة للاحتفاظ بتأكيد حجزك.",
+        "detailsBtn": "تفاصيل الحجز",
+        "backHome": "العودة إلى الرئيسية"
+    },
+    "bookingDetails": {
+        "title": "حجوزاتك الأخيرة",
+        "empty": "لا توجد حجوزات.",
+        "timeSlot": "الوقت",
+        "bookingId": "رقم الحجز",
+        "to": "إلى",
+        "rated": "تم التقييم",
+        "ratePrompt": "قيّم هذه الباقة",
+        "reviewPlaceholder": "اكتب مراجعة قصيرة (اختياري)",
+        "submit": "إرسال التقييم",
+        "processing": "جارٍ المعالجة…",
+        "loadMore": "تحميل المزيد",
+        "errTitle": "خطأ",
+        "errMissingPkg": "معرّف الباقة مفقود",
+        "ratingTitle": "التقييم",
+        "errMinStar": "يرجى اختيار نجمة واحدة على الأقل.",
+        "thanksTitle": "شكرًا لك!",
+        "thanksMsg": "تم إرسال تقييمك.",
+        "errSubmit": "فشل إرسال التقييم."
+    },
+    "become": {
+        "title": "كن مستر ستيمر",
+        "body": "انضم إلى فريقنا ونمِّ عملك عبر خدمات البخار الاحترافية. قدّم الآن وسنرشدك خلال عملية تسجيل سريعة.",
+        "register": "سجّل"
+    },
+    "registerSteamer": {
+    "title": "سجّل معنا",
+    "fields": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الجوال",
+      "password": "كلمة المرور",
+      "type": "فرد / شركة"
+    },
+    "placeholders": {
+      "name": "أدخل الاسم",
+      "email": "أدخل البريد الإلكتروني",
+      "phone": "أدخل رقم الجوال",
+      "password": "أدخل كلمة المرور"
+    },
+    "select": "اختيار",
+    "companyType": {
+      "individual": "فرد",
+      "company": "شركة"
+    },
+    "btn": {
+      "register": "تسجيل",
+      "registering": "جارٍ التسجيل…"
+    },
+    "missing": {
+      "title": "بيانات ناقصة",
+      "body": "يرجى تعبئة جميع الحقول."
+    },
+    "success": {
+      "title": "تم بنجاح",
+      "body": "تم تسجيل مقدّم الخدمة بنجاح!"
+    },
+    "error": {
+      "title": "خطأ",
+      "body": "فشل في عملية التسجيل."
+    }
+  },
+  "choosePackages": {
+    "title": "اختر الباقات",
+    "helper": "اختر باقة للحصول على أفضل خدمة",
+    "noItems": "لا توجد عناصر.",
+    "steamIt": "ابدأ التبخير"
+  },
+  "features": {
+    "title": "مميزاتنا",
+    "items": {
+      "1": { "title": "صديق للبيئة", "desc": "نستخدم مواد تنظيف ومعدات عالية الجودة ومواد فاخرة." },
+      "2": { "title": "توفير للمياه", "desc": "التنظيف بالبخار يوفر الماء دون التأثير على النتائج." },
+      "3": { "title": "توفير للوقت", "desc": "خدمة سريعة وفعّالة تناسب جدولك." },
+      "4": { "title": "بدون متاعب", "desc": "نصل إليك—لا طوابير ولا انتظار." },
+      "5": { "title": "سهل الاستخدام", "desc": "حجز بسيط وتسعير واضح." },
+      "6": { "title": "متاح 24/7", "desc": "احجز في أي وقت يناسبك." }
+    }
+  }
+}

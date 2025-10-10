@@ -8,6 +8,8 @@ import {
     StatusBar,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 // SVG icons (add these files)
 import Icon1 from '../../assets/svgs/feature-1.svg';
@@ -18,15 +20,19 @@ import Icon5 from '../../assets/svgs/feature-5.svg';
 import Icon6 from '../../assets/svgs/feature-6.svg';
 
 const FEATURES = [
-    { id: '1', title: 'Eco Friendly', desc: 'We use high-quality cleaning agents and equipment as well as premium materials.', Icon: Icon1 },
-    { id: '2', title: 'Water Conservative', desc: 'We use high-quality cleaning agents and equipment as well as premium materials.', Icon: Icon2 },
-    { id: '3', title: 'Time Saving', desc: 'We use high-quality cleaning agents and equipment as well as premium materials.', Icon: Icon3 },
-    { id: '4', title: 'Hassle Free', desc: 'We use high-quality cleaning agents and equipment as well as premium materials.', Icon: Icon4 },
-    { id: '5', title: 'User Friendly', desc: 'We use high-quality cleaning agents and equipment as well as premium materials.', Icon: Icon5 },
-    { id: '6', title: '24/7 Availability', desc: 'We use high-quality cleaning agents and equipment as well as premium materials.', Icon: Icon6 },
+    { id: '1', Icon: Icon1 },
+    { id: '2', Icon: Icon2 },
+    { id: '3', Icon: Icon3 },
+    { id: '4', Icon: Icon4 },
+    { id: '5', Icon: Icon5 },
+    { id: '6', Icon: Icon6 },
 ];
 
 const OurFeatures: React.FC = () => {
+
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
             <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
@@ -46,48 +52,61 @@ const OurFeatures: React.FC = () => {
                 <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
                     {/* Title */}
                     <View style={{ paddingTop: 120, paddingHorizontal: 20, alignItems: 'center' }}>
-                        <Text style={{ color: '#fff', fontSize: 30, fontWeight: '500', letterSpacing: 0.5 }}>
-                            Our Features
+                        <Text
+                            style={{
+                                color: '#fff',
+                                fontSize: 30,
+                                fontWeight: '500',
+                                letterSpacing: 0.5,
+                                textAlign: 'center',
+                                width: '100%',
+                            }}
+                        >
+                            {t('features.title')}
                         </Text>
                     </View>
 
                     {/* Features grid (no white background) */}
                     <View style={{ marginTop: 24, paddingHorizontal: 16 }}>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                            {FEATURES.map(({ id, title, desc, Icon }) => (
-                                <View
-                                    key={id}
-                                    style={{
-                                        width: '48%',
-                                        borderRadius: 14,
-                                        paddingVertical: 14,
-                                        paddingHorizontal: 10,
-                                        marginBottom: 12,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    {/* Circle + Icon */}
+                            {FEATURES.map(({ id, Icon }) => {
+                                const title = t(`features.items.${id}.title`);
+                                const desc = t(`features.items.${id}.desc`);
+                                return (
                                     <View
+                                        key={id}
                                         style={{
-                                            width: 54,
-                                            height: 54,
-                                            borderRadius: 27,
-                                            backgroundColor: "#fff",
-                                            alignItems: 'center',
+                                            width: '48%',
+                                            borderRadius: 14,
+                                            paddingVertical: 14,
+                                            paddingHorizontal: 10,
+                                            marginBottom: 12,
                                             justifyContent: 'center',
-                                            marginBottom: 10,
+                                            alignItems: 'center',
                                         }}
                                     >
-                                        <Icon width={28} height={28} fill="#FFFFFF" />
-                                    </View>
+                                        {/* Circle + Icon */}
+                                        <View
+                                            style={{
+                                                width: 54,
+                                                height: 54,
+                                                borderRadius: 27,
+                                                backgroundColor: "#fff",
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginBottom: 10,
+                                            }}
+                                        >
+                                            <Icon width={28} height={28} fill="#FFFFFF" />
+                                        </View>
 
-                                    <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>{title}</Text>
-                                    <Text style={{ color: 'rgba(255,255,255,0.8)', marginTop: 4, fontSize: 12 }}>
-                                        {desc}
-                                    </Text>
-                                </View>
-                            ))}
+                                        <Text style={{ color: '#FFFFFF', fontWeight: '700', textAlign: 'center' }}>{title}</Text>
+                                        <Text style={{ color: 'rgba(255,255,255,0.8)', marginTop: 4, fontSize: 12, textAlign: 'center' }}>
+                                            {desc}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
                         </View>
                     </View>
                 </ScrollView>

@@ -15,8 +15,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useBooking } from '../../hooks/useBooking';
 import { getUserData } from '../../hooks/useAuthStorage';
 import { getRatedPackages, markPackageRated } from '../../hooks/useRatingStorage';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const BookingDetailsPage: React.FC = () => {
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
     const { loading, fetchBookingsByUserId } = useBooking();
     const navigation = useNavigation<any>();
     const [items, setItems] = React.useState<any[]>([]);
@@ -77,7 +81,7 @@ const BookingDetailsPage: React.FC = () => {
         if (!iso) return '—';
         const start = new Date(iso);
         const end = new Date(start.getTime() + (durationMin ?? 60) * 60000);
-        return `${to12h(start)} to ${to12h(end)}`;
+        return `${to12h(start)} ${t('bookingDetails.to')} ${to12h(end)}`;
     };
 
     const statusColor = (s?: string) =>
@@ -95,8 +99,8 @@ const BookingDetailsPage: React.FC = () => {
 
     const submitFor = async (b: any) => {
         const pkgId = b?.packageId?.id || b?.package?.id;
-        const pkgKey = b?.packageId?.name || b?.package?.name || ''; // package name key
-        if (!pkgId) return Alert.alert('Error', 'Missing package id');
+        const pkgKey = b?.packageId?.name || b?.package?.name || '';
+        if (!pkgId) return Alert.alert(t('bookingDetails.errTitle'), t('bookingDetails.errMissingPkg'));
 
         // block if already rated this package name
         if (pkgKey && ratedSet.has(pkgKey)) {
@@ -104,7 +108,7 @@ const BookingDetailsPage: React.FC = () => {
         }
 
         const star = starsByBooking[b.id] || 0;
-        if (star < 1) return Alert.alert('Rating', 'Please select at least 1 star.');
+        if (star < 1) return Alert.alert(t('bookingDetails.ratingTitle'), t('bookingDetails.errMinStar'));
 
         try {
             setSubmittingFor(b.id);
@@ -117,11 +121,11 @@ const BookingDetailsPage: React.FC = () => {
                 await markPackageRated(userId, pkgKey);
                 setRatedSet(prev => new Set(prev).add(pkgKey));
             }
-            Alert.alert('Thank you!', 'Your rating has been submitted.');
+            Alert.alert(t('bookingDetails.thanksTitle'), t('bookingDetails.thanksMsg'));
             setStarsByBooking(p => ({ ...p, [b.id]: 0 }));
             setDescByBooking(p => ({ ...p, [b.id]: '' }));
         } catch (e: any) {
-            Alert.alert('Error', e?.response?.data?.message || 'Failed to submit rating.');
+            Alert.alert(t('bookingDetails.errTitle'), e?.response?.data?.message || t('bookingDetails.errSubmit'));
         } finally {
             setSubmittingFor(null);
         }
@@ -130,8 +134,8 @@ const BookingDetailsPage: React.FC = () => {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <View style={{ padding: 16 }}>
-                <Text style={{ fontSize: 18, fontWeight: '500', color: '#111' }}>
-                    Your recent bookings
+                <Text style={{ fontSize: 18, fontWeight: '500', color: '#111', textAlign: isAr ? 'right' : 'left' }}>
+                    {t('bookingDetails.title')}
                 </Text>
             </View>
 
@@ -141,7 +145,9 @@ const BookingDetailsPage: React.FC = () => {
                 </View>
             ) : items.length === 0 ? (
                 <View style={{ padding: 16 }}>
-                    <Text style={{ color: '#777' }}>No bookings found.</Text>
+                    <Text style={{ color: '#777', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('bookingDetails.empty')}
+                    </Text>
                 </View>
             ) : (
                 <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
@@ -181,17 +187,18 @@ const BookingDetailsPage: React.FC = () => {
                                 onPress={() => navigation.navigate('Success', { bookingId: b.id })}
                             >
                                 {/* Header: service name */}
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center' }}>
                                     <View
                                         style={{
                                             width: 36,
                                             height: 36,
                                             borderRadius: 8,
                                             backgroundColor: '#0F172A',
-                                            marginRight: 10,
+                                            marginRight: isAr ? 0 : 10,
+                                            marginLeft: isAr ? 10 : 0,
                                         }}
                                     />
-                                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '700', flex: 1 }}>
+                                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '700', flex: 1, textAlign: isAr ? 'right' : 'left' }}>
                                         {serviceName}
                                     </Text>
                                 </View>
@@ -200,28 +207,32 @@ const BookingDetailsPage: React.FC = () => {
                                 <View style={{ height: 1, backgroundColor: '#EAEAEA', marginVertical: 10 }} />
 
                                 {/* Row: package name (left) — price (right) */}
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <View>
-                                        <Text style={{ color: '#2D5BD1', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' }}>
+                                        <Text style={{ color: '#2D5BD1', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline', textAlign: isAr ? 'right' : 'left' }}>
                                             {pkgName}
                                         </Text>
                                     </View>
-                                    <Text style={{ color: '#111', fontSize: 14, fontWeight: '600' }}>
+                                    <Text style={{ color: '#111', fontSize: 14, fontWeight: '600', textAlign: isAr ? 'left' : 'right' }}>
                                         {price != null ? `${price} SAR` : '—'}
                                     </Text>
                                 </View>
 
                                 {/* Time slot */}
-                                <View style={{ marginTop: 10 }}>
-                                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>Time Slot</Text>
-                                    <Text style={{ color: '#111', fontSize: 13, marginTop: 2 }}>{timeSlot}</Text>
-                                </View>
+                                <Text style={{ color: '#9CA3AF', fontSize: 12, textAlign: isAr ? 'right' : 'left' }}>
+                                    {t('bookingDetails.timeSlot')}
+                                </Text>
+                                <Text style={{ color: '#111', fontSize: 13, marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                                    {timeSlot}
+                                </Text>
 
                                 {/* Booking ID */}
-                                <View style={{ marginTop: 8 }}>
-                                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>Booking ID</Text>
-                                    <Text style={{ color: '#111', fontSize: 13, marginTop: 2 }}>{b?.bookingId || '—'}</Text>
-                                </View>
+                                <Text style={{ color: '#9CA3AF', fontSize: 12, textAlign: isAr ? 'right' : 'left' }}>
+                                    {t('bookingDetails.bookingId')}
+                                </Text>
+                                <Text style={{ color: '#111', fontSize: 13, marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                                    {b?.bookingId || '—'}
+                                </Text>
 
                                 {/* Status centered */}
                                 <View style={{ marginTop: 10, alignItems: 'center' }}>
@@ -246,18 +257,18 @@ const BookingDetailsPage: React.FC = () => {
                                                     justifyContent: 'center',
                                                 }}
                                             >
-                                                <Text style={{ color: '#fff', fontWeight: '700' }}>Rated</Text>
+                                                <Text style={{ color: '#fff', fontWeight: '700' }}>{t('bookingDetails.rated')}</Text>
                                             </TouchableOpacity>
                                         </View>
                                     ) : (
                                         // user can rate (completed & not yet rated)
                                         <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderColor: '#EEE' }}>
-                                            <Text style={{ color: '#111', fontWeight: '600', marginBottom: 8 }}>
-                                                Rate this package
+                                            <Text style={{ color: '#111', fontWeight: '600', marginBottom: 8, textAlign: isAr ? 'right' : 'left' }}>
+                                                {t('bookingDetails.ratePrompt')}
                                             </Text>
 
                                             {/* Stars */}
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', marginBottom: 8 }}>
                                                 {Array.from({ length: 5 }).map((_, i) => {
                                                     const idx = i + 1;
                                                     const filled = idx <= (starsByBooking[b.id] || 0);
@@ -265,13 +276,9 @@ const BookingDetailsPage: React.FC = () => {
                                                         <TouchableOpacity
                                                             key={idx}
                                                             onPress={() => setStar(b.id, idx)}
-                                                            style={{ marginRight: 6 }}
+                                                            style={{ marginRight: isAr ? 0 : 6, marginLeft: isAr ? 6 : 0 }}
                                                         >
-                                                            <Ionicons
-                                                                name={filled ? 'star' : 'star-outline'}
-                                                                size={22}
-                                                                color={filled ? '#FACC15' : '#9CA3AF'}
-                                                            />
+                                                            <Ionicons name={filled ? 'star' : 'star-outline'} size={22} color={filled ? '#FACC15' : '#9CA3AF'} />
                                                         </TouchableOpacity>
                                                     );
                                                 })}
@@ -279,7 +286,7 @@ const BookingDetailsPage: React.FC = () => {
 
                                             {/* Optional review */}
                                             <TextInput
-                                                placeholder="Write a short review (optional)"
+                                                placeholder={t('bookingDetails.reviewPlaceholder')}
                                                 placeholderTextColor="#9CA3AF"
                                                 value={descByBooking[b.id] || ''}
                                                 onChangeText={(v) => setDesc(b.id, v)}
@@ -311,7 +318,9 @@ const BookingDetailsPage: React.FC = () => {
                                                 {submittingFor === b.id ? (
                                                     <ActivityIndicator color="#fff" />
                                                 ) : (
-                                                    <Text style={{ color: '#fff', fontWeight: '700' }}>Submit Rating</Text>
+                                                    <Text style={{ color: '#fff', fontWeight: '700' }}>
+                                                        {submittingFor === b.id ? t('bookingDetails.processing') : t('bookingDetails.submit')}
+                                                    </Text>
                                                 )}
                                             </TouchableOpacity>
                                         </View>
@@ -337,7 +346,9 @@ const BookingDetailsPage: React.FC = () => {
                             {loadingMore ? (
                                 <ActivityIndicator color="#fff" />
                             ) : (
-                                <Text style={{ color: '#fff', fontWeight: '700' }}>Load more</Text>
+                                <Text style={{ color: '#fff', fontWeight: '700' }}>
+                                    {t('bookingDetails.loadMore')}
+                                </Text>
                             )}
                         </TouchableOpacity>
                     ) : null}

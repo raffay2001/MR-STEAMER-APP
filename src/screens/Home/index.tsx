@@ -32,9 +32,13 @@ import PackageCardImg from "../../assets/svgs/PackageCardImg.svg"
 import { getUserData } from '../../hooks/useAuthStorage';
 import { useFavourites } from '../../hooks/useFavourites';
 import { useRating } from '../../hooks/useRating';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 export const Home: React.FC<TNavProps> = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   const { loading: servicesLoading, fetchServices, fetchPackagesByService } = useServices();
   const [services, setServices] = React.useState<any[]>([]);
   const [selectedServiceId, setSelectedServiceId] = React.useState<string | null>(null);
@@ -294,7 +298,7 @@ export const Home: React.FC<TNavProps> = () => {
       <ScrollView className="flex-1 mt-3">
         <View className="px-5">
           <SearchInput
-            placeholder="Search Company"
+            placeholder={t('home.searchPlaceholder')}
           />
         </View>
 
@@ -334,7 +338,9 @@ export const Home: React.FC<TNavProps> = () => {
           {packagesLoading ? (
             <ActivityIndicator />
           ) : packages.length === 0 ? (
-            <Text className="text-black/60">No packages for this service.</Text>
+            <Text className="text-black/60" style={{ textAlign: isAr ? 'right' : 'left' }}>
+              {t('home.services.noPackages')}
+            </Text>
           ) : (
             sortedGroups.map((g) => {
               const p = g.sample;
@@ -386,7 +392,7 @@ export const Home: React.FC<TNavProps> = () => {
 
                         {/* Certified pill */}
                         <View className="mt-1 bg-[#2E9E00] rounded-full px-3 py-1 self-start">
-                          <Text className="text-white text-[12px] font-semibold">Certified</Text>
+                          <Text className="text-white text-[12px] font-semibold">{t('home.card.certified')}</Text>
                         </View>
                       </View>
                     </View>
@@ -404,13 +410,15 @@ export const Home: React.FC<TNavProps> = () => {
 
                   <View className='flex flex-row items-center justify-between'>
                     <View>
-                      <Text className='text-black text-[14px] font-medium'>Packages</Text>
+                      <Text className='text-black text-[14px] font-medium' style={{ textAlign: isAr ? 'right' : 'left' }}>
+                        {t('home.card.packagesLabel')}
+                      </Text>
                     </View>
 
                     <View className='flex flex-col justify-start items-start gap-1' style={{ width: '50%' }}>
                       {g.types.length > 0 ? (
                         g.types.map((t) => (
-                          <Text key={t} className='text-[#232323] text-[11px] font-light'>{t}</Text>
+                          <Text key={t} className='text-[#232323] text-[11px] font-light' style={{ textAlign: isAr ? 'right' : 'left' }}>{t}</Text>
                         ))
                       ) : (
                         <Text className='text-[#232323] text-[11px] font-light'>—</Text>
@@ -422,11 +430,11 @@ export const Home: React.FC<TNavProps> = () => {
 
                   <View className='flex flex-row items-center justify-between'>
                     <View>
-                      <Text className='text-black text-[14px] font-medium'>{g.name}</Text>
+                      <Text className='text-black text-[14px] font-medium' style={{ textAlign: isAr ? 'right' : 'left' }}>{g.name}</Text>
                     </View>
 
                     <View className='pr-2'>
-                      <Text className='text-[#000] text-[14px] font-medium'>{`${g.minPrice} SAR`}</Text>
+                      <Text className='text-[#000] text-[14px] font-medium' style={{ textAlign: isAr ? 'left' : 'right' }}>{`${g.minPrice} SAR`}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -446,14 +454,16 @@ export const Home: React.FC<TNavProps> = () => {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 14 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111' }}>{favModalTitle} — Packages</Text>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111' }}>
+                {favModalTitle} — {t('home.fav.titleSuffix')}
+              </Text>
               <TouchableOpacity onPress={() => setFavModalVisible(false)} style={{ padding: 6 }}>
                 <Ionicons name="close" size={20} color="#111" />
               </TouchableOpacity>
             </View>
 
             {favModalItems.length === 0 ? (
-              <Text style={{ color: '#555' }}>No packages.</Text>
+              <Text style={{ color: '#555' }}>{t('home.fav.noPackages')}</Text>
             ) : (
               <ScrollView>
                 {favModalItems.map((pkg: any) => {
@@ -473,7 +483,9 @@ export const Home: React.FC<TNavProps> = () => {
                     >
                       <View style={{ flex: 1, paddingRight: 12 }}>
                         <Text style={{ color: '#111', fontWeight: '600' }}>{pkg.type || '—'}</Text>
-                        <Text style={{ color: '#666', marginTop: 2 }}>{`${pkg.pricing ?? 0} SAR`}</Text>
+                        <Text style={{ color: '#666', marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                          {`${pkg.pricing ?? 0} SAR`}
+                        </Text>
                       </View>
 
                       <TouchableOpacity
@@ -674,6 +686,8 @@ const ServiceCard = ({
 };
 
 const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label: string) => void }) => {
+  const { t } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   const [vehicleName, setVehicleName] = React.useState<string>('Sedan');
   const { fetchEnumById, fetchEnumsByType } = useEnums();
   const [showVehicleModal, setShowVehicleModal] = React.useState(false);
@@ -758,7 +772,9 @@ const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label
             }
           }}
         >
-          <Text className="text-[15px] text-black font-normal">Vehicle</Text>
+          <Text className="text-[15px] text-black font-normal" style={{ textAlign: isAr ? 'right' : 'left' }}>
+            {t('home.vehicle.label')}
+          </Text>
           <Text className="text-[15px] text-black font-medium">{vehicleName}</Text>
         </TouchableOpacity>
 
@@ -783,12 +799,12 @@ const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label
             }}
           >
             <Text className="text-white text-[14px] font-semibold text-center">
-              Availability Slot
+              {t('home.slots.availability')}
             </Text>
             <Text className="text-white text-[14px] text-center">
               {selectedDate
-                ? `${dayLabel(selectedDate)}${selectedSlot ? `, ${selectedSlot.displayTime}` : ', Select a slot'}`
-                : 'Select Slot'}
+                ? `${dayLabel(selectedDate)}${selectedSlot ? `, ${selectedSlot.displayTime}` : `, ${t('home.slots.selectSlot')}`}`
+                : t('home.slots.selectSlot')}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -816,7 +832,7 @@ const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label
           <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 12, elevation: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>
-                {selectedDate ? `${dayLabel(selectedDate)} — Pick a time` : 'Pick a time'}
+                {selectedDate ? `${dayLabel(selectedDate)} — ${t('home.slots.pickTime')}` : t('home.slots.pickTime')}
               </Text>
               <TouchableOpacity onPress={() => setShowSlotModal(false)} style={{ padding: 6 }}>
                 <Ionicons name="close" size={20} color="#111" />
@@ -825,7 +841,7 @@ const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label
             {slotsLoading ? (
               <ActivityIndicator />
             ) : slots.length === 0 ? (
-              <Text style={{ color: '#555', paddingVertical: 10 }}>No slots available for this date.</Text>
+              <Text style={{ color: '#555', paddingVertical: 10 }}>{t('home.slots.noSlots')}</Text>
             ) : (
               <ScrollView>
                 {slots.map((s, i) => {
@@ -865,7 +881,9 @@ const HomeButtons = ({ onVehicleChange }: { onVehicleChange?: (id: string, label
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 12, elevation: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>Select vehicle type</Text>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>
+                {t('home.vehicle.modalTitle')}
+              </Text>
               <TouchableOpacity onPress={() => setShowVehicleModal(false)} style={{ padding: 6 }}>
                 <Ionicons name="close" size={20} color="#111" />
               </TouchableOpacity>

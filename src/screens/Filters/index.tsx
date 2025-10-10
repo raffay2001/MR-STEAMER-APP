@@ -6,14 +6,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import PricingDown from "../../assets/svgs/PricingDown.svg";
 import PricingUp from "../../assets/svgs/PricingUp.svg";
-
-const SERVICES = [
-    { id: 'car-wash', label: 'Car Wash', disabled: false },
-    { id: 'tyre-replacement', label: 'Tyre Replacement', disabled: true },
-    { id: 'oil-change', label: 'Oil Change', disabled: true },
-    { id: 'roadside', label: 'Roadside Assistance', disabled: true },
-    { id: 'tow', label: 'Car Tow Service', disabled: true },
-];
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const SORT_OPTIONS = [
     { id: 'popularity', label: 'Popularity' },
@@ -25,6 +19,8 @@ const SORT_OPTIONS = [
 
 const Filters: React.FC = () => {
     const navigation = useNavigation();
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
     const [selected, setSelected] = useState<Record<string, boolean>>({});
     const [sortBy, setSortBy] = useState<string>('popularity');
     const [pkgNames, setPkgNames] = useState<string[]>([]);
@@ -41,15 +37,15 @@ const Filters: React.FC = () => {
 
     useLayoutEffect(() => {
         navigation.setOptions({
-            headerTitle: 'Filters',
+            headerTitle: t('filters.title'),
             headerTitleAlign: 'center',
             headerRight: () => (
                 <TouchableOpacity onPress={reset} style={{ paddingHorizontal: 8 }}>
-                    <Text style={{ color: '#111', fontSize: 14 }}>Reset</Text>
+                    <Text style={{ color: '#111', fontSize: 14 }}>{t('filters.reset')}</Text>
                 </TouchableOpacity>
             ),
         });
-    }, [navigation]);
+    }, [navigation, t]);
 
     useEffect(() => {
         (async () => {
@@ -81,7 +77,9 @@ const Filters: React.FC = () => {
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Packages (from backend) */}
                 <View style={{ paddingHorizontal: 16, paddingVertical: 12, marginTop: 16 }}>
-                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '600' }}>Services</Text>
+                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '600', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('filters.services')}
+                    </Text>
                 </View>
                 {pkgNames.map((name) => {
                     const checked = !!selectedPkgs[name];
@@ -93,14 +91,29 @@ const Filters: React.FC = () => {
                                 backgroundColor: '#fff',
                                 paddingHorizontal: 16,
                                 height: 52,
-                                flexDirection: 'row',
+                                flexDirection: isAr ? 'row-reverse' : 'row',
                                 alignItems: 'center',
                                 borderBottomWidth: 1,
                                 borderColor: '#EEE',
                             }}
                         >
-                            <Ionicons name={checked ? 'checkbox' : 'square-outline'} size={20} color="#000" />
-                            <Text style={{ marginLeft: 12, color: '#000', fontSize: 16, fontWeight: '400' }}>
+                            <Ionicons
+                                name={checked ? 'checkbox' : 'square-outline'}
+                                size={20}
+                                color="#000"
+                                style={{
+                                    marginLeft: isAr ? 12 : 0,
+                                    marginRight: isAr ? 0 : 12,
+                                }}
+                            />
+                            <Text
+                                style={{
+                                    color: '#000',
+                                    fontSize: 16,
+                                    fontWeight: '400',
+                                    textAlign: isAr ? 'right' : 'left',
+                                }}
+                            >
                                 {name}
                             </Text>
                         </Pressable>
@@ -109,7 +122,9 @@ const Filters: React.FC = () => {
 
                 {/* Sort By heading */}
                 <View style={{ paddingHorizontal: 16, paddingVertical: 12, marginTop: 16 }}>
-                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '600' }}>Sort By</Text>
+                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '600', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('filters.sortBy')}
+                    </Text>
                 </View>
 
                 {/* Sort By list */}
@@ -123,28 +138,45 @@ const Filters: React.FC = () => {
                                 backgroundColor: '#fff',
                                 paddingHorizontal: 16,
                                 height: 52,
-                                flexDirection: 'row',
+                                width: '100%',
+                                flexDirection: isAr ? 'row-reverse' : 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
                                 borderBottomWidth: 1,
                                 borderColor: '#EEE',
                             }}
                         >
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View
+                                style={{
+                                    flex: 1,
+                                    flexDirection: isAr ? 'row-reverse' : 'row',
+                                    alignItems: 'center',
+                                }}
+                            >
                                 <Ionicons
                                     name={checked ? 'radio-button-on' : 'radio-button-off'}
                                     size={20}
                                     color="#111"
                                 />
-                                <Text style={{ marginLeft: 12, color: '#232323', fontSize: 14, fontWeight: '500', marginRight: 15 }}>
-                                    {opt.label}
+                                <Text
+                                    style={{
+                                        flex: 1,
+                                        color: '#232323',
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        marginLeft: isAr ? 0 : 12,
+                                        marginRight: isAr ? 12 : 0,
+                                        textAlign: isAr ? 'right' : 'left',
+                                    }}
+                                >
+                                    {t(`filters.sort.${opt.id}`)}
                                 </Text>
-                                {opt.trailing === 'down' ? (
-                                    <PricingDown width={18} height={18} />
-                                ) : opt.trailing === 'up' ? (
-                                    <PricingUp width={18} height={18} />
-                                ) : null}
                             </View>
+
+                            {opt.trailing === 'down' ? (
+                                <PricingDown width={18} height={18} />
+                            ) : opt.trailing === 'up' ? (
+                                <PricingUp width={18} height={18} />
+                            ) : null}
                         </Pressable>
                     );
                 })}
@@ -170,7 +202,9 @@ const Filters: React.FC = () => {
                             justifyContent: 'center',
                         }}
                     >
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Apply</Text>
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+                            {t('filters.apply')}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

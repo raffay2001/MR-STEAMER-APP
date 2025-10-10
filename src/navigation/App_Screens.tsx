@@ -15,6 +15,7 @@ import {
 import MyDrawer from './Drawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VEHICLE_SETUP_DONE } from '../constants';
+import i18n from '../i18n';
 
 const Stack = createNativeStackNavigator<AppNavStackParamList>();
 
@@ -43,7 +44,7 @@ const App_Screens: React.FC = () => {
         name="Filters"
         component={Filters}
         options={{
-          title: 'Filters',
+          title: i18n.language?.startsWith('ar') ? 'الفلاتر' : 'Filters',
           headerTitleAlign: 'center',
         }}
       />
@@ -51,28 +52,28 @@ const App_Screens: React.FC = () => {
         name="PrePackage"
         component={PrePackage}
         options={{
-          title: 'Car Service',
+          title: i18n.language?.startsWith('ar') ? 'خدمة السيارة' : 'Car Service',
           headerTitleAlign: 'center',
         }}
       />
       <Stack.Screen
         name="Package"
         component={Package}
-        options={({ route }) => ({
-          title: 'Packages',
+        options={{
+          title: i18n.language?.startsWith('ar') ? 'الباقات' : 'Packages',
           headerTitleAlign: 'center',
-        })}
+        }}
       />
       <Stack.Screen
         name="YourBooking"
         component={YourBooking}
-        options={{ title: 'Your Booking', headerTitleAlign: 'center' }}
+        options={{ title: i18n.language?.startsWith('ar') ? 'حجزك' : 'Your Booking', headerTitleAlign: 'center' }}
       />
       <Stack.Screen
         name="Success"
         component={Success}
         options={{
-          title: 'Successful Booking',
+          title: i18n.language?.startsWith('ar') ? 'حجز ناجح' : 'Successful Booking',
           headerTitleAlign: 'center',
           headerBackVisible: false,
           gestureEnabled: false,
@@ -81,23 +82,18 @@ const App_Screens: React.FC = () => {
       <Stack.Screen
         name="BookingDetailsPage"
         component={BookingDetailsPage}
-        options={{ title: 'Booking Details', headerTitleAlign: 'center' }}
+        options={{
+          title: i18n.language?.startsWith('ar') ? 'تفاصيل الحجز' : 'Booking Details',
+          headerTitleAlign: 'center',
+        }}
       />
       <Stack.Screen
-        options={({ navigation }) => ({
-          headerTitleAlign: 'center',
-          // headerLeft: () => (
-          //   <SvgWrapper
-          //     xml={Icons.backIcon}
-          //     width={15}
-          //     height={15}
-          //     icon={true}
-          //     onPress={() => navigation.goBack()}
-          //   />
-          // ),
-        })}
         name="Vehicle"
         component={Vehicle}
+        options={{
+          headerTitleAlign: 'center',
+          title: i18n.language?.startsWith('ar') ? 'المركبة' : 'Vehicle',
+        }}
       />
       <Stack.Screen
         name="Register"

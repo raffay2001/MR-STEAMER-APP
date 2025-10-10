@@ -18,10 +18,14 @@ import AboutUs from '../screens/AboutUs';
 import Profile from '../screens/Profile';
 import BecomeStreamer from '../screens/BecomeStreamer';
 import RegisterSteamer from '../screens/RegisterSteamer';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
 const MyDrawer = () => {
+  const { t } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   const [userName, setUserName] = React.useState<string>('No Name');
 
   React.useEffect(() => {
@@ -39,13 +43,35 @@ const MyDrawer = () => {
             backgroundColor: 'white',
             width: '80%',
           },
-          headerLeft: () => <HeaderLeft navigation={navigation} />,
-          headerRight: () => <HeaderRight navigation={navigation} />,
-          title: userName,
-          headerTitleStyle: { fontSize: 16, letterSpacing: 0.8, fontWeight: 400 },
+          drawerPosition: isAr ? 'right' : 'left',
+          headerLeft: () =>
+            isAr
+              ? <HeaderRight navigation={navigation} isAr />
+              : <HeaderLeft navigation={navigation} isAr={false} />,
+          headerRight: () =>
+            isAr
+              ? <HeaderLeft navigation={navigation} isAr />
+              : <HeaderRight navigation={navigation} isAr={false} />,
+          headerTitleAlign: 'center',
         })}
         drawerContent={props => <CustomDrawerComponent {...props} />}>
-        <Drawer.Screen name="Home" component={Home} />
+        <Drawer.Screen
+          name="Home"
+          component={Home}
+          options={({ navigation }) => ({
+            // hide the centered title only on Home
+            headerTitle: '',
+            // put username next to the menu (mirrors for AR)
+            headerLeft: () =>
+              isAr
+                ? <HeaderRight navigation={navigation} isAr />
+                : <HeaderLeft navigation={navigation} isAr={false} userName={userName} />,
+            headerRight: () =>
+              isAr
+                ? <HeaderLeft navigation={navigation} isAr userName={userName} />
+                : <HeaderRight navigation={navigation} isAr={false} />,
+          })}
+        />
         <Drawer.Screen
           name="BecomeStreamer"
           component={BecomeStreamer}
@@ -56,7 +82,9 @@ const MyDrawer = () => {
             headerLeft: () => null,
             headerRight: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
-                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Cancel</Text>
+                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
+                  {t('common.cancel')}
+                </Text>
               </TouchableOpacity>
             ),
           })}
@@ -81,7 +109,7 @@ const MyDrawer = () => {
           component={ChoosePackages}
           options={({ navigation }) => ({
             headerShown: true,
-            title: 'Choose Packages',
+            title: isAr ? 'اختر الباقات' : 'Choose Packages',
             headerTitleAlign: 'center',
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
@@ -118,7 +146,7 @@ const MyDrawer = () => {
           component={AboutUs}
           options={({ navigation }) => ({
             headerShown: true,
-            title: 'About Us',
+            title: isAr ? 'من نحن' : 'About Us',
             headerTitleAlign: 'center',
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
@@ -148,7 +176,7 @@ const MyDrawer = () => {
           component={BookingDetailsPage}
           options={({ navigation }) => ({
             headerShown: true,
-            title: 'Booking Details',
+            title: isAr ? 'تفاصيل الحجز' : 'Booking Details',
             headerTitleAlign: 'center',
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
@@ -165,20 +193,37 @@ const MyDrawer = () => {
 
 export default MyDrawer;
 
-const HeaderLeft = ({ navigation }: any) => {
+const HeaderLeft = ({ navigation, isAr, userName }: any) => {
   return (
-    <SvgWrapper
-      xml={Icons.menuIcon}
-      width={22}
-      height={22}
-      style={{ marginLeft: 20 }}
-      icon={true}
-      onPress={() => navigation.toggleDrawer()}
-    />
+    <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center' }}>
+      <SvgWrapper
+        xml={Icons.menuIcon}
+        width={22}
+        height={22}
+        style={{ marginLeft: isAr ? 0 : 16, marginRight: isAr ? 16 : 8 }}
+        icon
+        onPress={() => navigation.toggleDrawer()}
+      />
+      <Text
+        numberOfLines={1}
+        style={{
+          maxWidth: 200,
+          fontSize: 16,
+          letterSpacing: 0.8,
+          fontWeight: '400',
+          color: '#111',
+          marginLeft: isAr ? 0 : 8,
+          marginRight: isAr ? 8 : 0,
+          textAlign: isAr ? 'right' : 'left',
+        }}
+      >
+        {userName}
+      </Text>
+    </View>
   );
 };
 
-const HeaderRight = ({ navigation }: any) => {
+const HeaderRight = ({ navigation, isAr }: any) => {
   const { fetchBookingsByUserId } = useBooking();
   const [pendingCount, setPendingCount] = React.useState(0);
 
@@ -204,7 +249,7 @@ const HeaderRight = ({ navigation }: any) => {
     <TouchableOpacity
       // ⬇️ navigate to the Booking Details list page instead of toggling drawer
       onPress={() => navigation.getParent()?.navigate('BookingDetailsPage')}
-      style={{ marginRight: 16 }}
+      style={{ marginRight: isAr ? 0 : 16, marginLeft: isAr ? 16 : 0 }}
     >
       <View>
         <Ionicons name="cart-outline" size={22} color="#111" />

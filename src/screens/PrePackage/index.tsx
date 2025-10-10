@@ -17,6 +17,8 @@ import { useRating } from '../../hooks/useRating';
 import { useFavourites } from '../../hooks/useFavourites';
 import { getUserData } from '../../hooks/useAuthStorage';
 import HeaderCover from "../../assets/images/prepackage-header.png";
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 type Pkg = { id: string; type?: string; pricing?: number; isFav?: string[] };
 type RouteParams = { packageIds?: string[]; name?: string; packages?: Pkg[] };
@@ -32,6 +34,8 @@ type ReviewItem = {
 
 const PrePackageScreen: React.FC = () => {
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
     const { params } = useRoute<any>() as { params: RouteParams };
     const pkgName = params?.name || '';
     const ids = params?.packageIds || [];
@@ -217,8 +221,8 @@ const PrePackageScreen: React.FC = () => {
                 <View style={{ flex: 1, padding: 16, justifyContent: 'space-between' }}>
                     {/* top row: title + heart */}
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#fff', flex: 1 }}>
-                            {pkgName || 'Package'}
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#fff', flex: 1, textAlign: isAr ? 'left' : 'left' }}>
+                            {pkgName || t('prePackage.fallbackName')}
                         </Text>
                         <TouchableOpacity
                             onPress={openFavModal}
@@ -239,7 +243,12 @@ const PrePackageScreen: React.FC = () => {
                             <ActivityIndicator color="#fff" />
                         ) : (
                             <>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View
+                                    style={{
+                                        flexDirection: isAr ? 'row-reverse' : 'row',
+                                        alignItems: 'center',
+                                    }}
+                                >
                                     {Array.from({ length: 5 }).map((_, i) => (
                                         <Ionicons
                                             key={i}
@@ -249,13 +258,19 @@ const PrePackageScreen: React.FC = () => {
                                             style={{ marginHorizontal: 1 }}
                                         />
                                     ))}
-                                    <Text style={{ marginLeft: 6, color: '#fff' }}>
-                                        {count} {count === 1 ? 'review' : 'reviews'}
+                                    <Text
+                                        style={{
+                                            marginStart: isAr ? 6 : 6,   // RTL/LTR aware spacing
+                                            color: '#fff',
+                                            textAlign: isAr ? 'right' : 'left',
+                                        }}
+                                    >
+                                        {t('prePackage.reviews', { count })}
                                     </Text>
                                 </View>
                                 {!!count && (
                                     <Text style={{ marginTop: 4, color: '#F3F4F6' }}>
-                                        Avg {avg.toFixed(1)} / 5
+                                        {t('prePackage.avg', { avg: avg.toFixed(1) })}
                                     </Text>
                                 )}
                             </>
@@ -269,7 +284,9 @@ const PrePackageScreen: React.FC = () => {
                 {loading ? (
                     <ActivityIndicator />
                 ) : reviews.length === 0 ? (
-                    <Text style={{ color: '#6B7280', marginBottom: 16 }}>No reviews yet.</Text>
+                    <Text style={{ color: '#6B7280', marginBottom: 16 }}>
+                        {t('prePackage.noReviews')}
+                    </Text>
                 ) : (
                     <ScrollView
                         contentContainerStyle={{ paddingBottom: 16 }}
@@ -308,7 +325,8 @@ const PrePackageScreen: React.FC = () => {
 
                                     {/* Footer: Name | Package: Type/Name */}
                                     <Text style={{ color: '#223671', fontWeight: '400' }}>
-                                        {name} <Text style={{ color: '#223671' }}>|</Text> <Text>Package: {pkgLabel}</Text>
+                                        {name} <Text style={{ color: '#223671' }}>|</Text>{' '}
+                                        <Text>{t('prePackage.packageLabel')}: {pkgLabel}</Text>
                                     </Text>
                                 </View>
                             );
@@ -337,7 +355,9 @@ const PrePackageScreen: React.FC = () => {
                     alignItems: 'center'
                 }}
             >
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Steam It</Text>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>
+                    {t('prePackage.cta')}
+                </Text>
             </TouchableOpacity>
 
             {/* Favourite Modal — type + price, and reflect existing favourites */}
@@ -351,7 +371,7 @@ const PrePackageScreen: React.FC = () => {
                     <View style={{ width: '90%', maxWidth: 480, maxHeight: '70%', backgroundColor: '#fff', borderRadius: 14, padding: 14 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: '#111' }}>
-                                {favModalTitle} — Packages
+                                {t('prePackage.modalTitle', { name: favModalTitle })}
                             </Text>
                             <TouchableOpacity onPress={() => setFavModalVisible(false)} style={{ padding: 6 }}>
                                 <Ionicons name="close" size={20} color="#111" />
@@ -359,7 +379,9 @@ const PrePackageScreen: React.FC = () => {
                         </View>
 
                         {favModalItems.length === 0 ? (
-                            <Text style={{ color: '#555' }}>No packages.</Text>
+                            <Text style={{ color: '#555' }}>
+                                {t('prePackage.noPackages')}
+                            </Text>
                         ) : (
                             <ScrollView>
                                 {favModalItems.map((pkg, idx) => {

@@ -20,19 +20,25 @@ import { getAccessToken, clearAuth } from '../../hooks/useAuthStorage';
 import { setCarProfile } from '../../hooks/useCarStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { SAUDI_CITIES, SELECTED_CITY } from '../../constants';
+import { SAUDI_CITIES, SAUDI_CITIES_AR, SELECTED_CITY } from '../../constants';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const SWATCHES = [
   '#000000', '#FFFFFF', '#FF0000', '#0000FF', '#008000',
   '#FFFF00', '#FFA500', '#800080', '#808080', '#A52A2A',
 ];
 
+const isAr = i18n.language?.startsWith('ar');
 const CITY_KEY = SELECTED_CITY;
-const CITY_OPTIONS = SAUDI_CITIES;
+// const CITY_OPTIONS = SAUDI_CITIES;
+const CITY_OPTIONS = isAr ? SAUDI_CITIES_AR : SAUDI_CITIES;
 
 const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   const { loading, fetchEnumsByType } = useEnums();
   const { loading: creating, createCar } = useCar();
+
+  const { t } = useTranslation();
 
   const [items, setItems] = React.useState<any[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -59,6 +65,20 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   const [openBrand, setOpenBrand] = React.useState(false);
   const [openName, setOpenName] = React.useState(false);   // NEW
   const [openNumber, setOpenNumber] = React.useState(false);
+
+  const toArabicDesc = React.useCallback((d: string) => {
+    const s = d?.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (s.includes('sedan') && s.includes('mini')) {
+      return 'سيدان، كوبيه، رياضية، صغيرة أو ما شابه';
+    }
+    if (s.includes('suv 5') || s.includes('short pickups')) {
+      return 'سيارة SUV بخمسة مقاعد، بيك أب قصير أو ما شابه';
+    }
+    if (s.includes('suv 7') || s.includes('long pickups')) {
+      return 'سيارة SUV بسبعة مقاعد، بيك أب طويل أو ما شابه';
+    }
+    return d;
+  }, []);
 
   // guards / caches
   const loadedRef = React.useRef(false);
@@ -96,7 +116,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   React.useEffect(() => {
     (async () => {
       const saved = await AsyncStorage.getItem(CITY_KEY);
-      if (!saved || !SAUDI_CITIES.includes(saved)) {
+      if (!saved || !CITY_OPTIONS.includes(saved)) {
         setShowCityModal(true);
         setSelectedCity(null);
       } else {
@@ -218,8 +238,8 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
         marginBottom: 12,
       }}
     >
-      <Text style={{ color: '#333', fontSize: 16 }}>{title}</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <Text style={{ color: '#333', fontSize: 16, textAlign: isAr ? 'right' : 'left' }}>{title}</Text>
+      <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 }}>
         {right}
         <Text style={{ color: '#999', fontSize: 18 }}>▾</Text>
       </View>
@@ -234,7 +254,9 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View className="px-6 py-4 mb-7 bg-[#F5F7FA]">
-          <Text className="text-black text-sm">Select Vehicle Type</Text>
+          <Text className="text-black text-sm" style={{ textAlign: isAr ? 'right' : 'left' }}>
+            {t('vehicle.selectType')}
+          </Text>
         </View>
 
         {loading && !refreshing ? (
@@ -243,7 +265,9 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
           </View>
         ) : items.length === 0 ? (
           <View className="items-center justify-center my-10">
-            <Text className="text-black">No vehicle types found.</Text>
+            <Text className="text-black" style={{ textAlign: isAr ? 'right' : 'left' }}>
+              {t('vehicle.noTypes')}
+            </Text>
           </View>
         ) : (
           items.map((it) => {
@@ -263,7 +287,12 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                   />
                 ) : null}
                 {it.description ? (
-                  <Text className="text-black/60 mt-1 text-[20px] text-left w-full">{it.description}</Text>
+                  <Text
+                    className="text-black/60 mt-1 text-[20px] w-full"
+                    style={{ textAlign: isAr ? 'right' : 'left' }}
+                  >
+                    {isAr ? toArabicDesc(it.description) : it.description}
+                  </Text>
                 ) : null}
               </Pressable>
             );
@@ -293,13 +322,13 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
               marginBottom: 12,
             }}
           >
-            <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 6 }} />
+            <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: isAr ? 0 : 6, marginLeft: isAr ? 6 : 0 }} />
             <TextInput
-              placeholder="Search Area"
+              placeholder={t('vehicle.searchArea')}
               placeholderTextColor="#9CA3AF"
               value={cityQuery}
               onChangeText={setCityQuery}
-              style={{ flex: 1, color: '#111' }}
+              style={{ flex: 1, color: '#111', textAlign: isAr ? 'right' : 'left' }}
             />
           </View>
 
@@ -307,13 +336,13 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
           <ScrollView keyboardShouldPersistTaps="handled">
             {CITY_OPTIONS
               .filter(c => c.toLowerCase().includes(cityQuery.trim().toLowerCase()))
-              .map((c) => (
+              .map((c, idx) => (
                 <TouchableOpacity
-                  key={c}
+                  key={`${c}-${idx}`}
                   onPress={() => onPickCity(c)}
                   style={{ paddingVertical: 14 }}
                 >
-                  <Text style={{ color: '#111', fontSize: 16 }}>{c}</Text>
+                  <Text style={{ color: '#111', fontSize: 16, textAlign: isAr ? 'right' : 'left' }}>{c}</Text>
                 </TouchableOpacity>
               ))}
           </ScrollView>
@@ -346,13 +375,13 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: '600', color: '#111', textAlign: 'center', marginBottom: 16 }}>
-              Car Information
+              {t('vehicle.modal.title')}
             </Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Car Color */}
               <Row
-                title="Car Color"
+                title={t('vehicle.fields.color')}
                 right={
                   <View
                     style={{
@@ -383,7 +412,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
 
               {/* Brand */}
               <Row
-                title="Brand"
+                title={t('vehicle.fields.brand')}
                 right={
                   <Text style={{ color: '#333' }}>
                     {selectedBrandId
@@ -394,45 +423,46 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                 }
                 onPress={() => { setOpenBrand(v => !v); setOpenColor(false); setOpenName(false); setOpenNumber(false); }}
               />
-              {openBrand && (
-                brandLoading ? (
-                  <ActivityIndicator style={{ marginVertical: 8 }} />
-                ) : brandList.length === 0 ? (
-                  <Text style={{ color: '#666', marginBottom: 12 }}>No brands found.</Text>
-                ) : (
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
-                    {brandList.map(b => {
-                      const active = selectedBrandId === b.id;
-                      return (
-                        <Pressable
-                          key={b.id}
-                          onPress={() => setSelectedBrandId(b.id)}
-                          style={{
-                            paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
-                            borderWidth: 1, borderColor: active ? '#111' : '#ddd',
-                            backgroundColor: active ? '#111' : '#fff',
-                            marginRight: 8, marginBottom: 8,
-                          }}
-                        >
-                          <Text style={{ color: active ? '#fff' : '#111' }}>
-                            {b.displayName || b.name}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                )
+              {openBrand && (brandLoading ? (
+                <ActivityIndicator style={{ marginVertical: 8 }} />
+              ) : brandList.length === 0 ? (
+                <Text style={{ color: '#666', marginBottom: 12, textAlign: isAr ? 'right' : 'left' }}>
+                  {t('vehicle.noBrands')}
+                </Text>
+              ) : (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
+                  {brandList.map(b => {
+                    const active = selectedBrandId === b.id;
+                    return (
+                      <Pressable
+                        key={b.id}
+                        onPress={() => setSelectedBrandId(b.id)}
+                        style={{
+                          paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+                          borderWidth: 1, borderColor: active ? '#111' : '#ddd',
+                          backgroundColor: active ? '#111' : '#fff',
+                          marginRight: 8, marginBottom: 8,
+                        }}
+                      >
+                        <Text style={{ color: active ? '#fff' : '#111' }}>
+                          {b.displayName || b.name}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )
               )}
 
               {/* Car name (model) */}
               <Row
-                title="Car name"
+                title={t('vehicle.fields.name')}
                 right={<Text style={{ color: '#333' }}>{carName || ''}</Text>}
                 onPress={() => { setOpenName(v => !v); setOpenColor(false); setOpenBrand(false); setOpenNumber(false); }}
               />
               {openName && (
                 <TextInput
-                  placeholder="e.g., Corolla Grande"
+                  placeholder={t('vehicle.placeholders.name')}
                   placeholderTextColor="#888"
                   value={carName}
                   onChangeText={setCarName}
@@ -440,19 +470,20 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                     height: 48, borderWidth: 1, borderColor: '#eee',
                     backgroundColor: '#F5F7FA', borderRadius: 12,
                     paddingHorizontal: 14, color: '#111', marginBottom: 12,
+                    textAlign: isAr ? 'right' : 'left'
                   }}
                 />
               )}
 
               {/* Car number */}
               <Row
-                title="Car number"
+                title={t('vehicle.fields.number')}
                 right={<Text style={{ color: '#333' }}>{carNumber || ''}</Text>}
                 onPress={() => { setOpenNumber(v => !v); setOpenColor(false); setOpenBrand(false); setOpenName(false); }}
               />
               {openNumber && (
                 <TextInput
-                  placeholder="Enter plate / registration"
+                  placeholder={t('vehicle.placeholders.number')}
                   placeholderTextColor="#888"
                   value={carNumber}
                   onChangeText={setCarNumber}
@@ -461,6 +492,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                     height: 48, borderWidth: 1, borderColor: '#eee',
                     backgroundColor: '#F5F7FA', borderRadius: 12,
                     paddingHorizontal: 14, color: '#111', marginBottom: 12,
+                    textAlign: isAr ? 'right' : 'left'
                   }}
                 />
               )}
@@ -479,7 +511,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                   {creating ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={{ color: '#fff', fontWeight: '600' }}>Submit</Text>
+                    <Text style={{ color: '#fff', fontWeight: '600' }}>{t('vehicle.submit')}</Text>
                   )}
                 </Pressable>
               </View>

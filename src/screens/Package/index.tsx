@@ -11,6 +11,8 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { usePackage } from '../../hooks/usePackage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 type RouteParams = {
     packageIds?: string[];
@@ -19,6 +21,8 @@ type RouteParams = {
 
 const Package: React.FC = () => {
     const route = useRoute<any>();
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
     const navigation = useNavigation<any>();
     const { packageIds = [], name = 'Package' } = (route?.params || {}) as RouteParams;
     const { loading, fetchPackageById } = usePackage();
@@ -45,9 +49,8 @@ const Package: React.FC = () => {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
                 {/* <Text style={{ fontSize: 18, fontWeight: '700', color: '#111' }}>{name}</Text> */}
-                <Text style={{ marginTop: 8, color: '#000', fontSize: 14, fontWeight: '400' }}>
-                    {/* {packageIds.length} item(s) selected. */}
-                    Choose a package for the best service
+                <Text style={{ marginTop: 8, color: '#000', fontSize: 14, fontWeight: '400', textAlign: isAr ? 'right' : 'left' }}>
+                    {t('package.choose')}
                 </Text>
 
                 {loading && items.length === 0 ? (
@@ -55,7 +58,9 @@ const Package: React.FC = () => {
                         <ActivityIndicator />
                     </View>
                 ) : items.length === 0 ? (
-                    <Text style={{ marginTop: 16, color: '#666' }}>No items.</Text>
+                    <Text style={{ marginTop: 16, color: '#666', textAlign: isAr ? 'right' : 'left' }}>
+                        {t('package.noItems')}
+                    </Text>
                 ) : (
                     items.map(it => {
                         const active = selectedId === it.id;
@@ -143,7 +148,7 @@ const Package: React.FC = () => {
                                         }}
                                     >
                                         <Text style={{ color: active ? '#2D4795' : '#9CA3AF', fontWeight: '500', textDecorationLine: 'underline', fontSize: 16 }}>
-                                            Steam it
+                                            {t('package.cta')}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>

@@ -3,6 +3,8 @@ import { SafeAreaView, View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useBooking } from '../../hooks/useBooking';
 import SuccessImg from "../../assets/svgs/SuccessImg.svg";
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const Success: React.FC = () => {
     const navigation = useNavigation<any>();
@@ -10,6 +12,9 @@ const Success: React.FC = () => {
     const { bookingId } = (route?.params || {}) as { bookingId: string };
     const { fetchBookingById } = useBooking();
     const [booking, setBooking] = React.useState<any | null>(null);
+
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
 
     React.useEffect(() => {
         if (!bookingId) return;
@@ -40,8 +45,10 @@ const Success: React.FC = () => {
                         paddingHorizontal: 16,
                     }}
                 >
-                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '700' }}>
-                        {booking?.bookingId ? `Booking ID: ${booking.bookingId}` : 'Booking ID: —'}
+                    <Text style={{ color: '#111', fontSize: 16, fontWeight: '700', textAlign: isAr ? 'right' : 'left' }}>
+                        {booking?.bookingId
+                            ? `${t('success.bookingId')}: ${booking.bookingId}`
+                            : `${t('success.bookingId')}: —`}
                     </Text>
                 </View>
 
@@ -56,25 +63,25 @@ const Success: React.FC = () => {
                         width: '100%',
                     }}
                 >
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <Text style={{ color: '#6B7280' }}>Email</Text>
-                        <Text style={{ color: '#111', fontWeight: '600' }}>{booking?.email || '—'}</Text>
+                    <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <Text style={{ color: '#6B7280', textAlign: isAr ? 'right' : 'left' }}>{t('success.email')}</Text>
+                        <Text style={{ color: '#111', fontWeight: '600', textAlign: isAr ? 'left' : 'right' }}>{booking?.email || '—'}</Text>
                     </View>
                     <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                        <Text style={{ color: '#6B7280' }}>Payment</Text>
-                        <Text style={{ color: '#111', fontWeight: '600' }}>On-Site</Text>
+                    <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                        <Text style={{ color: '#6B7280', textAlign: isAr ? 'right' : 'left' }}>{t('success.payment')}</Text>
+                        <Text style={{ color: '#111', fontWeight: '600', textAlign: isAr ? 'left' : 'right' }}>{t('success.paymentOnSite')}</Text>
                     </View>
                 </View>
 
-                <Text style={{ marginTop: 6, color: '#16A34A', fontSize: 18, fontWeight: '700' }}>
-                    Successful !
+                <Text style={{ marginTop: 6, color: '#16A34A', fontSize: 18, fontWeight: '700', textAlign: 'center' }}>
+                    {t('success.successful')}
                 </Text>
 
                 {/* Take Screenshot */}
                 {/* Notice instead of screenshot button */}
                 <Text style={{ marginTop: 10, color: '#6B7280', fontSize: 12, textAlign: 'center' }}>
-                    Tip: take a screenshot of this page to save your booking confirmation.
+                    {t('success.tip')}
                 </Text>
 
                 {/* Buttons */}
@@ -90,7 +97,9 @@ const Success: React.FC = () => {
                         justifyContent: 'center',
                     }}
                 >
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Booking Details</Text>
+                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+                        {t('success.detailsBtn')}
+                    </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -106,7 +115,9 @@ const Success: React.FC = () => {
                         justifyContent: 'center',
                     }}
                 >
-                    <Text style={{ color: '#2C4694', fontSize: 16, fontWeight: '700' }}>Back to Home</Text>
+                    <Text style={{ color: '#2C4694', fontSize: 16, fontWeight: '700' }}>
+                        {t('success.backHome')}
+                    </Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

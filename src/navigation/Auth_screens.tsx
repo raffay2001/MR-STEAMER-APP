@@ -7,6 +7,8 @@ import { Login, SignUpOnBoarding, SplashScreen, Welcome } from '../screens';
 import ForgotPassword from '../screens/ForgotPassword';
 import ResetPassword from '../screens/ResetPassword';
 
+import i18n from '../i18n';
+
 const Auth_Screens: React.FC = () => {
   const Stack = createNativeStackNavigator<AuthNavStackParamList>();
 
@@ -29,12 +31,12 @@ const Auth_Screens: React.FC = () => {
         <Stack.Screen
           name="ForgotPassword"
           component={ForgotPassword}
-          options={{ title: 'Forgot Password' }}
+          options={() => ({ title: i18n.t('forgot.title') })}
         />
         <Stack.Screen
           name="ResetPassword"
           component={ResetPassword}
-          options={{ title: 'Reset Password' }}
+          options={() => ({ title: i18n.t('reset.title') })}
         />
       </Stack.Group>
     </Stack.Navigator>

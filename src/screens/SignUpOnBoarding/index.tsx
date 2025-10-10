@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity,
+  View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity, TextInput
 } from 'react-native';
 import { TSignUpOnBoardingProps } from './types';
 import { SvgWrapper } from '../../common/SvgWrapper';
@@ -12,9 +12,19 @@ import FacebookLogo from '../../assets/svgs/FacebookLogo.svg';
 import AppleLogo from '../../assets/svgs/AppleIcon.svg';
 import { useAuth } from '../../hooks/useAuth';
 import { persistAuthResponse } from '../../hooks/useAuthStorage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import i18n from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation }) => {
   const { loading, handleRegister } = useAuth();
+
+  const { t } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
+  const toggleLanguage = async () => {
+    const next = isAr ? 'en' : 'ar';
+    await i18n.changeLanguage(next);
+  };
 
   const [formErrors, setFormErrors] = useState({
     emailError: false, passwordError: false, nameError: false, confirmPasswordError: false,
@@ -23,6 +33,8 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const validateFormFields = useCallback(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,95 +70,179 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
 
   return (
     <SafeAreaView className="flex-1 bg-black">
-      <ScrollView className="flex-1">
-        <View className="relative pt-12 px-2">
-          <Text className="text-white ml-2 pt-6 text-4xl font-[Poppins-SemiBold] mb-6">Sign up</Text>
+      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="relative pt-4 px-2">
+
+          <View className="flex-row justify-end px-4 pt-4">
+            <Pressable
+              onPress={toggleLanguage}
+              style={{ paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: '#3a3a3a', borderRadius: 8 }}
+            >
+              <Text className="text-white text-[14px]">{t('common.changeLanguage')}</Text>
+            </Pressable>
+          </View>
+
+          <Text className="text-white ml-2 pt-6 text-4xl font-[Poppins-SemiBold] mb-6">
+            {t('signup.title')}
+          </Text>
 
           <View className="px-2 pb-12 flex-1 gap-y-6">
             {/* Social */}
             <View className="gap-y-2">
               <Button className="mb-2" variant="outlined" onPress={() => { }}>
                 <SvgWrapper className="mr-4" xml={GoogleSvg} width={24} height={24} />
-                <Text className="text-white text-[16px] font-[Poppins-Medium]">Continue with Google</Text>
+                <Text className="text-white text-[16px] font-[Poppins-Medium]">{t('signup.continueGoogle')}</Text>
               </Button>
 
               <TouchableOpacity className="flex justify-center items-center flex-row h-[56px] bg-white rounded-[10px]" onPress={() => { }}>
                 <FacebookLogo width={24} height={24} style={{ marginRight: 16 }} />
-                <Text className="text-black text-[16px] font-[Poppins-Medium]">Continue with Facebook</Text>
+                <Text className="text-black text-[16px] font-[Poppins-Medium]">{t('signup.continueFacebook')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity className="flex justify-center items-center flex-row h-[56px] bg-white rounded-[10px]" onPress={() => { }}>
                 <AppleLogo width={24} height={24} style={{ marginRight: 16 }} />
-                <Text className="text-black text-[16px] font-[Poppins-Medium]">Continue with Apple</Text>
+                <Text className="text-black text-[16px] font-[Poppins-Medium]">{t('signup.continueApple')}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Divider */}
-            <View className="flex-row items-center">
-              <View className="flex-[0.45] h-[0.6px] bg-[#A4A4A4]" />
-              <Text className="text-[#A4A4A4] ml-3 flex-[0.1] text-xl font-[Poppins-Regular]">or</Text>
-              <View className="flex-[0.45] h-[0.6px] bg-[#A4A4A4]" />
+            <View className="flex-row items-center w-full">
+              <View className="flex-1 h-[0.6px] bg-[#A4A4A4]" />
+              <Text className="text-[#A4A4A4] mx-3 text-xl font-[Poppins-Regular]">
+                {t('common.or')}
+              </Text>
+              <View className="flex-1 h-[0.6px] bg-[#A4A4A4]" />
             </View>
 
             {/* Form */}
             <View>
               <View className="mb-2">
-                <Text className="text-white text-[16px] mb-2">Email Address</Text>
-                <Input
-                  onFocus={() => setFormErrors(p => ({ ...p, emailError: false }))}
-                  error={formErrors.emailError}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter Email Address"
-                  keyboardType="email-address"
-                  preIcon={<SvgWrapper xml={PersonSvg} width={20} height={20} />}
-                />
-                {formErrors.emailError && <Text className="text-red-600 text-[16px] mt-2">Please enter a valid email address.</Text>}
+                <Text className="text-white text-[16px] mb-2">{t('signup.emailLabel')}</Text>
+                <View
+                  className="flex-row items-center rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] px-3 h-[60px]"
+                  style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+                >
+                  <Ionicons
+                    name="mail-outline"
+                    size={20}
+                    color="#A4A4A4"
+                    style={{ marginRight: isAr ? 0 : 8, marginLeft: isAr ? 8 : 0 }}
+                  />
+                  <TextInput
+                    value={email}
+                    onChangeText={setEmail}
+                    onFocus={() => setFormErrors(p => ({ ...p, emailError: false }))}
+                    placeholder={t('signup.emailPlaceholder')}
+                    placeholderTextColor="#8A8A8A"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    style={{ flex: 1, color: '#FFFFFF', textAlign: isAr ? 'right' : 'left' }}
+                  />
+                </View>
+                {formErrors.emailError && (
+                  <Text className="text-red-600 text-[16px] mt-2">{t('signup.emailError')}</Text>
+                )}
               </View>
 
               <View className="mb-2">
-                <Text className="text-white text-[16px] mb-2">Name</Text>
-                <Input
-                  onFocus={() => setFormErrors(p => ({ ...p, nameError: false }))}
-                  error={formErrors.nameError}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter Name"
-                  preIcon={<SvgWrapper xml={PersonSvg} width={20} height={20} />}
-                />
-                {formErrors.nameError && <Text className="text-red-600 text-[16px] mt-2">Name is required.</Text>}
+                <Text className="text-white text-[16px] mb-2">{t('signup.nameLabel')}</Text>
+                <View
+                  className="flex-row items-center rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] px-3 h-[60px]"
+                  style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+                >
+                  <Ionicons
+                    name="person-outline"
+                    size={20}
+                    color="#A4A4A4"
+                    style={{ marginRight: isAr ? 0 : 8, marginLeft: isAr ? 8 : 0 }}
+                  />
+                  <TextInput
+                    value={name}
+                    onChangeText={setName}
+                    onFocus={() => setFormErrors(p => ({ ...p, nameError: false }))}
+                    placeholder={t('signup.namePlaceholder')}
+                    placeholderTextColor="#8A8A8A"
+                    autoCapitalize="words"
+                    style={{ flex: 1, color: '#FFFFFF', textAlign: isAr ? 'right' : 'left' }}
+                  />
+                </View>
+                {formErrors.nameError && (
+                  <Text className="text-red-600 text-[16px] mt-2">{t('signup.nameError')}</Text>
+                )}
               </View>
 
-              <View>
-                <Text className="text-white text-[16px] mb-2">Password</Text>
-                <Input
-                  onFocus={() => setFormErrors(p => ({ ...p, passwordError: false }))}
-                  error={formErrors.passwordError}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Enter Password"
-                  passwordInput
-                  preIcon={<SvgWrapper xml={KeySvg} width={20} height={20} />}
-                />
+              <View className="mb-2">
+                <Text className="text-white text-[16px] mb-2">{t('signup.passwordLabel')}</Text>
+                <View
+                  className="flex-row items-center rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] px-3 h-[60px]"
+                  style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+                >
+                  <Ionicons
+                    name="key-outline"
+                    size={20}
+                    color="#A4A4A4"
+                    style={{ marginRight: isAr ? 0 : 8, marginLeft: isAr ? 8 : 0 }}
+                  />
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={() => setFormErrors(p => ({ ...p, passwordError: false }))}
+                    placeholder={t('signup.passwordPlaceholder')}
+                    placeholderTextColor="#8A8A8A"
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    style={{ flex: 1, color: '#FFFFFF', textAlign: isAr ? 'right' : 'left' }}
+                  />
+                  <Pressable onPress={() => setShowPassword(p => !p)} hitSlop={10}>
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="#A4A4A4"
+                      style={{ marginLeft: isAr ? 0 : 8, marginRight: isAr ? 8 : 0 }}
+                    />
+                  </Pressable>
+                </View>
                 {formErrors.passwordError && (
                   <Text className="text-red-600 text-[16px] mt-2">
-                    Password should contain at least one uppercase letter, one digit, and one special character.
+                    {t('signup.passwordError')}
                   </Text>
                 )}
               </View>
 
-              <View>
-                <Text className="text-white text-[16px] mb-2 mt-4">Confirm Password</Text>
-                <Input
-                  onFocus={() => setFormErrors(p => ({ ...p, confirmPasswordError: false }))}
-                  error={formErrors.confirmPasswordError}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirm Password"
-                  passwordInput
-                  preIcon={<SvgWrapper xml={KeySvg} width={20} height={20} />}
-                />
-                {formErrors.confirmPasswordError && <Text className="text-red-600 text-[16px] mt-2">Passwords do not match.</Text>}
+              <View className="mb-2">
+                <Text className="text-white text-[16px] mb-2">{t('signup.confirmPasswordLabel')}</Text>
+                <View
+                  className="flex-row items-center rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] px-3 h-[60px]"
+                  style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+                >
+                  <Ionicons
+                    name="key-outline"
+                    size={20}
+                    color="#A4A4A4"
+                    style={{ marginRight: isAr ? 0 : 8, marginLeft: isAr ? 8 : 0 }}
+                  />
+                  <TextInput
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    onFocus={() => setFormErrors(p => ({ ...p, confirmPasswordError: false }))}
+                    placeholder={t('signup.confirmPasswordPlaceholder')}
+                    placeholderTextColor="#8A8A8A"
+                    secureTextEntry={!showConfirm}
+                    autoCapitalize="none"
+                    style={{ flex: 1, color: '#FFFFFF', textAlign: isAr ? 'right' : 'left' }}
+                  />
+                  <Pressable onPress={() => setShowConfirm(p => !p)} hitSlop={10}>
+                    <Ionicons
+                      name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="#A4A4A4"
+                      style={{ marginLeft: isAr ? 0 : 8, marginRight: isAr ? 8 : 0 }}
+                    />
+                  </Pressable>
+                </View>
+                {formErrors.confirmPasswordError && (
+                  <Text className="text-red-600 text-[16px] mt-2">{t('signup.confirmPasswordError')}</Text>
+                )}
               </View>
             </View>
 
@@ -159,14 +255,14 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
                 disabled={loading}
               >
                 <Text className="text-black text-[16px] font-[Poppins-Medium]">
-                  {loading ? 'Signing Up...' : 'Sign Up'}
+                  {loading ? t('signup.signingUp') : t('signup.cta')}
                 </Text>
               </Button>
 
-              <View className="flex-row gap-x-2 justify-center">
-                <Text className="text-[#A4A4A4] text-[16px] font-[Poppins-Regular]">Already have an account?</Text>
+              <View className="flex-row gap-x-2 justify-center" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
+                <Text className="text-[#A4A4A4] text-[16px] font-[Poppins-Regular]">{t('signup.already')}</Text>
                 <Pressable onPress={() => navigation.navigate('Login')}>
-                  <Text className="text-white text-[16px] font-[Poppins-Regular] underline">Login</Text>
+                  <Text className="text-white text-[16px] font-[Poppins-Regular] underline">{t('signup.login')}</Text>
                 </Pressable>
               </View>
             </View>

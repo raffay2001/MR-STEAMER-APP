@@ -1,0 +1,282 @@
+{
+  "common": {
+    "english": "English",
+    "arabic": "العربية",
+    "changeLanguage": "العربية",
+    "or": "or",
+    "sar": "SAR",
+    "cancel": "Cancel"
+  },
+  "welcome": {
+    "title": "Premium Car Services At Your Doorstep",
+    "signup": "Sign up",
+    "login": "Login"
+  },
+  "login": {
+    "title": "Welcome Back!",
+    "subtitle": "welcome back we missed you",
+    "google": "Login with Google",
+    "facebook": "Login with Facebook",
+    "or": "or",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "emailError": "Please enter a valid email address.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter Password",
+    "passwordError": "Password should contain at least one uppercase letter, one digit and one special character.",
+    "cta": "Login",
+    "loggingIn": "Logging in...",
+    "forgot": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "signup": "Signup",
+    "toastLoginFail": "Login failed. Please try again."
+  },
+  "signup": {
+    "title": "Sign up",
+    "continueGoogle": "Continue with Google",
+    "continueFacebook": "Continue with Facebook",
+    "continueApple": "Continue with Apple",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "emailError": "Please enter a valid email address.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter Name",
+    "nameError": "Name is required.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter Password",
+    "passwordError": "Password should contain at least one uppercase letter, one digit, and one special character.",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm Password",
+    "confirmPasswordError": "Passwords do not match.",
+    "cta": "Sign Up",
+    "signingUp": "Signing Up...",
+    "already": "Already have an account?",
+    "login": "Login"
+  },
+  "forgot": {
+    "title": "Forgot Password",
+    "subtitle": "Enter your account email. We’ll send a verification code.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "sending": "Sending…",
+    "sendCode": "Send Code",
+    "remembered": "Remembered your password?",
+    "login": "Login",
+    "missingTitle": "Missing",
+    "missingDesc": "Please enter your email.",
+    "errorTitle": "Error",
+    "errorFallback": "Failed to send code."
+  },
+    "reset": {
+    "title": "Reset Password",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "codeLabel": "Verification Code",
+    "codePlaceholder": "6-digit code",
+    "passwordLabel": "New Password",
+    "passwordPlaceholder": "Enter new password",
+    "cta": "Reset Password",
+    "resetting": "Resetting…",
+    "missingTitle": "Missing",
+    "missingDesc": "Please fill all fields.",
+    "successTitle": "Success",
+    "successDesc": "Password has been reset.",
+    "ok": "OK",
+    "errorTitle": "Error",
+    "errorFallback": "Failed to reset password."
+  },
+  "vehicle": {
+    "selectType": "Select Vehicle Type",
+    "noTypes": "No vehicle types found.",
+    "searchArea": "Search Area",
+    "modal": { "title": "Car Information" },
+    "fields": {
+      "color": "Car Color",
+      "brand": "Brand",
+      "name": "Car name",
+      "number": "Car number"
+    },
+    "noBrands": "No brands found.",
+    "placeholders": {
+      "name": "e.g., Corolla Grande",
+      "number": "Enter plate / registration"
+    },
+    "submit": "Submit"
+  },
+  "drawer": {
+    "becomeStreamer": "Become Mr.Streamer",
+    "choosePackages": "Choose Packages",
+    "hireUs": "Hire us",
+    "ourFeatures": "Our Features",
+    "aboutUs": "About Us",
+    "bookingDetail": "Booking Detail",
+    "logout": "Logout"
+  },
+  "home": {
+    "searchPlaceholder": "Search Company",
+    "services": {
+      "noPackages": "No packages for this service."
+    },
+    "card": {
+      "certified": "Certified",
+      "packagesLabel": "Packages"
+    },
+    "fav": {
+      "titleSuffix": "Packages",
+      "noPackages": "No packages."
+    },
+    "vehicle": {
+      "label": "Vehicle",
+      "modalTitle": "Select vehicle type"
+    },
+    "slots": {
+      "availability": "Availability Slot",
+      "selectSlot": "Select Slot",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "pickTime": "Pick a time",
+      "noSlots": "No slots available for this date."
+    }
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset",
+    "services": "Services",
+    "sortBy": "Sort By",
+    "apply": "Apply",
+    "sort": {
+      "popularity": "Popularity",
+      "rating": "Rating",
+      "discount": "Discount",
+      "price_desc": "Price",
+      "price_asc": "Price"
+    }
+  },
+    "prePackage": {
+        "fallbackName": "Package",
+        "reviews_one": "{{count}} review",
+        "reviews_other": "{{count}} reviews",
+        "avg": "Avg {{avg}} / 5",
+        "noReviews": "No reviews yet.",
+        "packageLabel": "Package",
+        "cta": "Steam It",
+        "modalTitle": "{{name}} — Packages",
+        "noPackages": "No packages."
+    },
+    "package": {
+        "title": "Packages",
+        "choose": "Choose a package for the best service",
+        "noItems": "No items.",
+        "cta": "Steam it"
+    },
+    "booking": {
+        "mobileLabel": "Mobile Number",
+        "mobilePlaceholder": "Enter mobile number",
+        "messageLabel": "Message (optional)",
+        "messagePlaceholder": "Write a message for the provider",
+        "slotTitle": "Availability Slot",
+        "selectSlot": "Select Slot",
+        "checkout": "Check out",
+        "processing": "Processing…",
+        "pickTime": "{{day}} — Pick a time",
+        "pickTimeSimple": "Pick a time",
+        "noSlots": "No slots available for this date.",
+        "errorTitle": "Missing info",
+        "errors": {
+            "noPackage": "Package not loaded yet.",
+            "noPhone": "Please enter mobile number.",
+            "noDate": "Please select a date.",
+            "noSlot": "Please select a time slot.",
+            "createFail": "Failed to create booking. Please try again."
+        }
+    },
+    "success": {
+        "bookingId": "Booking ID",
+        "email": "Email",
+        "payment": "Payment",
+        "paymentOnSite": "On-Site",
+        "successful": "Successful!",
+        "tip": "Tip: take a screenshot of this page to save your booking confirmation.",
+        "detailsBtn": "Booking Details",
+        "backHome": "Back to Home"
+    },
+    "bookingDetails": {
+        "title": "Your recent bookings",
+        "empty": "No bookings found.",
+        "timeSlot": "Time Slot",
+        "bookingId": "Booking ID",
+        "to": "to",
+        "rated": "Rated",
+        "ratePrompt": "Rate this package",
+        "reviewPlaceholder": "Write a short review (optional)",
+        "submit": "Submit Rating",
+        "processing": "Processing…",
+        "loadMore": "Load more",
+        "errTitle": "Error",
+        "errMissingPkg": "Missing package id",
+        "ratingTitle": "Rating",
+        "errMinStar": "Please select at least 1 star.",
+        "thanksTitle": "Thank you!",
+        "thanksMsg": "Your rating has been submitted.",
+        "errSubmit": "Failed to submit rating."
+    },
+    "become": {
+        "title": "Become Mr. Steamer",
+        "body": "Join our team and grow your business with professional steam services. Apply now and we’ll guide you through a quick onboarding process.",
+        "register": "Register"
+    },
+    "registerSteamer": {
+        "title": "Register With Us",
+        "fields": {
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone Number",
+            "password": "Password",
+            "type": "Individual / Company"
+        },
+        "placeholders": {
+            "name": "Enter Name",
+            "email": "Enter Email",
+            "phone": "Enter Phone Number",
+            "password": "Enter Password"
+        },
+        "select": "Select",
+        "companyType": {
+            "individual": "Individual",
+            "company": "Company"
+        },
+        "btn": {
+            "register": "Register",
+            "registering": "Registering…"
+        },
+        "missing": {
+            "title": "Missing info",
+            "body": "Please fill all fields."
+        },
+        "success": {
+            "title": "Success",
+            "body": "Steamer registered successfully!"
+        },
+        "error": {
+            "title": "Error",
+            "body": "Failed to register."
+        }
+    },
+    "choosePackages": {
+    "title": "Choose Packages",
+    "helper": "Choose a package for the best service",
+    "noItems": "No items.",
+    "steamIt": "Steam it"
+  },
+   "features": {
+    "title": "Our Features",
+    "items": {
+      "1": { "title": "Eco Friendly", "desc": "We use high-quality agents, equipment, and premium materials." },
+      "2": { "title": "Water Conservative", "desc": "Steam cleaning saves water without compromising results." },
+      "3": { "title": "Time Saving", "desc": "Fast, efficient service that fits your schedule." },
+      "4": { "title": "Hassle Free", "desc": "We come to you—no queues, no waiting." },
+      "5": { "title": "User Friendly", "desc": "Simple booking and clear pricing." },
+      "6": { "title": "24/7 Availability", "desc": "Book any time that works for you." }
+    }
+  }
+}

@@ -2,10 +2,14 @@ import React from 'react';
 import { SafeAreaView, View, Text, ImageBackground, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const BecomeStreamer: React.FC = () => {
 
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
+    const isAr = i18n.language?.startsWith('ar');
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
@@ -26,16 +30,29 @@ const BecomeStreamer: React.FC = () => {
 
                 {/* Bottom-fixed content (no scroll) */}
                 <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: 20, paddingBottom: 32 }}>
-                    <Text style={{ color: '#fff', fontSize: 30, fontWeight: '600', letterSpacing: 0.5 }}>
-                        Become Mr. Steamer
+                    <Text
+                        style={{
+                            color: '#fff',
+                            fontSize: 30,
+                            fontWeight: '600',
+                            letterSpacing: 0.5,
+                            textAlign: isAr ? 'right' : 'left',
+                        }}
+                    >
+                        {t('become.title')}
                     </Text>
 
-                    <Text style={{ color: '#fff', marginTop: 12, fontWeight: '600', lineHeight: 20 }}>
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
-                        has been the industry's standard dummy text ever since the 1500s, when an unknown
-                        printer took a galley of type and scrambled it to make a type specimen book. It has
-                        survived not only five centuries, but also the leap into electronic typesetting,
-                        remaining essentially unc
+                    {/* body */}
+                    <Text
+                        style={{
+                            color: '#fff',
+                            marginTop: 12,
+                            fontWeight: '600',
+                            lineHeight: 20,
+                            textAlign: isAr ? 'right' : 'left',   // + RTL
+                        }}
+                    >
+                        {t('become.body')}
                     </Text>
 
                     {/* Register button */}
@@ -53,7 +70,9 @@ const BecomeStreamer: React.FC = () => {
                         }}
                         activeOpacity={0.9}
                     >
-                        <Text style={{ color: '#000000', fontWeight: '500', fontSize: 18 }}>Register</Text>
+                        <Text style={{ color: '#000000', fontWeight: '500', fontSize: 18 }}>
+                            {t('become.register')}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
