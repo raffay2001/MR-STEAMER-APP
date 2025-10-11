@@ -6,6 +6,8 @@ import {
   registerSteamerUser,
   requestPasswordReset,
   resetPasswordWithCode,
+  appleSignInApi,
+  facebookSignInApi,
 } from '../api/auth/auth.api';
 
 type LoginBody = { email: string; password: string };
@@ -37,6 +39,26 @@ export const useAuth = () => {
     setLoading(true);
     try {
       const res = await googleSignInApi(idToken);
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleAppleLogin = useCallback(async (identityToken: string) => {
+    setLoading(true);
+    try {
+      const res = await appleSignInApi(identityToken);
+      return res.data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleFacebookLogin = useCallback(async (accessToken: string) => {
+    setLoading(true);
+    try {
+      const res = await facebookSignInApi(accessToken);
       return res.data;
     } finally {
       setLoading(false);
@@ -87,6 +109,8 @@ export const useAuth = () => {
     loading,
     handleLogin,
     handleGoogleLogin,  
+    handleAppleLogin,
+    handleFacebookLogin,
     handleRegister,
     handleRegisterSteamer,
     handleRequestPasswordReset,

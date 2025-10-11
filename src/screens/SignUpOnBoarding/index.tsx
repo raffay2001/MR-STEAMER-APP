@@ -15,9 +15,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import i18n from '../../i18n';
 import { useTranslation } from 'react-i18next';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
+import { LoginManager, AccessToken, Settings } from 'react-native-fbsdk-next';
 
 export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation }) => {
-  const { loading, handleRegister, handleGoogleLogin } = useAuth();
+
+  const { loading, handleRegister, handleGoogleLogin, handleAppleLogin, handleFacebookLogin } = useAuth();
 
   const { t } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
@@ -29,6 +32,7 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
   const [formErrors, setFormErrors] = useState({
     emailError: false, passwordError: false, nameError: false, confirmPasswordError: false,
   });
+
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +40,7 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Normal Register
   const validateFormFields = useCallback(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).+$/;
@@ -68,6 +73,7 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
     }
   }, [email, password, name, validateFormFields, handleRegister, navigation]);
 
+  // Google
   const onPressGoogle = useCallback(async () => {
     try {
       const hasPS = await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
@@ -86,11 +92,62 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
     }
   }, [handleGoogleLogin, navigation]);
 
+  // Apple
+  const onPressApple = useCallback(async () => {
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      });
+
+      const { identityToken } = appleAuthRequestResponse;
+      if (!identityToken) throw new Error('No identityToken from Apple');
+
+      const apiResp = await handleAppleLogin(identityToken);
+      await persistAuthResponse(apiResp);
+      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+    } catch (e: any) {
+      console.log('🔴 Apple sign-in error:', e);
+      ErrorSuccessToast?.({ type: 'error', message1: e?.message || 'Apple sign-in failed', message2: '' });
+    }
+  }, [handleAppleLogin, navigation]);
+
+  // Facebook
+  Settings.initializeSDK();
+
+  const onPressFacebook = useCallback(async () => {
+    try {
+      // make sure previous session doesn’t hide the scopes prompt
+      LoginManager.logOut();
+
+      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      console.log('✅ FB LoginManager result:', JSON.stringify(result, null, 2));
+      if (result.isCancelled) throw new Error('Facebook login cancelled');
+
+      const access = await AccessToken.getCurrentAccessToken();
+      console.log('✅ FB AccessToken object:', JSON.stringify(access, null, 2));
+
+      const token = access?.accessToken?.toString();
+      if (!token) throw new Error('No access token from Facebook');
+      console.log('✅ FB accessToken string:', token);
+
+      const apiResp = await handleFacebookLogin(token);
+      console.log('✅ Backend /auth/facebook response:', JSON.stringify(apiResp, null, 2));
+
+      await persistAuthResponse(apiResp);
+      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+    } catch (e: any) {
+      console.log('🔴 Facebook sign-in error (full):', e);
+      ErrorSuccessToast?.({ type: 'error', message1: e?.message || 'Facebook sign-in failed', message2: '' });
+    }
+  }, [handleFacebookLogin, navigation]);
+
   return (
     <SafeAreaView className="flex-1 bg-black">
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
         <View className="relative pt-4 px-2">
 
+          {/* Language Toggle */}
           <View className="flex-row justify-end px-4 pt-4">
             <Pressable
               onPress={toggleLanguage}
@@ -100,27 +157,35 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
             </Pressable>
           </View>
 
+          {/* Heading */}
           <Text className="text-white ml-2 pt-6 text-4xl font-[Poppins-SemiBold] mb-6">
             {t('signup.title')}
           </Text>
 
           <View className="px-2 pb-12 flex-1 gap-y-6">
-            {/* Social */}
+            {/* Social Logins */}
             <View className="gap-y-2">
               <Button className="mb-2" variant="outlined" onPress={onPressGoogle}>
                 <SvgWrapper className="mr-4" xml={GoogleSvg} width={24} height={24} />
                 <Text className="text-white text-[16px] font-[Poppins-Medium]">{t('signup.continueGoogle')}</Text>
               </Button>
 
-              <TouchableOpacity className="flex justify-center items-center flex-row h-[56px] bg-white rounded-[10px]" onPress={() => { }}>
+              <TouchableOpacity className="flex justify-center items-center flex-row h-[56px] bg-white rounded-[10px]" onPress={onPressFacebook}>
                 <FacebookLogo width={24} height={24} style={{ marginRight: 16 }} />
                 <Text className="text-black text-[16px] font-[Poppins-Medium]">{t('signup.continueFacebook')}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity className="flex justify-center items-center flex-row h-[56px] bg-white rounded-[10px]" onPress={() => { }}>
-                <AppleLogo width={24} height={24} style={{ marginRight: 16 }} />
-                <Text className="text-black text-[16px] font-[Poppins-Medium]">{t('signup.continueApple')}</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  className="flex justify-center items-center flex-row h-[56px] bg-white rounded-[10px]"
+                  onPress={onPressApple}
+                >
+                  <AppleLogo width={24} height={24} style={{ marginRight: 16 }} />
+                  <Text className="text-black text-[16px] font-[Poppins-Medium]">
+                    {t('signup.continueApple')}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Divider */}

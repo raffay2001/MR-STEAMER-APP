@@ -102,7 +102,10 @@ const DrawerHeader: React.FC<TNavProps> = ({ navigation /*, route*/ }) => {
             navigation.navigate('Profile');
           }}
         >
-          <Image source={ProfileImage} height={20} width={20} />
+          <Image
+            source={user?.picture ? { uri: user.picture } : ProfileImage}
+            style={{ width: 48, height: 48, borderRadius: 24 }}
+          />
           <View className="gap-y-0" style={{ marginLeft: isAr ? 0 : 8, marginRight: isAr ? 8 : 0 }}>
             <Text className="text-white text-xl font-semibold" style={{ textAlign: isAr ? 'right' : 'left' }}>
               {user?.name || 'Guest'}

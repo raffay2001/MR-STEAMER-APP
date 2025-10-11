@@ -13,6 +13,12 @@ export const registerUser = (data: {
 export const googleSignInApi = (idToken: string) =>
   apiClient.post('/auth/google', { idToken });
 
+export const appleSignInApi = (identityToken: string) =>
+  apiClient.post('/auth/apple', { identityToken });
+
+export const facebookSignInApi = (accessToken: string) =>
+  apiClient.post('/auth/facebook', { accessToken });
+
 export const registerSteamerUser = (data: {
   name: string;
   email: string;
