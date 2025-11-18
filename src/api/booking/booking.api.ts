@@ -2,13 +2,27 @@ import apiClient from '../index';
 import { getAccessToken } from '../../hooks/useAuthStorage';
 
 export type CreateBookingPayload = {
+  carId: string;
+  userPackageId: string;
   packageId: string;
-  serviceId: string;
-  details: string;
+  slotId: string;
+
+  additionalAddOns?: Array<{
+    addOnId: string;
+    quantity: number;
+    price: number; // unit price only
+  }>;
+
   mobileNumber: string;
-  time: string;         
-  message?: string;
-  isDiscount?: boolean; 
+  email?: string;
+  address: string;
+
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+
+  specialInstructions?: string;
 };
 
 export const createBooking = async (data: CreateBookingPayload) => {

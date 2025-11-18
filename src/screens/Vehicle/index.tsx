@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
+  DeviceEventEmitter,
 } from 'react-native';
 import { TVehicleProps } from './types';
 import { useEnums } from '../../hooks/useEnums';
@@ -21,6 +22,8 @@ import { setCarProfile } from '../../hooks/useCarStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SAUDI_CITIES, SAUDI_CITIES_AR, SELECTED_CITY } from '../../constants';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import type { AppNavStackParamList } from '../../navigation/navigation.types';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 
@@ -35,6 +38,8 @@ const CITY_KEY = SELECTED_CITY;
 const CITY_OPTIONS = isAr ? SAUDI_CITIES_AR : SAUDI_CITIES;
 
 const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
+  const route = useRoute<RouteProp<AppNavStackParamList, 'Vehicle'>>();
+  const forceCityModal = route.params?.forceCityModal;
   const { loading, fetchEnumsByType } = useEnums();
   const { loading: creating, createCar } = useCar();
 
@@ -115,6 +120,13 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
 
   React.useEffect(() => {
     (async () => {
+      if (forceCityModal) {
+        // always ask again when coming from "Add new car"
+        setShowCityModal(true);
+        setSelectedCity(null);
+        return;
+      }
+
       const saved = await AsyncStorage.getItem(CITY_KEY);
       if (!saved || !CITY_OPTIONS.includes(saved)) {
         setShowCityModal(true);
@@ -124,7 +136,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
         setShowCityModal(false);
       }
     })();
-  }, []);
+  }, [forceCityModal]);
 
   const onPickCity = React.useCallback(async (city: string) => {
     setSelectedCity(city);
@@ -201,6 +213,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
       const created = await createCar(payload);
       console.log('✅ [Vehicle] car created:', created?.id || created);
       await setCarProfile(created);
+      DeviceEventEmitter.emit('CAR_CHANGED', created); // 🔹 notify app
       setShowModal(false);
       navigation.navigate('Drawer', { screen: 'Home' });
     } catch (err: any) {
@@ -385,29 +398,72 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                 right={
                   <View
                     style={{
-                      width: 18, height: 18, borderRadius: 9,
-                      backgroundColor: color || '#ddd', borderWidth: 1, borderColor: '#ccc'
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      backgroundColor: color || '#ddd',
+                      borderWidth: 1,
+                      borderColor: '#ccc',
                     }}
                   />
                 }
-                onPress={() => { setOpenColor(v => !v); setOpenBrand(false); setOpenName(false); setOpenNumber(false); }}
+                onPress={() => {
+                  setOpenColor(v => !v);
+                  setOpenBrand(false);
+                  setOpenName(false);
+                  setOpenNumber(false);
+                }}
               />
               {openColor && (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
-                  {SWATCHES.map(c => {
-                    const active = color?.toLowerCase() === c.toLowerCase();
-                    return (
-                      <TouchableOpacity
-                        key={c}
-                        onPress={() => setColor(c)}
-                        style={{
-                          width: 34, height: 34, borderRadius: 17, backgroundColor: c,
-                          borderWidth: active ? 3 : 1, borderColor: active ? '#111' : '#ddd'
-                        }}
-                      />
-                    );
-                  })}
-                </View>
+                <>
+                  {/* Preset swatches */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {SWATCHES.map(c => {
+                      const active = color?.toLowerCase() === c.toLowerCase();
+                      return (
+                        <TouchableOpacity
+                          key={c}
+                          onPress={() => setColor(c)}
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 17,
+                            backgroundColor: c,
+                            borderWidth: active ? 3 : 1,
+                            borderColor: active ? '#111' : '#ddd',
+                          }}
+                        />
+                      );
+                    })}
+                  </View>
+
+                  {/* Custom color input (hex or name) */}
+                  <TextInput
+                    placeholder="e.g. #FFFFFF or Red"
+                    placeholderTextColor="#888"
+                    value={color}
+                    onChangeText={setColor}
+                    autoCapitalize="none"
+                    style={{
+                      height: 48,
+                      borderWidth: 1,
+                      borderColor: '#eee',
+                      backgroundColor: '#F5F7FA',
+                      borderRadius: 12,
+                      paddingHorizontal: 14,
+                      color: '#111',
+                      marginBottom: 12,
+                      textAlign: isAr ? 'right' : 'left',
+                    }}
+                  />
+                </>
               )}
 
               {/* Brand */}

@@ -11,6 +11,7 @@ export type AppNavStackParamList = {
   SplashScreen: undefined;
   Drawer: undefined;
   Filters: undefined;
+  PackageDetails: { packageId: string }; 
   PrePackage:
     | {
         packageIds?: string[];
@@ -22,6 +23,7 @@ export type AppNavStackParamList = {
   YourBooking: { packageId: string } | undefined;
   Success: { bookingId: string };
   BookingDetailsPage: { id?: string } | undefined;
-  Vehicle: undefined;
+  Vehicle: { forceCityModal?: boolean } | undefined;
   CheckOut: undefined;
+  BuyPackage: { packageId: string };
 };

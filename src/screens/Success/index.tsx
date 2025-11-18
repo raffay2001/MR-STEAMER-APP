@@ -21,7 +21,7 @@ const Success: React.FC = () => {
         (async () => {
             try {
                 const data = await fetchBookingById(bookingId);
-                // console.log('[Success] booking:', data);
+                console.log('[Success] booking:', data);
                 setBooking(data);
             } catch (e) {
                 console.log('[Success] failed to load booking by id:', e);
@@ -46,8 +46,8 @@ const Success: React.FC = () => {
                     }}
                 >
                     <Text style={{ color: '#111', fontSize: 16, fontWeight: '700', textAlign: isAr ? 'right' : 'left' }}>
-                        {booking?.bookingId
-                            ? `${t('success.bookingId')}: ${booking.bookingId}`
+                        {booking?._id
+                            ? `${t('success.bookingId')}: ${booking._id}`
                             : `${t('success.bookingId')}: —`}
                     </Text>
                 </View>
@@ -65,7 +65,7 @@ const Success: React.FC = () => {
                 >
                     <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                         <Text style={{ color: '#6B7280', textAlign: isAr ? 'right' : 'left' }}>{t('success.email')}</Text>
-                        <Text style={{ color: '#111', fontWeight: '600', textAlign: isAr ? 'left' : 'right' }}>{booking?.email || '—'}</Text>
+                        <Text style={{ color: '#111', fontWeight: '600', textAlign: isAr ? 'left' : 'right' }}>{booking?.email ?? booking?.userId?.email ?? '—'}</Text>
                     </View>
                     <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
                     <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', marginTop: 8 }}>
@@ -86,7 +86,7 @@ const Success: React.FC = () => {
 
                 {/* Buttons */}
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('BookingDetailsPage', { id: booking?.id })}
+                    onPress={() => navigation.navigate('BookingDetailsPage', { id: booking?._id })}
                     style={{
                         marginTop: 24,
                         width: '100%',

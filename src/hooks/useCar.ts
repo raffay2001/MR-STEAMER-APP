@@ -1,5 +1,10 @@
-import { useState } from 'react';
-import { createCar as apiCreateCar, type CreateCarPayload } from '../api/car/car.api';
+import { useState, useCallback } from 'react';
+import {
+  createCar as apiCreateCar,
+  getCarsByUserId as apiGetCarsByUserId,
+  type CreateCarPayload,
+  type CarItem,
+} from '../api/car/car.api';
 
 export const useCar = () => {
   const [loading, setLoading] = useState(false);
@@ -14,5 +19,18 @@ export const useCar = () => {
     }
   };
 
-  return { loading, createCar };
+  const fetchCarsByUserId = useCallback(
+    async (userId: string): Promise<CarItem[]> => {
+      setLoading(true);
+      try {
+        const res = await apiGetCarsByUserId(userId);
+        return res;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  return { loading, createCar, fetchCarsByUserId };
 };

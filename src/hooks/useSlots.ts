@@ -1,40 +1,20 @@
-// src/hooks/useSlots.ts
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
-  getAvailableSlots,
-  type GetAvailableSlotsParams,
+  getSlotsByDay,
+  type GetSlotsByDayParams,
+  type SlotItem,
+  type SlotsByDayResponse,
 } from '../api/slot/slot.api';
-
-export type SlotItem = {
-  startTime: string;     // "10:00"
-  endTime: string;       // "11:00"
-  displayTime: string;   // "10:00 AM - 11:00 AM"
-  dateTime: string;      // ISO
-  duration: number;      // minutes
-  day: string;           // "Wednesday"
-  isAvailable: boolean;
-};
-
-export type AvailableSlotsResponse = {
-  date: string;
-  packageId: string | null;
-  totalSlots: number;
-  availableSlots: number;
-  bookedSlots: number;
-  slotDuration: number;
-  slots: SlotItem[];
-  bookedSlotDetails?: any[];
-};
 
 export const useSlots = () => {
   const [loading, setLoading] = useState(false);
 
-  const fetchAvailableSlots = useCallback(
-    async (params: GetAvailableSlotsParams): Promise<AvailableSlotsResponse> => {
+  const fetchSlotsByDay = useCallback(
+    async (params: GetSlotsByDayParams): Promise<SlotsByDayResponse> => {
       setLoading(true);
       try {
-        const res = await getAvailableSlots(params);
-        return res.data as AvailableSlotsResponse;
+        const res = await getSlotsByDay(params);
+        return res;
       } finally {
         setLoading(false);
       }
@@ -42,5 +22,5 @@ export const useSlots = () => {
     []
   );
 
-  return { loading, fetchAvailableSlots };
+  return { loading, fetchSlotsByDay };
 };

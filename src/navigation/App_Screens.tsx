@@ -15,6 +15,8 @@ import MyDrawer from './Drawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VEHICLE_SETUP_DONE } from '../constants';
 import i18n from '../i18n';
+import PackageDetails from '../screens/PackageDetails';
+import BuyNow from '../screens/BuyNow';
 
 const Stack = createNativeStackNavigator<AppNavStackParamList>();
 
@@ -46,6 +48,16 @@ const App_Screens: React.FC = () => {
           title: i18n.language?.startsWith('ar') ? 'الفلاتر' : 'Filters',
           headerTitleAlign: 'center',
         }}
+      />
+      <Stack.Screen
+        name="PackageDetails"
+        component={PackageDetails}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BuyPackage"
+        component={BuyNow}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="PrePackage"

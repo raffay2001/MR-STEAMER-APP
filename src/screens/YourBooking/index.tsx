@@ -3,382 +3,1042 @@ import {
     SafeAreaView,
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     ScrollView,
     ActivityIndicator,
-    Alert,
+    TextInput,
+    PermissionsAndroid,
+    Platform,
+    Alert
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-
 import { usePackage } from '../../hooks/usePackage';
-import { useSlots, type SlotItem } from '../../hooks/useSlots';
+import { getCarProfile } from '../../hooks/useCarStorage';
+import { getUserData } from '../../hooks/useAuthStorage';
+import { checkIfUserOwnsPackage } from '../../api/package/package.api';
+import { useSlots } from '../../hooks/useSlots';
+import type { SlotItem } from '../../api/slot/slot.api';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import { useAddons } from '../../hooks/useAddons';
+import type { AddonItem } from '../../api/addon/addon.api';
+import Geolocation from 'react-native-geolocation-service';
 import { useBooking } from '../../hooks/useBooking';
 
-import { useTranslation } from 'react-i18next';
-import i18n from '../../i18n';
+const BRAND = '#223671';
 
 type RouteParams = { packageId: string };
 
 const YourBooking: React.FC = () => {
-    const route = useRoute<any>();
     const navigation = useNavigation<any>();
-    const { t } = useTranslation();
-    const isAr = i18n.language?.startsWith('ar');
+    const route = useRoute<any>();
     const { packageId } = (route?.params || {}) as RouteParams;
 
-    // Package details
     const { fetchPackageById } = usePackage();
     const [pkg, setPkg] = React.useState<any | null>(null);
+    const [loading, setLoading] = React.useState(true);
 
-    // Inputs
-    const [phone, setPhone] = React.useState('');
-    const [message, setMessage] = React.useState('');
+    const [car, setCar] = React.useState<any | null>(null);
+    const [userPackageId, setUserPackageId] = React.useState<string | null>(null);
 
-    // Slots/date picker (same behavior as Home)
-    const { loading: slotsLoading, fetchAvailableSlots } = useSlots();
-    const [showPicker, setShowPicker] = React.useState(false);
+    const { loading: slotsLoading, fetchSlotsByDay } = useSlots();
+
+    const [selectedDay, setSelectedDay] = React.useState<string>('');
+    const [daysToShow, setDaysToShow] = React.useState<string[]>([]);
     const [slots, setSlots] = React.useState<SlotItem[]>([]);
-    const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
+    const slotSheetRef = React.useRef<any>(null);;
     const [selectedSlot, setSelectedSlot] = React.useState<SlotItem | null>(null);
-    const [showSlotModal, setShowSlotModal] = React.useState(false);
 
-    const { loading: creating, createBooking } = useBooking();
+    const { loading: addonsLoading, addons, fetchAddons } = useAddons();
+    const addonSheetRef = React.useRef<any>(null);
+    const [selectedAddons, setSelectedAddons] = React.useState<Record<string, number>>({});
 
-    const dayLabel = (d: Date) => {
-        const today = new Date();
-        const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const diff = (dd.getTime() - t.getTime()) / (1000 * 60 * 60 * 24);
-        if (diff === 0) return 'Today';
-        if (diff === 1) return 'Tomorrow';
-        return d.toLocaleDateString(undefined, { weekday: 'long' });
-    };
+    const [mobileNumber, setMobileNumber] = React.useState('');
+    const [email, setEmail] = React.useState('');
+    const [specialInstructions, setSpecialInstructions] = React.useState('');
 
-    const fmtDate = (d: Date) =>
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-            d.getDate()
-        ).padStart(2, '0')}`;
+    const [address, setAddress] = React.useState('');
+    const [latitude, setLatitude] = React.useState<number | null>(null);
+    const [longitude, setLongitude] = React.useState<number | null>(null);
 
-    const onPickDate = async (_: any, date?: Date) => {
-        setShowPicker(false);
-        if (!date) return;
-        setSelectedDate(date);
-        try {
-            const res = await fetchAvailableSlots({ date: fmtDate(date) });
-            setSlots(res?.slots ?? []);
-            setShowSlotModal(true);
-        } catch {
-            setSlots([]);
-            setShowSlotModal(false);
-        }
-    };
+    const [locLoading, setLocLoading] = React.useState(false);
+    const [checkoutLoading, setCheckoutLoading] = React.useState(false);
 
-    // Fetch package details
+    const { createBooking } = useBooking();
+
     React.useEffect(() => {
         if (!packageId) return;
+
         (async () => {
             try {
+                setLoading(true);
                 const data = await fetchPackageById(packageId);
                 setPkg(data);
-                console.log('[YourBooking] package details:', data);
             } catch (e) {
                 console.log('[YourBooking] failed to fetch package:', e);
                 setPkg(null);
+            } finally {
+                setLoading(false);
             }
         })();
     }, [packageId, fetchPackageById]);
 
-    const parseStartHM = (s: string) => {
-        const m = s?.match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/);
-        if (!m) return { h: 0, min: 0, ok: false };
-        let h = parseInt(m[1], 10);
-        const min = parseInt(m[2], 10);
-        const ap = m[3]?.toLowerCase();
-        if (ap === 'pm' && h < 12) h += 12;
-        if (ap === 'am' && h === 12) h = 0;
-        return { h, min, ok: true };
+    React.useEffect(() => {
+        (async () => {
+            try {
+                // 🚗 Get car profile
+                const c = await getCarProfile();
+                setCar(c);
+                const carId = c?._id || c?.id;
+                console.log('[YourBooking] car profile:', c);
+                console.log('[YourBooking] carId:', carId);
+
+                // 🎫 Get user package for this package
+                const u = await getUserData();
+                if (u?.id && packageId) {
+                    const ownRes = await checkIfUserOwnsPackage(u.id as string, packageId);
+                    const first = ownRes?.results?.[0];
+                    if (first?.id) {
+                        setUserPackageId(first.id);
+                        console.log('[YourBooking] userPackageId:', first.id);
+                    } else {
+                        console.log('[YourBooking] no active userPackage for this package');
+                    }
+                }
+            } catch (e) {
+                console.log('[YourBooking] car/userPackage fetch error:', e);
+            }
+        })();
+    }, [packageId]);
+
+    React.useEffect(() => {
+        const all = [
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+            'sunday',
+        ];
+
+        const jsDay = new Date().getDay(); // 0 = Sun ... 6 = Sat
+        const startIdx = (jsDay + 6) % 7;  // 0 = Mon ... 6 = Sun
+
+        const ordered = all.slice(startIdx); // today → Sunday
+
+        setDaysToShow(ordered);
+        setSelectedDay(all[startIdx]);
+    }, []);
+
+    React.useEffect(() => {
+        if (!selectedDay) return;
+
+        (async () => {
+            try {
+                const res = await fetchSlotsByDay({ day: selectedDay, limit: 50 });
+                setSlots(res.results || []);
+            } catch (e) {
+                console.log('[YourBooking] fetch slots error:', e);
+                setSlots([]);
+            }
+        })();
+    }, [selectedDay, fetchSlotsByDay]);
+
+    React.useEffect(() => {
+        fetchAddons();
+    }, [fetchAddons]);
+
+    const priceLabel =
+        pkg?.pricingType === 'fixed'
+            ? `SAR ${pkg.fixedPrice}`
+            : 'Vehicle based pricing';
+
+    const updateAddonQty = (addonId: string, delta: number) => {
+        setSelectedAddons((prev) => {
+            const current = prev[addonId] ?? 0;
+            const next = Math.max(0, current + delta);
+
+            const copy: Record<string, number> = { ...prev };
+            if (next === 0) {
+                delete copy[addonId];
+            } else {
+                copy[addonId] = next;
+            }
+            return copy;
+        });
     };
 
-    const buildTimeIso = (date: Date, slot: SlotItem) => {
-        const disp = (slot as any)?.displayTime ?? '';
-        const { h, min, ok } = parseStartHM(String(disp));
-        return new Date(Date.UTC(
-            date.getFullYear(), date.getMonth(), date.getDate(),
-            ok ? h : 0, ok ? min : 0, 0
-        )).toISOString().replace('.000Z', 'Z');
-    };
+    const additionalAddOns =
+        addons.length === 0
+            ? []
+            : Object.entries(selectedAddons)
+                .filter(([, qty]) => qty > 0)
+                .map(([addonId, quantity]) => {
+                    const addon = addons.find((a) => a.id === addonId);
+                    if (!addon) return null;
+                    return {
+                        addOnId: addonId,
+                        quantity,
+                        price: addon.price, // unit price (not total)
+                    };
+                })
+                .filter(Boolean) as { addOnId: string; quantity: number; price: number }[];
 
-    const onCheckout = async () => {
-        if (!pkg?.id) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noPackage'));
-        if (!phone.trim()) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noPhone'));
-        if (!selectedDate) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noDate'));
-        if (!selectedSlot) return Alert.alert(t('booking.errorTitle'), t('booking.errors.noSlot'));
+    const addonsTotal = additionalAddOns.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+    );
 
-        const timeIso = buildTimeIso(selectedDate, selectedSlot);
-        const payload = {
-            packageId: pkg.id,
-            serviceId: pkg.service,
-            details: pkg.detail ?? '',
-            mobileNumber: phone.trim(),
-            time: timeIso,
-            message: message.trim(),
-            isDiscount: false,
-        };
-        // console.log('[YourBooking] checkout payload:', payload);
-        try {
-            const result = await createBooking(payload);
-            console.log('[YourBooking] booking created:', result);
-            navigation.navigate('Success', { bookingId: result.id });
-        } catch (e) {
-            console.log('[YourBooking] booking failed:', e);
-            Alert.alert(t('booking.errorTitle'), t('booking.errors.createFail'));
+    const requestLocationPermission = async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
         }
+        return true; // iOS auto handled
     };
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-            <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-                {/* Top details box */}
+    const useCurrentLocation = async () => {
+        const ok = await requestLocationPermission();
+        if (!ok) {
+            Alert.alert('Location permission required.');
+            return;
+        }
+
+        setLocLoading(true);
+
+        Geolocation.getCurrentPosition(
+            (pos) => {
+                setLatitude(pos.coords.latitude);
+                setLongitude(pos.coords.longitude);
+                setLocLoading(false);
+            },
+            (err) => {
+                console.log(err);
+                Alert.alert('Unable to get location');
+                setLocLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+    };
+
+    const canCheckout =
+        !!car &&
+        !!userPackageId &&
+        !!selectedSlot &&
+        mobileNumber.trim().length > 0 &&
+        email.trim().length > 0 &&
+        specialInstructions.trim().length > 0;
+
+    if (loading || !pkg) {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
                 <View
                     style={{
-                        backgroundColor: '#E2E2E2',
-                        borderRadius: 12,
-                        padding: 14,
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
                     }}
                 >
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#111' }}>
-                        {pkg?.name ?? '—'}
+                    <ActivityIndicator size="large" color={BRAND} />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Package summary card */}
+                <View
+                    style={{
+                        backgroundColor: '#fff',
+                        borderRadius: 16,
+                        padding: 18,
+                        marginBottom: 16,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.05,
+                        shadowRadius: 8,
+                        shadowOffset: { width: 0, height: 4 },
+                        elevation: 2,
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: 18,
+                            fontWeight: '700',
+                            color: '#111827',
+                            marginBottom: 4,
+                        }}
+                    >
+                        {pkg.name}
                     </Text>
 
-                    <View style={{ height: 6 }} />
-
-                    <Text style={{ fontSize: 14, color: '#111' }}>
-                        {pkg?.type ? `${pkg.type} • ` : ''}
-                        {typeof pkg?.pricing === 'number' ? `${pkg.pricing} ${t('common.sar')}` : '—'}
+                    <Text
+                        style={{
+                            fontSize: 13,
+                            color: '#6B7280',
+                            marginBottom: 8,
+                        }}
+                    >
+                        {pkg.pricingType === 'fixed'
+                            ? 'Fixed price package'
+                            : 'Vehicle based pricing'}
                     </Text>
 
-                    {!!pkg?.detail && (
-                        <Text style={{ marginTop: 6, color: '#333' }}>{pkg.detail}</Text>
+                    <Text
+                        style={{
+                            fontSize: 16,
+                            fontWeight: '700',
+                            color: BRAND,
+                            marginBottom: 10,
+                        }}
+                    >
+                        {priceLabel}
+                    </Text>
+
+                    {pkg.description ? (
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                lineHeight: 20,
+                                color: '#4B5563',
+                            }}
+                        >
+                            {pkg.description}
+                        </Text>
+                    ) : null}
+
+                    {/* Usage / expiry inline row */}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            marginTop: 12,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: '#374151',
+                            }}
+                        >
+                            Usage limit:{' '}
+                            <Text style={{ fontWeight: '600' }}>
+                                {pkg.usageLimit ?? 'Unlimited'}
+                            </Text>
+                        </Text>
+
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: '#374151',
+                            }}
+                        >
+                            {pkg.hasExpiry
+                                ? `Expires: ${pkg.expiryDate || 'N/A'}`
+                                : 'No expiry'}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Day selector */}
+                {/* Slot selector (single button) */}
+                <View style={{ marginBottom: 16 }}>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontWeight: '600',
+                            color: '#111827',
+                            marginBottom: 8,
+                        }}
+                    >
+                        Choose Slot *
+                    </Text>
+
+                    <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => slotSheetRef.current?.open()}
+                        style={{
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                            backgroundColor: '#fff',
+                            paddingVertical: 12,
+                            paddingHorizontal: 14,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    color: selectedSlot ? '#111827' : '#9CA3AF',
+                                    fontWeight: selectedSlot ? '500' : '400',
+                                }}
+                                numberOfLines={1}
+                            >
+                                {selectedSlot
+                                    ? `${selectedSlot.day ?? selectedDay} • ${selectedSlot.time}`
+                                    : slotsLoading
+                                        ? 'Loading slots...'
+                                        : 'Tap to choose day & time'}
+                            </Text>
+                            {selectedSlot && (
+                                <Text
+                                    style={{
+                                        fontSize: 12,
+                                        color: '#6B7280',
+                                        marginTop: 2,
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    Change slot
+                                </Text>
+                            )}
+                        </View>
+
+                        <Ionicons name="time-outline" size={18} color="#9CA3AF" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Slot bottom sheet */}
+                <RBSheet
+                    ref={slotSheetRef}
+                    {...{ closeOnDragDown: true }}
+                    closeOnPressMask
+                    customStyles={{
+                        wrapper: { backgroundColor: 'rgba(0,0,0,0.4)' },
+                        container: {
+                            height: '70%',
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            padding: 16,
+                            paddingBottom: 24,
+                        },
+                    }}
+                >
+                    {/* Sheet header */}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                fontWeight: '600',
+                                color: '#111827',
+                            }}
+                        >
+                            Choose day & time
+                        </Text>
+                        <TouchableOpacity onPress={() => slotSheetRef.current?.close()}>
+                            <Ionicons name="close" size={20} color="#6B7280" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Day chips inside sheet */}
+                    {daysToShow.length > 0 && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{
+                                paddingVertical: 8,
+                                paddingHorizontal: 4,
+                                marginBottom: 18,
+                            }}
+                        >
+                            {daysToShow.map((day) => {
+                                const isActive = day === selectedDay;
+                                const label = day.charAt(0).toUpperCase() + day.slice(1);
+
+                                return (
+                                    <TouchableOpacity
+                                        key={day}
+                                        onPress={() => setSelectedDay(day)}
+                                        style={{
+                                            height: 32,
+                                            paddingHorizontal: 14,
+                                            borderRadius: 999,
+                                            borderWidth: 1,
+                                            borderColor: isActive ? BRAND : '#E5E7EB',
+                                            backgroundColor: isActive ? `${BRAND}15` : '#fff',
+                                            marginRight: 8,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginBottom: 10
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 13,
+                                                lineHeight: 18,
+                                                fontWeight: '500',
+                                                color: isActive ? BRAND : '#374151',
+                                            }}
+                                        >
+                                            {label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                    )}
+
+                    {slotsLoading ? (
+                        <View
+                            style={{
+                                flex: 1,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 16,
+                            }}
+                        >
+                            <ActivityIndicator size="small" color={BRAND} />
+                        </View>
+                    ) : slots.length === 0 ? (
+                        <View style={{ paddingVertical: 12 }}>
+                            <Text style={{ color: '#6B7280', fontSize: 14 }}>
+                                No slots available for this day.
+                            </Text>
+                        </View>
+                    ) : (
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{ paddingTop: 1 }}
+                        >
+                            {slots.map((slot) => {
+                                const isActive = selectedSlot?.id === slot.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={slot.id}
+                                        onPress={() => {
+                                            setSelectedSlot(slot);
+                                            slotSheetRef.current?.close();
+                                        }}
+                                        style={{
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 10,
+                                            borderRadius: 10,
+                                            marginBottom: 8,
+                                            backgroundColor: isActive ? `${BRAND}10` : '#F9FAFB',
+                                            borderWidth: 1,
+                                            borderColor: isActive ? BRAND : '#E5E7EB',
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 14,
+                                                color: '#111827',
+                                                fontWeight: '500',
+                                            }}
+                                        >
+                                            {slot.time}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                fontSize: 12,
+                                                color: '#6B7280',
+                                            }}
+                                        >
+                                            {slot.duration} min
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                    )}
+                </RBSheet>
+
+                {/* Additional Add-ons trigger */}
+                <View style={{ marginBottom: 16 }}>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontWeight: '600',
+                            color: '#111827',
+                            marginBottom: 8,
+                        }}
+                    >
+                        Additional Add-ons
+                    </Text>
+
+                    <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => addonSheetRef.current?.open()}
+                        style={{
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                            backgroundColor: '#fff',
+                            paddingVertical: 12,
+                            paddingHorizontal: 14,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    color: addonsTotal > 0 ? '#111827' : '#9CA3AF',
+                                    fontWeight: addonsTotal > 0 ? '500' : '400',
+                                }}
+                                numberOfLines={1}
+                            >
+                                {addonsTotal > 0
+                                    ? `Selected ${Object.keys(selectedAddons).length} add-on(s)`
+                                    : 'Tap to add extras to your wash'}
+                            </Text>
+                            {addonsTotal > 0 && (
+                                <Text
+                                    style={{
+                                        fontSize: 12,
+                                        color: BRAND,
+                                        marginTop: 2,
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    Add-ons total: SAR {addonsTotal}
+                                </Text>
+                            )}
+                        </View>
+
+                        <Ionicons name="add-circle-outline" size={18} color="#9CA3AF" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Add-ons bottom sheet */}
+                <RBSheet
+                    ref={addonSheetRef}
+                    {...{ closeOnDragDown: true }}
+                    closeOnPressMask
+                    customStyles={{
+                        wrapper: { backgroundColor: 'rgba(0,0,0,0.4)' },
+                        container: {
+                            height: '65%',
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            padding: 16,
+                            paddingBottom: 24,
+                        },
+                    }}
+                >
+                    {/* Sheet header */}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                fontWeight: '600',
+                                color: '#111827',
+                            }}
+                        >
+                            Choose Add-ons
+                        </Text>
+                        <TouchableOpacity onPress={() => addonSheetRef.current?.close()}>
+                            <Ionicons name="close" size={20} color="#6B7280" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {addonsLoading ? (
+                        <View
+                            style={{
+                                flex: 1,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 16,
+                            }}
+                        >
+                            <ActivityIndicator size="small" color={BRAND} />
+                        </View>
+                    ) : addons.length === 0 ? (
+                        <View style={{ paddingVertical: 12 }}>
+                            <Text style={{ fontSize: 13, color: '#6B7280' }}>
+                                No add-ons available.
+                            </Text>
+                        </View>
+                    ) : (
+                        <>
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{ paddingBottom: 8 }}
+                            >
+                                {addons.map((addon: AddonItem) => {
+                                    const qty = selectedAddons[addon.id] ?? 0;
+                                    return (
+                                        <View
+                                            key={addon.id}
+                                            style={{
+                                                paddingVertical: 10,
+                                                borderBottomWidth: 0.5,
+                                                borderBottomColor: '#E5E7EB',
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                            }}
+                                        >
+                                            <View style={{ flex: 1, paddingRight: 8 }}>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 14,
+                                                        fontWeight: '600',
+                                                        color: '#111827',
+                                                    }}
+                                                >
+                                                    {addon.name}
+                                                </Text>
+                                                {addon.description ? (
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 12,
+                                                            color: '#6B7280',
+                                                            marginTop: 2,
+                                                        }}
+                                                        numberOfLines={2}
+                                                    >
+                                                        {addon.description}
+                                                    </Text>
+                                                ) : null}
+                                                <Text
+                                                    style={{
+                                                        fontSize: 13,
+                                                        color: BRAND,
+                                                        marginTop: 4,
+                                                    }}
+                                                >
+                                                    SAR {addon.price}
+                                                </Text>
+                                            </View>
+
+                                            {/* Qty controls */}
+                                            <View
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                <TouchableOpacity
+                                                    onPress={() => updateAddonQty(addon.id, -1)}
+                                                    style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: 999,
+                                                        borderWidth: 1,
+                                                        borderColor: '#E5E7EB',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        marginRight: 8,
+                                                    }}
+                                                >
+                                                    <Ionicons name="remove" size={16} color="#374151" />
+                                                </TouchableOpacity>
+
+                                                <Text
+                                                    style={{
+                                                        minWidth: 24,
+                                                        textAlign: 'center',
+                                                        fontSize: 14,
+                                                        fontWeight: '500',
+                                                        color: '#111827',
+                                                    }}
+                                                >
+                                                    {qty}
+                                                </Text>
+
+                                                <TouchableOpacity
+                                                    onPress={() => updateAddonQty(addon.id, 1)}
+                                                    style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: 999,
+                                                        borderWidth: 1,
+                                                        borderColor: BRAND,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        marginLeft: 8,
+                                                    }}
+                                                >
+                                                    <Ionicons name="add" size={16} color={BRAND} />
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    );
+                                })}
+                            </ScrollView>
+
+                            {/* Total add-ons price */}
+                            {addonsTotal > 0 && (
+                                <View
+                                    style={{
+                                        marginTop: 8,
+                                        paddingTop: 8,
+                                        borderTopWidth: 0.5,
+                                        borderTopColor: '#E5E7EB',
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            fontSize: 13,
+                                            color: '#374151',
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        Add-ons Total
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontSize: 13,
+                                            color: BRAND,
+                                            fontWeight: '700',
+                                        }}
+                                    >
+                                        SAR {addonsTotal}
+                                    </Text>
+                                </View>
+                            )}
+                        </>
+                    )}
+                </RBSheet>
+
+                {/* Contact & instructions */}
+                <View
+                    style={{
+                        backgroundColor: '#fff',
+                        borderRadius: 16,
+                        padding: 14,
+                        marginBottom: 12,
+                        borderWidth: 1,
+                        borderColor: '#E5E7EB',
+                    }}
+                >
+                    {/* Mobile */}
+                    <View style={{ marginBottom: 10 }}>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                fontWeight: '500',
+                                color: '#111827',
+                                marginBottom: 4,
+                            }}
+                        >
+                            Mobile Number *
+                        </Text>
+                        <TextInput
+                            value={mobileNumber}
+                            onChangeText={setMobileNumber}
+                            keyboardType="phone-pad"
+                            placeholder="+9665..."
+                            placeholderTextColor="#9CA3AF"
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                fontSize: 14,
+                                color: '#111827',
+                                backgroundColor: '#F9FAFB',
+                            }}
+                        />
+                    </View>
+
+                    {/* Email */}
+                    <View style={{ marginBottom: 10 }}>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                fontWeight: '500',
+                                color: '#111827',
+                                marginBottom: 4,
+                            }}
+                        >
+                            Email *
+                        </Text>
+                        <TextInput
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            placeholder="you@example.com"
+                            placeholderTextColor="#9CA3AF"
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                fontSize: 14,
+                                color: '#111827',
+                                backgroundColor: '#F9FAFB',
+                            }}
+                        />
+                    </View>
+
+                    {/* Special instructions */}
+                    <View>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                fontWeight: '500',
+                                color: '#111827',
+                                marginBottom: 4,
+                            }}
+                        >
+                            Special Instructions *
+                        </Text>
+                        <TextInput
+                            value={specialInstructions}
+                            onChangeText={setSpecialInstructions}
+                            placeholder="E.g. Come near the bakery"
+                            placeholderTextColor="#9CA3AF"
+                            multiline
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                fontSize: 14,
+                                color: '#111827',
+                                backgroundColor: '#F9FAFB',
+                                minHeight: 70,
+                                textAlignVertical: 'top',
+                            }}
+                        />
+                    </View>
+                </View>
+
+                {/* Address */}
+                <View style={{ marginBottom: 16 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                        Address
+                    </Text>
+
+                    <View
+                        style={{
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                            backgroundColor: '#fff',
+                            paddingVertical: 10,
+                            paddingHorizontal: 14,
+                        }}
+                    >
+                        <TextInput
+                            placeholder="Enter your address"
+                            value={address}
+                            onChangeText={setAddress}
+                            style={{ fontSize: 14, color: '#111827' }}
+                        />
+                    </View>
+                </View>
+
+                {/* Location */}
+                <View style={{ marginBottom: 16 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                        Location (Latitude & Longitude)
+                    </Text>
+
+                    <TouchableOpacity
+                        onPress={useCurrentLocation}
+                        style={{
+                            padding: 12,
+                            backgroundColor: BRAND,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                        }}
+                    >
+                        {locLoading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>
+                                Use Current Location
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+
+                    {latitude && longitude && (
+                        <Text style={{ marginTop: 8, fontSize: 13, color: '#374151' }}>
+                            Lat: {latitude} | Lng: {longitude}
+                        </Text>
                     )}
                 </View>
 
-                {/* Inputs */}
-                <View style={{ marginTop: 16 }}>
-                    <Text style={{ color: '#111', marginBottom: 8, fontWeight: '600', textAlign: isAr ? 'right' : 'left' }}>
-                        {t('booking.mobileLabel')}
-                    </Text>
-                    <TextInput
-                        placeholder={t('booking.mobilePlaceholder')}
-                        placeholderTextColor="#9CA3AF"
-                        keyboardType="phone-pad"
-                        value={phone}
-                        onChangeText={setPhone}
-                        style={{
-                            height: 48, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB',
-                            paddingHorizontal: 12, backgroundColor: '#fff', color: '#111', textAlign: isAr ? 'right' : 'left'
-                        }}
-                    />
-                </View>
+                {/* Checkout button */}
+                <TouchableOpacity
+                    activeOpacity={0.85}
+                    disabled={!canCheckout}
+                    style={{
+                        backgroundColor: canCheckout ? BRAND : '#9CA3AF',
+                        paddingVertical: 14,
+                        borderRadius: 999,
+                        alignItems: 'center',
+                        marginTop: 8,
+                        opacity: canCheckout ? 1 : 0.7,
+                    }}
+                    onPress={async () => {
+                        if (!car || !selectedSlot || !mobileNumber || !address || latitude === null || longitude === null) {
+                            Alert.alert('Please fill all required fields.');
+                            return;
+                        }
 
-                <View style={{ marginTop: 16 }}>
-                    <Text style={{ color: '#111', marginBottom: 8, fontWeight: '600', textAlign: isAr ? 'right' : 'left' }}>
-                        {t('booking.messageLabel')}
-                    </Text>
-                    <TextInput
-                        placeholder={t('booking.messagePlaceholder')}
-                        placeholderTextColor="#9CA3AF"
-                        value={message}
-                        onChangeText={setMessage}
-                        multiline
-                        numberOfLines={4}
-                        style={{
-                            minHeight: 100, textAlignVertical: 'top', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB',
-                            paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#111',
-                            textAlign: isAr ? 'right' : 'left'
-                        }}
-                    />
-                </View>
+                        setCheckoutLoading(true);
 
-                {/* Availability Slot (same UI/behavior as Home) */}
-                <View style={{ marginTop: 16 }}>
-                    <TouchableOpacity
-                        style={{ elevation: 5, minWidth: 0, height: 70, borderRadius: 12, overflow: 'hidden' }}
-                        onPress={() => {
-                            if (selectedDate && slots.length > 0) setShowSlotModal(true);
-                            else setShowPicker(true);
-                        }}
-                    >
-                        <LinearGradient
-                            colors={['#000000', '#2C4694']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{
-                                flex: 1,
-                                borderRadius: 12,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingHorizontal: 12,
-                            }}
-                        >
-                            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', textAlign: 'center' }}>
-                                {t('booking.slotTitle')}
-                            </Text>
-                            <Text style={{ color: '#fff', fontSize: 14, textAlign: 'center' }}>
-                                {selectedDate
-                                    ? `${dayLabel(selectedDate)}${selectedSlot ? `, ${selectedSlot.displayTime}` : `, ${t('booking.selectSlot')}`}`
-                                    : t('booking.selectSlot')}
-                            </Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </View>
+                        const payload = {
+                            carId: car?._id || car?.id,
+                            userPackageId: userPackageId!,
+                            packageId,
+                            slotId: selectedSlot.id,
+                            additionalAddOns,
+                            mobileNumber,
+                            email,
+                            address,
+                            location: { latitude, longitude },
+                            specialInstructions,
+                        };
 
-                {/* Check out */}
-                <View style={{ marginTop: 16 }}>
-                    <TouchableOpacity
-                        onPress={onCheckout}
-                        disabled={creating}
-                        style={{
-                            height: 48,
-                            borderRadius: 12,
-                            backgroundColor: '#2C4694',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: creating ? 0.7 : 1,
-                        }}
-                    >
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
-                            {creating ? t('booking.processing') : t('booking.checkout')}
+                        const response = await createBooking(payload);
+
+                        setCheckoutLoading(false);
+
+                        navigation.replace('Success', { bookingId: response.id });
+                    }}
+                >
+                    {checkoutLoading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
+                            Checkout
                         </Text>
-                    </TouchableOpacity>
-                </View>
+                    )}
+                </TouchableOpacity>
             </ScrollView>
-
-            {/* Date picker */}
-            {showPicker && (
-                <DateTimePicker
-                    value={selectedDate || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={onPickDate}
-                    minimumDate={new Date()}
-                />
-            )}
-
-            {/* Slots modal */}
-            <ModalSlots
-                visible={showSlotModal}
-                onClose={() => setShowSlotModal(false)}
-                slotsLoading={slotsLoading}
-                slots={slots}
-                selectedSlot={selectedSlot}
-                onSelect={(s) => {
-                    setSelectedSlot(s);
-                    setShowSlotModal(false);
-                }}
-                title={selectedDate ? t('booking.pickTime', { day: dayLabel(selectedDate) }) : t('booking.pickTimeSimple')}
-            />
         </SafeAreaView>
     );
 };
 
 export default YourBooking;
-
-/** Small internal component for the slots modal (copied structure of Home) */
-const ModalSlots = ({
-    visible,
-    onClose,
-    slotsLoading,
-    slots,
-    selectedSlot,
-    onSelect,
-    title,
-}: {
-    visible: boolean;
-    onClose: () => void;
-    slotsLoading: boolean;
-    slots: SlotItem[];
-    selectedSlot: SlotItem | null;
-    onSelect: (s: SlotItem) => void;
-    title: string;
-}) => {
-    const { t } = useTranslation();
-    return (
-        <React.Fragment>
-            {visible && (
-                <View
-                    style={{
-                        position: 'absolute',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <View
-                        style={{
-                            width: '90%',
-                            maxWidth: 480,
-                            maxHeight: '70%',
-                            backgroundColor: '#fff',
-                            borderRadius: 14,
-                            padding: 12,
-                            elevation: 10,
-                        }}
-                    >
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: 6,
-                            }}
-                        >
-                            <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>{title}</Text>
-                            <TouchableOpacity onPress={onClose} style={{ padding: 6 }}>
-                                <Ionicons name="close" size={20} color="#111" />
-                            </TouchableOpacity>
-                        </View>
-
-                        {slotsLoading ? (
-                            <ActivityIndicator />
-                        ) : slots.length === 0 ? (
-                            <Text style={{ color: '#555', paddingVertical: 10 }}>
-                                {t('booking.noSlots')}
-                            </Text>
-                        ) : (
-                            <ScrollView>
-                                {slots.map((s, i) => {
-                                    const disabled = !s.isAvailable;
-                                    const active =
-                                        selectedSlot?.startTime === s.startTime &&
-                                        selectedSlot?.endTime === s.endTime;
-                                    return (
-                                        <TouchableOpacity
-                                            key={`${s.startTime}-${s.endTime}-${i}`}
-                                            disabled={disabled}
-                                            onPress={() => onSelect(s)}
-                                            style={{
-                                                paddingVertical: 12,
-                                                paddingHorizontal: 14,
-                                                backgroundColor: active ? '#F1F5F9' : '#fff',
-                                                opacity: disabled ? 0.5 : 1,
-                                                borderTopWidth: i === 0 ? 0 : 1,
-                                                borderColor: '#eee',
-                                            }}
-                                        >
-                                            <Text style={{ color: '#111' }}>{s.displayTime}</Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </ScrollView>
-                        )}
-                    </View>
-                </View>
-            )}
-        </React.Fragment>
-    );
-};
