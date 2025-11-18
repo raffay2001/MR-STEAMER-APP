@@ -21,7 +21,6 @@ const Success: React.FC = () => {
         (async () => {
             try {
                 const data = await fetchBookingById(bookingId);
-                console.log('[Success] booking:', data);
                 setBooking(data);
             } catch (e) {
                 console.log('[Success] failed to load booking by id:', e);

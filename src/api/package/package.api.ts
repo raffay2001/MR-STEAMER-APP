@@ -32,7 +32,6 @@ export type PackageListResponse = {
 
 export const getAllPackages = async (): Promise<PackageListResponse> => {
   const token = await getAccessToken();
-  console.log('[getAllPackages] token exists:', !!token);
 
   const res = await apiClient.get('/package', {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -43,7 +42,6 @@ export const getAllPackages = async (): Promise<PackageListResponse> => {
 
 export const getPackageById = async (id: string): Promise<PackageItem> => {
   const token = await getAccessToken();
-  console.log('[getPackageById] id:', id, 'token exists:', !!token);
 
   const res = await apiClient.get(`/package/${id}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
