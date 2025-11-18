@@ -58,7 +58,7 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-black">
-      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView className="flex-1">
 
         {/* Top bar: language toggle */}
         <View className="flex-row justify-end px-4 pt-6">
