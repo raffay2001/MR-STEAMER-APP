@@ -1,7 +1,12 @@
 import React from 'react';
-import { SafeAreaView, View, Text, ActivityIndicator, ScrollView, Pressable, TouchableOpacity } from 'react-native';
+import {
+    SafeAreaView,
+    View,
+    Text,
+    ActivityIndicator,
+    ScrollView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { usePackage } from '../../hooks/usePackage';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -10,9 +15,8 @@ const ChoosePackages: React.FC = () => {
     const navigation = useNavigation<any>();
     const { t } = useTranslation();
     const isAr = i18n.language?.startsWith('ar');
-    const { loading, fetchPackages } = usePackage();
+    const { loading, fetchMyUserPackages } = usePackage();
     const [items, setItems] = React.useState<any[]>([]);
-    const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
     React.useLayoutEffect(() => {
         navigation.setOptions({
@@ -25,24 +29,44 @@ const ChoosePackages: React.FC = () => {
     React.useEffect(() => {
         (async () => {
             try {
-                const data = await fetchPackages({ page: 1, limit: 50 });
-                console.log(data)
+                const data = await fetchMyUserPackages('active');
                 const list = data?.results ?? [];
                 setItems(list);
-                if (list.length > 0) setSelectedId(list[0].id);
             } catch {
                 setItems([]);
             }
         })();
-    }, [fetchPackages]);
+    }, [fetchMyUserPackages]);
+
+    const formatDate = (iso?: string | null) => {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
+
+    const statusColor = (b: any) => {
+        if (b.isExpired) return '#EF4444';
+        if ((b.status || '').toLowerCase() === 'active') return '#16A34A';
+        return '#6B7280';
+    };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-                <Text style={{
-                    marginTop: 8, color: '#000', fontSize: 14, fontWeight: '400',
-                    textAlign: isAr ? 'right' : 'left'
-                }}>
+                <Text
+                    style={{
+                        marginTop: 8,
+                        color: '#111827',
+                        fontSize: 14,
+                        fontWeight: '400',
+                        textAlign: isAr ? 'right' : 'left',
+                    }}
+                >
                     {t('choosePackages.helper')}
                 </Text>
 
@@ -51,86 +75,225 @@ const ChoosePackages: React.FC = () => {
                         <ActivityIndicator />
                     </View>
                 ) : items.length === 0 ? (
-                    <Text style={{ marginTop: 16, color: '#666', textAlign: isAr ? 'right' : 'left' }}>
+                    <Text
+                        style={{
+                            marginTop: 16,
+                            color: '#6B7280',
+                            textAlign: isAr ? 'right' : 'left',
+                        }}
+                    >
                         {t('choosePackages.noItems')}
                     </Text>
                 ) : (
-                    items.map(it => {
-                        const active = selectedId === it.id;
+                    items.map((it) => {
+                        const pkg = it.packageId || {};
+                        const title = pkg.name || '—';
+                        const desc = pkg.description || '';
+                        const remaining = it.remainingUsage ?? 0;
+                        const limit = pkg.usageLimit ?? null;
+                        const pricePaid = it.pricePaid ?? pkg.fixedPrice ?? 0;
+
                         return (
-                            <Pressable
+                            <View
                                 key={it.id}
-                                onPress={() => setSelectedId(it.id)}
                                 style={{
-                                    marginTop: 32,
-                                    backgroundColor: '#fff',
-                                    borderRadius: 25,
-                                    paddingHorizontal: 14,
-                                    paddingTop: 12,
-                                    paddingBottom: 10,
+                                    marginTop: 16,
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: 18,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 14,
                                     borderWidth: 1,
-                                    borderColor: active ? '#2CB67D' : '#EEE',
+                                    borderColor: '#E5E7EB',
                                     shadowColor: '#000',
                                     shadowOpacity: 0.05,
-                                    shadowRadius: 6,
-                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowRadius: 8,
+                                    shadowOffset: { width: 0, height: 3 },
                                     elevation: 2,
                                 }}
                             >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
-                                    {active ? (
-                                        <View
+                                {/* Top row: name + status */}
+                                <View
+                                    style={{
+                                        flexDirection: isAr ? 'row-reverse' : 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        marginBottom: 6,
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            flex: 1,
+                                            color: '#111827',
+                                            fontSize: 16,
+                                            fontWeight: '700',
+                                            textAlign: isAr ? 'right' : 'left',
+                                        }}
+                                        numberOfLines={2}
+                                    >
+                                        {title}
+                                    </Text>
+
+                                    <View
+                                        style={{
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 4,
+                                            borderRadius: 999,
+                                            backgroundColor: '#F3F4F6',
+                                            marginLeft: isAr ? 0 : 10,
+                                            marginRight: isAr ? 10 : 0,
+                                        }}
+                                    >
+                                        <Text
                                             style={{
-                                                width: 22, height: 22, borderRadius: 6, backgroundColor: '#2CB67D',
-                                                alignItems: 'center', justifyContent: 'center', marginRight: 10,
+                                                fontSize: 12,
+                                                fontWeight: '600',
+                                                color: statusColor(it),
+                                                textTransform: 'capitalize',
                                             }}
                                         >
-                                            <Ionicons name="checkmark" size={14} color="#fff" />
-                                        </View>
-                                    ) : (
-                                        <View
-                                            style={{
-                                                width: 22, height: 22, borderRadius: 6,
-                                                borderWidth: 1.5, borderColor: '#CFCFCF', marginRight: 10,
-                                            }}
-                                        />
-                                    )}
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{ fontSize: 16, fontWeight: '600', color: '#232323' }}>
-                                            {it.name}
+                                            {it.status || '—'}
                                         </Text>
-                                        {!!it.type && (
-                                            <Text style={{ marginTop: 2, color: '#6B7280', fontSize: 12 }}>
-                                                {it.type}
-                                            </Text>
-                                        )}
                                     </View>
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#111' }}>
-                                        {`SAR ${it.pricing ?? 0}`}
-                                    </Text>
                                 </View>
 
-                                <View style={{ height: 1, backgroundColor: '#EFEFEF' }} />
-
-                                <View style={{ paddingVertical: 12 }}>
-                                    {!!it.detail && (
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <Ionicons name="checkmark-done" size={16} color={active ? '#16A34A' : '#9CA3AF'} />
-                                            <Text style={{ marginLeft: 8, color: '#111', fontSize: 14 }}>{it.detail}</Text>
-                                        </View>
-                                    )}
-
-                                    <TouchableOpacity
-                                        disabled={!active}
-                                        onPress={() => active && navigation.navigate('YourBooking', { packageId: it.id })}
-                                        style={{ marginTop: 20, justifyContent: 'center', alignItems: 'center', width: '100%', opacity: active ? 1 : 0.5 }}
+                                {/* Description */}
+                                {!!desc && (
+                                    <Text
+                                        style={{
+                                            color: '#6B7280',
+                                            fontSize: 12,
+                                            lineHeight: 18,
+                                            marginBottom: 10,
+                                            textAlign: isAr ? 'right' : 'left',
+                                        }}
+                                        numberOfLines={3}
                                     >
-                                        <Text style={{ color: active ? '#2D4795' : '#9CA3AF', fontWeight: '500', textDecorationLine: 'underline', fontSize: 16 }}>
-                                            {t('choosePackages.steamIt')}
+                                        {desc}
+                                    </Text>
+                                )}
+
+                                {/* Divider */}
+                                <View
+                                    style={{
+                                        height: 1,
+                                        backgroundColor: '#E5E7EB',
+                                        marginVertical: 8,
+                                        opacity: 0.6,
+                                    }}
+                                />
+
+                                {/* Price + usage */}
+                                <View
+                                    style={{
+                                        flexDirection: isAr ? 'row-reverse' : 'row',
+                                        justifyContent: 'space-between',
+                                        marginBottom: 6,
+                                    }}
+                                >
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                color: '#9CA3AF',
+                                                fontSize: 11,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {t('choosePackages.pricePaid', 'Price paid')}
                                         </Text>
-                                    </TouchableOpacity>
+                                        <Text
+                                            style={{
+                                                color: '#111827',
+                                                fontSize: 14,
+                                                fontWeight: '600',
+                                                marginTop: 2,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {`SAR ${pricePaid}`}
+                                        </Text>
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                color: '#9CA3AF',
+                                                fontSize: 11,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {t('choosePackages.remainingUsage', 'Remaining usage')}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                color: '#111827',
+                                                fontSize: 14,
+                                                fontWeight: '600',
+                                                marginTop: 2,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {limit != null
+                                                ? `${remaining} / ${limit}`
+                                                : `${remaining}`}
+                                        </Text>
+                                    </View>
                                 </View>
-                            </Pressable>
+
+                                {/* Dates */}
+                                <View
+                                    style={{
+                                        flexDirection: isAr ? 'row-reverse' : 'row',
+                                        justifyContent: 'space-between',
+                                        marginTop: 4,
+                                    }}
+                                >
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                color: '#9CA3AF',
+                                                fontSize: 11,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {t('choosePackages.purchaseDate', 'Purchase date')}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                color: '#111827',
+                                                fontSize: 13,
+                                                marginTop: 2,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {formatDate(it.purchaseDate)}
+                                        </Text>
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                color: '#9CA3AF',
+                                                fontSize: 11,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {t('choosePackages.expiresOn', 'Expires on')}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                color: '#111827',
+                                                fontSize: 13,
+                                                marginTop: 2,
+                                                textAlign: isAr ? 'right' : 'left',
+                                            }}
+                                        >
+                                            {pkg.hasExpiry
+                                                ? formatDate(it.expiryDate)
+                                                : t('choosePackages.noExpiry', 'No expiry')}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
                         );
                     })
                 )}

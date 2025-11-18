@@ -51,8 +51,16 @@ const Filters: React.FC = () => {
         (async () => {
             try {
                 // packages for names
-                const res = await fetchPackages({ page: 1, limit: 100 });
-                const names = Array.from(new Set((res?.results || []).map((p: any) => p?.name).filter(Boolean)));
+                const res = await fetchPackages();
+                const list = Array.isArray(res?.results)
+                    ? res.results
+                    : Array.isArray(res)
+                        ? res
+                        : [];
+
+                const names = Array.from(
+                    new Set(list.map((p: any) => p?.name).filter(Boolean))
+                );
                 setPkgNames(names);
             } catch { }
         })();
@@ -191,7 +199,10 @@ const Filters: React.FC = () => {
                                 selected,
                                 selectedPkgs,
                             }));
-                            DeviceEventEmitter.emit('HOME_FILTERS', { sortBy, names });
+                            DeviceEventEmitter.emit('HOME_FILTERS', {
+                                sortBy,
+                                names: Object.keys(selectedPkgs).filter((n) => selectedPkgs[n])
+                            });
                             navigation.goBack();
                         }}
                         style={{

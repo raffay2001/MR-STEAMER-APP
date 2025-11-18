@@ -43,6 +43,11 @@ export const Home: React.FC<TNavProps> = () => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [car, setCar] = React.useState(null);
 
+  const [search, setSearch] = React.useState('');
+  const [filteredPackages, setFilteredPackages] = React.useState<any[]>([]);
+  const [selectedFilterNames, setSelectedFilterNames] = React.useState<string[]>([]);
+  const [selectedSort, setSelectedSort] = React.useState<string>('popularity');
+
   const KEY_HOME_AD = HOME_AD_SEEN;
   const [showAd, setShowAd] = React.useState(false);
 
@@ -96,6 +101,7 @@ export const Home: React.FC<TNavProps> = () => {
           ? data
           : [];
       setPackages(list);
+      applyFilters(list);
     } catch (e: any) {
       setPackages([]);
     } finally {
@@ -103,9 +109,51 @@ export const Home: React.FC<TNavProps> = () => {
     }
   }, [fetchPackages]);
 
+  const applyFilters = React.useCallback(
+    (all: any) => {
+      let list = [...all];
+
+      // SEARCH
+      if (search.trim()) {
+        const s = search.toLowerCase();
+        list = list.filter((p) =>
+          p.name?.toLowerCase().includes(s)
+        );
+      }
+
+      // FILTER BY NAMES
+      if (selectedFilterNames.length) {
+        list = list.filter((p) => selectedFilterNames.includes(p.name));
+      }
+
+      // SORT
+      if (selectedSort === 'price_asc') {
+        list.sort((a, b) => (a.fixedPrice || 0) - (b.fixedPrice || 0));
+      } else if (selectedSort === 'price_desc') {
+        list.sort((a, b) => (b.fixedPrice || 0) - (a.fixedPrice || 0));
+      }
+
+      setFilteredPackages(list);
+    },
+    [search, selectedFilterNames, selectedSort]
+  );
+
   React.useEffect(() => {
     loadPackages();
   }, [loadPackages]);
+
+  React.useEffect(() => {
+    applyFilters(packages);
+  }, [search, packages, selectedFilterNames, selectedSort]);
+
+  React.useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('HOME_FILTERS', ({ sortBy, names }) => {
+      setSelectedSort(sortBy);
+      setSelectedFilterNames(names || []);
+    });
+
+    return () => sub.remove();
+  }, []);
 
   const getPackagePriceLabel = (pkg: any, car: any) => {
     if (!car) return 'Vehicle based pricing';
@@ -146,6 +194,8 @@ export const Home: React.FC<TNavProps> = () => {
         <View className="px-5">
           <SearchInput
             placeholder={t('home.searchPlaceholder')}
+            value={search}
+            onChangeText={(txt) => setSearch(txt)}
           />
         </View>
 
@@ -167,7 +217,7 @@ export const Home: React.FC<TNavProps> = () => {
             </Text>
           ) : (
             <View>
-              {packages.map((pkg: any) => (
+              {filteredPackages.map((pkg: any) => (
                 <View
                   key={pkg.id}
                   style={{

@@ -113,7 +113,7 @@
     "logout": "تسجيل الخروج"
   },
   "home": {
-    "searchPlaceholder": "ابحث عن شركة",
+    "searchPlaceholder": "ابحث...",
     "services": {
       "noPackages": "لا توجد باقات لهذه الخدمة."
     },

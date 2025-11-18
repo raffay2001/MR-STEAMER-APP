@@ -100,8 +100,6 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   const loadOnce = React.useCallback(async () => {
     const token = await getAccessToken();
     const url = `${BACKEND_URL}/v1/enum?enumType=VEHICLE_TYPE&page=1&limit=50`;
-    console.log('🔵 [Vehicle] first-load token:', token ? token.slice(0, 12) + '…' : 'none');
-    console.log('🔵 [Vehicle] first-load GET:', url);
 
     try {
       const res = await fetchEnumsByType('VEHICLE_TYPE', { page: 1, limit: 50 });
@@ -109,7 +107,6 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
     } catch (err: any) {
       const status = err?.response?.status;
       const data = err?.response?.data;
-      console.log('🛑 [Vehicle] first-load ERROR status:', status, 'msg:', err?.message, 'data:', JSON.stringify(data));
       if (status === 401) {
         await clearAuth();
         navigation.reset({ index: 0, routes: [{ name: 'Vehicle' as never }] });
@@ -207,18 +204,15 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
       name: carName.trim(),
       city: selectedCity as string,
     };
-    console.log('🚗 [Vehicle] createCar payload:', payload);
 
     try {
       const created = await createCar(payload);
-      console.log('✅ [Vehicle] car created:', created?.id || created);
       await setCarProfile(created);
       DeviceEventEmitter.emit('CAR_CHANGED', created); // 🔹 notify app
       setShowModal(false);
       navigation.navigate('Drawer', { screen: 'Home' });
     } catch (err: any) {
       const status = err?.response?.status;
-      console.log('🛑 [Vehicle] createCar ERROR status:', status, 'msg:', err?.message);
       if (status === 401) {
         await clearAuth();
         navigation.reset({ index: 0, routes: [{ name: 'Vehicle' as never }] });

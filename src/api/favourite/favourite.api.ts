@@ -4,7 +4,6 @@ import { getAccessToken } from '../../hooks/useAuthStorage';
 
 export const toggleFavouritePackage = async (id: string) => {
   const token = await getAccessToken();
-  console.log('[FavouriteAPI] token?', token ? token.slice(0, 10) + '…' : 'NONE');
 
   return apiClient.post(
     `/package/${id}/favourite`,

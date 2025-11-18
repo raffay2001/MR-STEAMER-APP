@@ -9,7 +9,6 @@ export const useRating = () => {
         setLoading(true);
         try {
         const res = await getRatingsByPackageName(name, params);
-        // console.log('[RatingAPI] OK:', res.status, `name=${name}`, res.data);
         return res.data;
         } finally {
         setLoading(false);
@@ -20,7 +19,6 @@ export const useRating = () => {
         setCreating(true);
         try {
             const res = await createRating(payload);
-            // console.log('[RatingAPI] CREATE OK:', res.status, res.data);
             return res.data;
         } finally {
             setCreating(false);

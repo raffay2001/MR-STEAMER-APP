@@ -11,7 +11,6 @@ export const useAddons = () => {
       const res = await getAddons({ limit: 50 });
       setAddons(res.data?.results ?? []);
     } catch (e) {
-      console.log('[useAddons] fetch error:', e);
       setAddons([]);
     } finally {
       setLoading(false);

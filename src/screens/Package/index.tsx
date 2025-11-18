@@ -35,7 +35,6 @@ const Package: React.FC = () => {
             if (!packageIds.length) return;
             try {
                 const res = await Promise.all(packageIds.map(id => fetchPackageById(id)));
-                console.log('[Package] details:', res);
                 if (mounted) setItems(res.filter(Boolean));
                 if (mounted && packageIds.length > 0) setSelectedId(packageIds[0]);
             } catch {

@@ -90,8 +90,6 @@ const YourBooking: React.FC = () => {
                 const c = await getCarProfile();
                 setCar(c);
                 const carId = c?._id || c?.id;
-                console.log('[YourBooking] car profile:', c);
-                console.log('[YourBooking] carId:', carId);
 
                 // 🎫 Get user package for this package
                 const u = await getUserData();
@@ -100,7 +98,6 @@ const YourBooking: React.FC = () => {
                     const first = ownRes?.results?.[0];
                     if (first?.id) {
                         setUserPackageId(first.id);
-                        console.log('[YourBooking] userPackageId:', first.id);
                     } else {
                         console.log('[YourBooking] no active userPackage for this package');
                     }

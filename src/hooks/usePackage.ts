@@ -4,7 +4,9 @@ import {
   getPackageById as apiGetPackageById,
   type PackageListResponse,
   type PackageItem,
-  checkIfUserOwnsPackage as apiCheckIfUserOwnsPackage
+  checkIfUserOwnsPackage as apiCheckIfUserOwnsPackage,
+  getMyUserPackages as apiGetMyUserPackages,
+  type UserPackageListResponse,
 } from '../api/package/package.api';
 
 export const usePackage = () => {
@@ -40,5 +42,24 @@ export const usePackage = () => {
     []
   );
 
-  return { loading, fetchPackageById, fetchPackages, checkIfUserOwnsPackage };
+  const fetchMyUserPackages = useCallback(
+    async (status: string = 'active'): Promise<UserPackageListResponse> => {
+      setLoading(true);
+      try {
+        const res = await apiGetMyUserPackages(status);
+        return res;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  return {
+    loading,
+    fetchPackageById,
+    fetchPackages,
+    checkIfUserOwnsPackage,
+    fetchMyUserPackages,
+  };
 };

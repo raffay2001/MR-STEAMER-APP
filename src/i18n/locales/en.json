@@ -113,7 +113,7 @@
     "logout": "Logout"
   },
   "home": {
-    "searchPlaceholder": "Search Company",
+    "searchPlaceholder": "Search...",
     "services": {
       "noPackages": "No packages for this service."
     },
