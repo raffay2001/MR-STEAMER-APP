@@ -31,6 +31,10 @@
         android:name="com.google.android.gms.auth.api.signin.webClientId"
         android:value="${googleSigninWebClientId}" />
 
+    <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyApI2bRWLV7R3ID776FLL1N51MtN9f34Uw"/>
+
       <!-- Facebook SDK config -->
       <meta-data
           android:name="com.facebook.sdk.ApplicationId"

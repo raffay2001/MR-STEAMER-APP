@@ -123,6 +123,8 @@ dependencies {
     implementation("com.facebook.react:flipper-integration")
     implementation "com.google.android.gms:play-services-auth:21.1.1"
 
+    implementation "com.google.android.gms:play-services-maps:18.2.0"
+
     implementation 'com.facebook.android:facebook-login:latest.release'
     // only if you need everything
     // implementation 'com.facebook.android:facebook-android-sdk:latest.release'

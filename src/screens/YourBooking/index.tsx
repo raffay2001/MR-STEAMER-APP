@@ -7,9 +7,7 @@ import {
     ScrollView,
     ActivityIndicator,
     TextInput,
-    PermissionsAndroid,
-    Platform,
-    Alert
+    Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,8 +20,11 @@ import type { SlotItem } from '../../api/slot/slot.api';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { useAddons } from '../../hooks/useAddons';
 import type { AddonItem } from '../../api/addon/addon.api';
-import Geolocation from 'react-native-geolocation-service';
 import { useBooking } from '../../hooks/useBooking';
+import MapView, { MapPressEvent, Marker } from 'react-native-maps';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+
+const GOOGLE_API_KEY = 'AIzaSyApI2bRWLV7R3ID776FLL1N51MtN9f34Uw';
 
 const BRAND = '#223671';
 
@@ -34,6 +35,10 @@ const YourBooking: React.FC = () => {
     const route = useRoute<any>();
     const { packageId } = (route?.params || {}) as RouteParams;
 
+    const addressSheetRef = React.useRef<any>(null);
+    const slotSheetRef = React.useRef<any>(null);
+    const addonSheetRef = React.useRef<any>(null);
+
     const { fetchPackageById } = usePackage();
     const [pkg, setPkg] = React.useState<any | null>(null);
     const [loading, setLoading] = React.useState(true);
@@ -42,15 +47,12 @@ const YourBooking: React.FC = () => {
     const [userPackageId, setUserPackageId] = React.useState<string | null>(null);
 
     const { loading: slotsLoading, fetchSlotsByDay } = useSlots();
-
     const [selectedDay, setSelectedDay] = React.useState<string>('');
     const [daysToShow, setDaysToShow] = React.useState<string[]>([]);
     const [slots, setSlots] = React.useState<SlotItem[]>([]);
-    const slotSheetRef = React.useRef<any>(null);;
     const [selectedSlot, setSelectedSlot] = React.useState<SlotItem | null>(null);
 
     const { loading: addonsLoading, addons, fetchAddons } = useAddons();
-    const addonSheetRef = React.useRef<any>(null);
     const [selectedAddons, setSelectedAddons] = React.useState<Record<string, number>>({});
 
     const [mobileNumber, setMobileNumber] = React.useState('');
@@ -61,10 +63,16 @@ const YourBooking: React.FC = () => {
     const [latitude, setLatitude] = React.useState<number | null>(null);
     const [longitude, setLongitude] = React.useState<number | null>(null);
 
-    const [locLoading, setLocLoading] = React.useState(false);
     const [checkoutLoading, setCheckoutLoading] = React.useState(false);
 
     const { createBooking } = useBooking();
+
+    const defaultRegion = {
+        latitude: 24.7136, // Riyadh
+        longitude: 46.6753,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+    };
 
     React.useEffect(() => {
         if (!packageId) return;
@@ -86,20 +94,15 @@ const YourBooking: React.FC = () => {
     React.useEffect(() => {
         (async () => {
             try {
-                // 🚗 Get car profile
                 const c = await getCarProfile();
                 setCar(c);
-                const carId = c?._id || c?.id;
 
-                // 🎫 Get user package for this package
                 const u = await getUserData();
                 if (u?.id && packageId) {
                     const ownRes = await checkIfUserOwnsPackage(u.id as string, packageId);
                     const first = ownRes?.results?.[0];
                     if (first?.id) {
                         setUserPackageId(first.id);
-                    } else {
-                        console.log('[YourBooking] no active userPackage for this package');
                     }
                 }
             } catch (e) {
@@ -120,17 +123,15 @@ const YourBooking: React.FC = () => {
         ];
 
         const jsDay = new Date().getDay(); // 0 = Sun ... 6 = Sat
-        const startIdx = (jsDay + 6) % 7;  // 0 = Mon ... 6 = Sun
+        const startIdx = (jsDay + 6) % 7; // 0 = Mon ... 6 = Sun
 
-        const ordered = all.slice(startIdx); // today → Sunday
-
+        const ordered = all.slice(startIdx);
         setDaysToShow(ordered);
         setSelectedDay(all[startIdx]);
     }, []);
 
     React.useEffect(() => {
         if (!selectedDay) return;
-
         (async () => {
             try {
                 const res = await fetchSlotsByDay({ day: selectedDay, limit: 50 });
@@ -152,7 +153,7 @@ const YourBooking: React.FC = () => {
             : 'Vehicle based pricing';
 
     const updateAddonQty = (addonId: string, delta: number) => {
-        setSelectedAddons((prev) => {
+        setSelectedAddons(prev => {
             const current = prev[addonId] ?? 0;
             const next = Math.max(0, current + delta);
 
@@ -172,53 +173,25 @@ const YourBooking: React.FC = () => {
             : Object.entries(selectedAddons)
                 .filter(([, qty]) => qty > 0)
                 .map(([addonId, quantity]) => {
-                    const addon = addons.find((a) => a.id === addonId);
+                    const addon = addons.find(a => a.id === addonId);
                     if (!addon) return null;
                     return {
                         addOnId: addonId,
                         quantity,
-                        price: addon.price, // unit price (not total)
+                        price: addon.price,
                     };
                 })
                 .filter(Boolean) as { addOnId: string; quantity: number; price: number }[];
 
     const addonsTotal = additionalAddOns.reduce(
         (sum, item) => sum + item.price * item.quantity,
-        0
+        0,
     );
 
-    const requestLocationPermission = async () => {
-        if (Platform.OS === 'android') {
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-            );
-            return granted === PermissionsAndroid.RESULTS.GRANTED;
-        }
-        return true; // iOS auto handled
-    };
-
-    const useCurrentLocation = async () => {
-        const ok = await requestLocationPermission();
-        if (!ok) {
-            Alert.alert('Location permission required.');
-            return;
-        }
-
-        setLocLoading(true);
-
-        Geolocation.getCurrentPosition(
-            (pos) => {
-                setLatitude(pos.coords.latitude);
-                setLongitude(pos.coords.longitude);
-                setLocLoading(false);
-            },
-            (err) => {
-                console.log(err);
-                Alert.alert('Unable to get location');
-                setLocLoading(false);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
+    const handleMapPress = (e: MapPressEvent) => {
+        const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
+        setLatitude(lat);
+        setLongitude(lng);
     };
 
     const canCheckout =
@@ -227,7 +200,10 @@ const YourBooking: React.FC = () => {
         !!selectedSlot &&
         mobileNumber.trim().length > 0 &&
         email.trim().length > 0 &&
-        specialInstructions.trim().length > 0;
+        specialInstructions.trim().length > 0 &&
+        address.trim().length > 0 &&
+        latitude !== null &&
+        longitude !== null;
 
     if (loading || !pkg) {
         return (
@@ -237,8 +213,7 @@ const YourBooking: React.FC = () => {
                         flex: 1,
                         justifyContent: 'center',
                         alignItems: 'center',
-                    }}
-                >
+                    }}>
                     <ActivityIndicator size="large" color={BRAND} />
                 </View>
             </SafeAreaView>
@@ -250,8 +225,7 @@ const YourBooking: React.FC = () => {
             <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-                showsVerticalScrollIndicator={false}
-            >
+                showsVerticalScrollIndicator={false}>
                 {/* Package summary card */}
                 <View
                     style={{
@@ -264,16 +238,14 @@ const YourBooking: React.FC = () => {
                         shadowRadius: 8,
                         shadowOffset: { width: 0, height: 4 },
                         elevation: 2,
-                    }}
-                >
+                    }}>
                     <Text
                         style={{
                             fontSize: 18,
                             fontWeight: '700',
                             color: '#111827',
                             marginBottom: 4,
-                        }}
-                    >
+                        }}>
                         {pkg.name}
                     </Text>
 
@@ -282,8 +254,7 @@ const YourBooking: React.FC = () => {
                             fontSize: 13,
                             color: '#6B7280',
                             marginBottom: 8,
-                        }}
-                    >
+                        }}>
                         {pkg.pricingType === 'fixed'
                             ? 'Fixed price package'
                             : 'Vehicle based pricing'}
@@ -295,8 +266,7 @@ const YourBooking: React.FC = () => {
                             fontWeight: '700',
                             color: BRAND,
                             marginBottom: 10,
-                        }}
-                    >
+                        }}>
                         {priceLabel}
                     </Text>
 
@@ -306,26 +276,22 @@ const YourBooking: React.FC = () => {
                                 fontSize: 14,
                                 lineHeight: 20,
                                 color: '#4B5563',
-                            }}
-                        >
+                            }}>
                             {pkg.description}
                         </Text>
                     ) : null}
 
-                    {/* Usage / expiry inline row */}
                     <View
                         style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             marginTop: 12,
-                        }}
-                    >
+                        }}>
                         <Text
                             style={{
                                 fontSize: 13,
                                 color: '#374151',
-                            }}
-                        >
+                            }}>
                             Usage limit:{' '}
                             <Text style={{ fontWeight: '600' }}>
                                 {pkg.usageLimit ?? 'Unlimited'}
@@ -336,8 +302,7 @@ const YourBooking: React.FC = () => {
                             style={{
                                 fontSize: 13,
                                 color: '#374151',
-                            }}
-                        >
+                            }}>
                             {pkg.hasExpiry
                                 ? `Expires: ${pkg.expiryDate || 'N/A'}`
                                 : 'No expiry'}
@@ -345,8 +310,7 @@ const YourBooking: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Day selector */}
-                {/* Slot selector (single button) */}
+                {/* Slot selector */}
                 <View style={{ marginBottom: 16 }}>
                     <Text
                         style={{
@@ -354,8 +318,7 @@ const YourBooking: React.FC = () => {
                             fontWeight: '600',
                             color: '#111827',
                             marginBottom: 8,
-                        }}
-                    >
+                        }}>
                         Choose Slot *
                     </Text>
 
@@ -372,8 +335,7 @@ const YourBooking: React.FC = () => {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                        }}
-                    >
+                        }}>
                         <View style={{ flex: 1, marginRight: 8 }}>
                             <Text
                                 style={{
@@ -381,8 +343,7 @@ const YourBooking: React.FC = () => {
                                     color: selectedSlot ? '#111827' : '#9CA3AF',
                                     fontWeight: selectedSlot ? '500' : '400',
                                 }}
-                                numberOfLines={1}
-                            >
+                                numberOfLines={1}>
                                 {selectedSlot
                                     ? `${selectedSlot.day ?? selectedDay} • ${selectedSlot.time}`
                                     : slotsLoading
@@ -396,8 +357,7 @@ const YourBooking: React.FC = () => {
                                         color: '#6B7280',
                                         marginTop: 2,
                                     }}
-                                    numberOfLines={1}
-                                >
+                                    numberOfLines={1}>
                                     Change slot
                                 </Text>
                             )}
@@ -407,7 +367,7 @@ const YourBooking: React.FC = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Slot bottom sheet */}
+                {/* Slot RBSheet */}
                 <RBSheet
                     ref={slotSheetRef}
                     {...{ closeOnDragDown: true }}
@@ -421,24 +381,20 @@ const YourBooking: React.FC = () => {
                             padding: 16,
                             paddingBottom: 24,
                         },
-                    }}
-                >
-                    {/* Sheet header */}
+                    }}>
                     <View
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             marginBottom: 8,
-                        }}
-                    >
+                        }}>
                         <Text
                             style={{
                                 fontSize: 16,
                                 fontWeight: '600',
                                 color: '#111827',
-                            }}
-                        >
+                            }}>
                             Choose day & time
                         </Text>
                         <TouchableOpacity onPress={() => slotSheetRef.current?.close()}>
@@ -446,7 +402,6 @@ const YourBooking: React.FC = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Day chips inside sheet */}
                     {daysToShow.length > 0 && (
                         <ScrollView
                             horizontal
@@ -455,11 +410,11 @@ const YourBooking: React.FC = () => {
                                 paddingVertical: 8,
                                 paddingHorizontal: 4,
                                 marginBottom: 18,
-                            }}
-                        >
-                            {daysToShow.map((day) => {
+                            }}>
+                            {daysToShow.map(day => {
                                 const isActive = day === selectedDay;
-                                const label = day.charAt(0).toUpperCase() + day.slice(1);
+                                const label =
+                                    day.charAt(0).toUpperCase() + day.slice(1);
 
                                 return (
                                     <TouchableOpacity
@@ -475,17 +430,15 @@ const YourBooking: React.FC = () => {
                                             marginRight: 8,
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            marginBottom: 10
-                                        }}
-                                    >
+                                            marginBottom: 10,
+                                        }}>
                                         <Text
                                             style={{
                                                 fontSize: 13,
                                                 lineHeight: 18,
                                                 fontWeight: '500',
                                                 color: isActive ? BRAND : '#374151',
-                                            }}
-                                        >
+                                            }}>
                                             {label}
                                         </Text>
                                     </TouchableOpacity>
@@ -501,8 +454,7 @@ const YourBooking: React.FC = () => {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 paddingVertical: 16,
-                            }}
-                        >
+                            }}>
                             <ActivityIndicator size="small" color={BRAND} />
                         </View>
                     ) : slots.length === 0 ? (
@@ -514,9 +466,8 @@ const YourBooking: React.FC = () => {
                     ) : (
                         <ScrollView
                             showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingTop: 1 }}
-                        >
-                            {slots.map((slot) => {
+                            contentContainerStyle={{ paddingTop: 1 }}>
+                            {slots.map(slot => {
                                 const isActive = selectedSlot?.id === slot.id;
                                 return (
                                     <TouchableOpacity
@@ -536,23 +487,20 @@ const YourBooking: React.FC = () => {
                                             flexDirection: 'row',
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
-                                        }}
-                                    >
+                                        }}>
                                         <Text
                                             style={{
                                                 fontSize: 14,
                                                 color: '#111827',
                                                 fontWeight: '500',
-                                            }}
-                                        >
+                                            }}>
                                             {slot.time}
                                         </Text>
                                         <Text
                                             style={{
                                                 fontSize: 12,
                                                 color: '#6B7280',
-                                            }}
-                                        >
+                                            }}>
                                             {slot.duration} min
                                         </Text>
                                     </TouchableOpacity>
@@ -562,7 +510,7 @@ const YourBooking: React.FC = () => {
                     )}
                 </RBSheet>
 
-                {/* Additional Add-ons trigger */}
+                {/* Add-ons trigger */}
                 <View style={{ marginBottom: 16 }}>
                     <Text
                         style={{
@@ -570,8 +518,7 @@ const YourBooking: React.FC = () => {
                             fontWeight: '600',
                             color: '#111827',
                             marginBottom: 8,
-                        }}
-                    >
+                        }}>
                         Additional Add-ons
                     </Text>
 
@@ -588,8 +535,7 @@ const YourBooking: React.FC = () => {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                        }}
-                    >
+                        }}>
                         <View style={{ flex: 1, marginRight: 8 }}>
                             <Text
                                 style={{
@@ -597,8 +543,7 @@ const YourBooking: React.FC = () => {
                                     color: addonsTotal > 0 ? '#111827' : '#9CA3AF',
                                     fontWeight: addonsTotal > 0 ? '500' : '400',
                                 }}
-                                numberOfLines={1}
-                            >
+                                numberOfLines={1}>
                                 {addonsTotal > 0
                                     ? `Selected ${Object.keys(selectedAddons).length} add-on(s)`
                                     : 'Tap to add extras to your wash'}
@@ -610,8 +555,7 @@ const YourBooking: React.FC = () => {
                                         color: BRAND,
                                         marginTop: 2,
                                     }}
-                                    numberOfLines={1}
-                                >
+                                    numberOfLines={1}>
                                     Add-ons total: SAR {addonsTotal}
                                 </Text>
                             )}
@@ -621,7 +565,7 @@ const YourBooking: React.FC = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Add-ons bottom sheet */}
+                {/* Add-ons RBSheet */}
                 <RBSheet
                     ref={addonSheetRef}
                     {...{ closeOnDragDown: true }}
@@ -635,24 +579,20 @@ const YourBooking: React.FC = () => {
                             padding: 16,
                             paddingBottom: 24,
                         },
-                    }}
-                >
-                    {/* Sheet header */}
+                    }}>
                     <View
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             marginBottom: 8,
-                        }}
-                    >
+                        }}>
                         <Text
                             style={{
                                 fontSize: 16,
                                 fontWeight: '600',
                                 color: '#111827',
-                            }}
-                        >
+                            }}>
                             Choose Add-ons
                         </Text>
                         <TouchableOpacity onPress={() => addonSheetRef.current?.close()}>
@@ -667,8 +607,7 @@ const YourBooking: React.FC = () => {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 paddingVertical: 16,
-                            }}
-                        >
+                            }}>
                             <ActivityIndicator size="small" color={BRAND} />
                         </View>
                     ) : addons.length === 0 ? (
@@ -681,8 +620,7 @@ const YourBooking: React.FC = () => {
                         <>
                             <ScrollView
                                 showsVerticalScrollIndicator={false}
-                                contentContainerStyle={{ paddingBottom: 8 }}
-                            >
+                                contentContainerStyle={{ paddingBottom: 8 }}>
                                 {addons.map((addon: AddonItem) => {
                                     const qty = selectedAddons[addon.id] ?? 0;
                                     return (
@@ -694,16 +632,14 @@ const YourBooking: React.FC = () => {
                                                 borderBottomColor: '#E5E7EB',
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
-                                            }}
-                                        >
+                                            }}>
                                             <View style={{ flex: 1, paddingRight: 8 }}>
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
                                                         fontWeight: '600',
                                                         color: '#111827',
-                                                    }}
-                                                >
+                                                    }}>
                                                     {addon.name}
                                                 </Text>
                                                 {addon.description ? (
@@ -713,8 +649,7 @@ const YourBooking: React.FC = () => {
                                                             color: '#6B7280',
                                                             marginTop: 2,
                                                         }}
-                                                        numberOfLines={2}
-                                                    >
+                                                        numberOfLines={2}>
                                                         {addon.description}
                                                     </Text>
                                                 ) : null}
@@ -723,19 +658,16 @@ const YourBooking: React.FC = () => {
                                                         fontSize: 13,
                                                         color: BRAND,
                                                         marginTop: 4,
-                                                    }}
-                                                >
+                                                    }}>
                                                     SAR {addon.price}
                                                 </Text>
                                             </View>
 
-                                            {/* Qty controls */}
                                             <View
                                                 style={{
                                                     flexDirection: 'row',
                                                     alignItems: 'center',
-                                                }}
-                                            >
+                                                }}>
                                                 <TouchableOpacity
                                                     onPress={() => updateAddonQty(addon.id, -1)}
                                                     style={{
@@ -747,8 +679,7 @@ const YourBooking: React.FC = () => {
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         marginRight: 8,
-                                                    }}
-                                                >
+                                                    }}>
                                                     <Ionicons name="remove" size={16} color="#374151" />
                                                 </TouchableOpacity>
 
@@ -759,8 +690,7 @@ const YourBooking: React.FC = () => {
                                                         fontSize: 14,
                                                         fontWeight: '500',
                                                         color: '#111827',
-                                                    }}
-                                                >
+                                                    }}>
                                                     {qty}
                                                 </Text>
 
@@ -775,8 +705,7 @@ const YourBooking: React.FC = () => {
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         marginLeft: 8,
-                                                    }}
-                                                >
+                                                    }}>
                                                     <Ionicons name="add" size={16} color={BRAND} />
                                                 </TouchableOpacity>
                                             </View>
@@ -785,7 +714,6 @@ const YourBooking: React.FC = () => {
                                 })}
                             </ScrollView>
 
-                            {/* Total add-ons price */}
                             {addonsTotal > 0 && (
                                 <View
                                     style={{
@@ -795,15 +723,13 @@ const YourBooking: React.FC = () => {
                                         borderTopColor: '#E5E7EB',
                                         flexDirection: 'row',
                                         justifyContent: 'space-between',
-                                    }}
-                                >
+                                    }}>
                                     <Text
                                         style={{
                                             fontSize: 13,
                                             color: '#374151',
                                             fontWeight: '600',
-                                        }}
-                                    >
+                                        }}>
                                         Add-ons Total
                                     </Text>
                                     <Text
@@ -811,8 +737,7 @@ const YourBooking: React.FC = () => {
                                             fontSize: 13,
                                             color: BRAND,
                                             fontWeight: '700',
-                                        }}
-                                    >
+                                        }}>
                                         SAR {addonsTotal}
                                     </Text>
                                 </View>
@@ -830,9 +755,7 @@ const YourBooking: React.FC = () => {
                         marginBottom: 12,
                         borderWidth: 1,
                         borderColor: '#E5E7EB',
-                    }}
-                >
-                    {/* Mobile */}
+                    }}>
                     <View style={{ marginBottom: 10 }}>
                         <Text
                             style={{
@@ -840,8 +763,7 @@ const YourBooking: React.FC = () => {
                                 fontWeight: '500',
                                 color: '#111827',
                                 marginBottom: 4,
-                            }}
-                        >
+                            }}>
                             Mobile Number *
                         </Text>
                         <TextInput
@@ -863,7 +785,6 @@ const YourBooking: React.FC = () => {
                         />
                     </View>
 
-                    {/* Email */}
                     <View style={{ marginBottom: 10 }}>
                         <Text
                             style={{
@@ -871,8 +792,7 @@ const YourBooking: React.FC = () => {
                                 fontWeight: '500',
                                 color: '#111827',
                                 marginBottom: 4,
-                            }}
-                        >
+                            }}>
                             Email *
                         </Text>
                         <TextInput
@@ -895,7 +815,6 @@ const YourBooking: React.FC = () => {
                         />
                     </View>
 
-                    {/* Special instructions */}
                     <View>
                         <Text
                             style={{
@@ -903,8 +822,7 @@ const YourBooking: React.FC = () => {
                                 fontWeight: '500',
                                 color: '#111827',
                                 marginBottom: 4,
-                            }}
-                        >
+                            }}>
                             Special Instructions *
                         </Text>
                         <TextInput
@@ -929,61 +847,218 @@ const YourBooking: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Address */}
+                {/* Address + lat/lng preview */}
                 <View style={{ marginBottom: 16 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
-                        Address
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontWeight: '600',
+                            color: '#111827',
+                            marginBottom: 8,
+                        }}>
+                        Address *
                     </Text>
 
-                    <View
+                    <TouchableOpacity
+                        onPress={() => addressSheetRef.current?.open()}
                         style={{
                             borderRadius: 12,
                             borderWidth: 1,
                             borderColor: '#E5E7EB',
                             backgroundColor: '#fff',
-                            paddingVertical: 10,
+                            paddingVertical: 12,
                             paddingHorizontal: 14,
-                        }}
-                    >
-                        <TextInput
-                            placeholder="Enter your address"
-                            value={address}
-                            onChangeText={setAddress}
-                            style={{ fontSize: 14, color: '#111827' }}
-                        />
-                    </View>
-                </View>
-
-                {/* Location */}
-                <View style={{ marginBottom: 16 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
-                        Location (Latitude & Longitude)
-                    </Text>
-
-                    <TouchableOpacity
-                        onPress={useCurrentLocation}
-                        style={{
-                            padding: 12,
-                            backgroundColor: BRAND,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                        }}
-                    >
-                        {locLoading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>
-                                Use Current Location
-                            </Text>
-                        )}
+                        }}>
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                color: address ? '#111827' : '#9CA3AF',
+                            }}
+                            numberOfLines={2}>
+                            {address || 'Tap to choose address'}
+                        </Text>
                     </TouchableOpacity>
 
-                    {latitude && longitude && (
-                        <Text style={{ marginTop: 8, fontSize: 13, color: '#374151' }}>
-                            Lat: {latitude} | Lng: {longitude}
+                    {latitude !== null && longitude !== null && (
+                        <Text
+                            style={{
+                                marginTop: 6,
+                                fontSize: 12,
+                                color: '#374151',
+                            }}>
+                            Lat: {latitude.toFixed(6)} | Lng: {longitude.toFixed(6)}
                         </Text>
                     )}
                 </View>
+
+                {/* ADDRESS FULLSCREEN SHEET */}
+                <RBSheet
+                    ref={addressSheetRef}
+                    {...{ closeOnDragDown: true }}
+                    closeOnPressMask
+                    customStyles={{
+                        wrapper: { backgroundColor: 'rgba(0,0,0,0.4)' },
+                        container: {
+                            height: '100%',
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            padding: 16,
+                        },
+                    }}>
+                    <View style={{ flex: 1 }}>
+                        {/* Header */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: 8,
+                            }}>
+                            <Text
+                                style={{
+                                    fontSize: 16,
+                                    fontWeight: '600',
+                                    color: '#111827',
+                                }}>
+                                Select Address
+                            </Text>
+                            <TouchableOpacity onPress={() => addressSheetRef.current?.close()}>
+                                <Ionicons name="close" size={20} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Google Places (NO ScrollView wrapper here) */}
+                        <GooglePlacesAutocomplete
+                            placeholder="Search your address"
+                            fetchDetails
+                            enablePoweredByContainer={false}
+                            keyboardShouldPersistTaps="handled"
+                            query={{
+                                key: GOOGLE_API_KEY,
+                                language: 'en',
+                                components: 'country:sa',
+                            }}
+                            onPress={(data, details = null) => {
+                                const formatted =
+                                    details?.formatted_address || data.description;
+                                setAddress(formatted);
+
+                                const loc = details?.geometry?.location;
+                                if (loc) {
+                                    setLatitude(loc.lat);
+                                    setLongitude(loc.lng);
+                                }
+                                // don't close, user can still adjust on map
+                            }}
+                            textInputProps={{
+                                placeholderTextColor: '#9CA3AF',
+                                style: {
+                                    height: 44,
+                                    fontSize: 14,
+                                    color: '#111827',
+                                    paddingHorizontal: 10,
+                                },
+                            }}
+                            styles={{
+                                container: {
+                                    flex: 0,
+                                },
+                                textInputContainer: {
+                                    borderRadius: 12,
+                                    borderWidth: 1,
+                                    borderColor: '#E5E7EB',
+                                    backgroundColor: '#fff',
+                                },
+                                listView: {
+                                    backgroundColor: '#fff',
+                                    borderRadius: 12,
+                                    marginTop: 4,
+                                    elevation: 6,
+                                    maxHeight: 220, // so it scrolls inside, not over map
+                                },
+                                row: {
+                                    padding: 10,
+                                    minHeight: 44,
+                                },
+                                description: {
+                                    color: '#111827',
+                                    fontSize: 14,
+                                },
+                                predefinedPlacesDescription: {
+                                    color: '#111827',
+                                },
+                            }}
+                        />
+
+                        {/* Map with flex below the list */}
+                        <View
+                            style={{
+                                flex: 1,
+                                borderRadius: 16,
+                                overflow: 'hidden',
+                                marginTop: 16,
+                            }}>
+                            <MapView
+                                style={{ flex: 1 }}
+                                initialRegion={defaultRegion}
+                                region={{
+                                    latitude: latitude ?? defaultRegion.latitude,
+                                    longitude: longitude ?? defaultRegion.longitude,
+                                    latitudeDelta: defaultRegion.latitudeDelta,
+                                    longitudeDelta: defaultRegion.longitudeDelta,
+                                }}
+                                onPress={handleMapPress}>
+                                {latitude !== null && longitude !== null && (
+                                    <Marker
+                                        coordinate={{ latitude, longitude }}
+                                        title="Selected location"
+                                    />
+                                )}
+                            </MapView>
+                        </View>
+
+                        {/* Lat/Lng display */}
+                        {latitude !== null && longitude !== null && (
+                            <Text
+                                style={{
+                                    marginTop: 8,
+                                    fontSize: 13,
+                                    color: '#111827',
+                                }}>
+                                Lat: {latitude.toFixed(6)} | Lng: {longitude.toFixed(6)}
+                            </Text>
+                        )}
+
+                        {/* Confirm button */}
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (!address || latitude === null || longitude === null) {
+                                    Alert.alert(
+                                        'Select address',
+                                        'Please choose address and location on map.',
+                                    );
+                                    return;
+                                }
+                                addressSheetRef.current?.close();
+                            }}
+                            style={{
+                                marginTop: 10,
+                                paddingVertical: 12,
+                                borderRadius: 999,
+                                backgroundColor: BRAND,
+                                alignItems: 'center',
+                            }}>
+                            <Text
+                                style={{
+                                    color: '#fff',
+                                    fontWeight: '600',
+                                    fontSize: 14,
+                                }}>
+                                Use This Location
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </RBSheet>
 
                 {/* Checkout button */}
                 <TouchableOpacity
@@ -998,37 +1073,54 @@ const YourBooking: React.FC = () => {
                         opacity: canCheckout ? 1 : 0.7,
                     }}
                     onPress={async () => {
-                        if (!car || !selectedSlot || !mobileNumber || !address || latitude === null || longitude === null) {
-                            Alert.alert('Please fill all required fields.');
-                            return;
+                        try {
+                            if (
+                                !car ||
+                                !selectedSlot ||
+                                !mobileNumber ||
+                                !address ||
+                                latitude === null ||
+                                longitude === null
+                            ) {
+                                Alert.alert('Please fill all required fields.');
+                                return;
+                            }
+
+                            setCheckoutLoading(true);
+
+                            const payload = {
+                                carId: car?._id || car?.id,
+                                userPackageId: userPackageId!,
+                                packageId,
+                                slotId: selectedSlot.id,
+                                additionalAddOns,
+                                mobileNumber,
+                                email,
+                                address,
+                                location: { latitude, longitude },
+                                specialInstructions,
+                            };
+
+                            const response = await createBooking(payload);
+
+                            setCheckoutLoading(false);
+                            navigation.replace('Success', { bookingId: response.id });
+                        } catch (e) {
+                            setCheckoutLoading(false);
+                            console.log('Create booking error', e);
+                            Alert.alert('Error', 'Could not create booking, please try again.');
                         }
-
-                        setCheckoutLoading(true);
-
-                        const payload = {
-                            carId: car?._id || car?.id,
-                            userPackageId: userPackageId!,
-                            packageId,
-                            slotId: selectedSlot.id,
-                            additionalAddOns,
-                            mobileNumber,
-                            email,
-                            address,
-                            location: { latitude, longitude },
-                            specialInstructions,
-                        };
-
-                        const response = await createBooking(payload);
-
-                        setCheckoutLoading(false);
-
-                        navigation.replace('Success', { bookingId: response.id });
                     }}
                 >
                     {checkoutLoading ? (
                         <ActivityIndicator color="#fff" />
                     ) : (
-                        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
+                        <Text
+                            style={{
+                                color: '#fff',
+                                fontSize: 15,
+                                fontWeight: '600',
+                            }}>
                             Checkout
                         </Text>
                     )}
