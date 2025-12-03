@@ -175,7 +175,7 @@ const MyDrawer = () => {
           component={ChoosePackages}
           options={({ navigation }) => ({
             headerShown: true,
-            title: isAr ? 'اختر الباقات' : 'Choose Packages',
+            title: isAr ? 'اختر الباقات' : 'My Packages',
             headerTitleAlign: 'center',
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>

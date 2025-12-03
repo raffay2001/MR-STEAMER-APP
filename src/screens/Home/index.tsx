@@ -12,22 +12,27 @@ import {
   ActivityIndicator,
   DeviceEventEmitter,
   RefreshControl,
+  Alert,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-// import HomePageAd from '../../assets/svgs/HomePageAd.svg';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Geolocation from '@react-native-community/geolocation';
 import { TNavProps } from '../../services/types/drawerscreens.types';
 import SearchInput from '../../components/SearchInput';
 import BlackCar from '../../assets/images/black-car.png';
-import { HOME_AD_SEEN } from '../../constants';
+import { HOME_AD_SEEN, SELECTED_CITY } from '../../constants';
 import { useBanner } from '../../hooks/useBanner';
 import { usePackage } from '../../hooks/usePackage';
 import { BACKEND_URL } from '../../api';
 import { getCarProfile } from '../../hooks/useCarStorage';
-import { getUserData } from '../../hooks/useAuthStorage';
+import { getUserData, setAuth } from '../../hooks/useAuthStorage';
+import { useUser } from '../../hooks/useUser';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
+import { useAddons } from '../../hooks/useAddons';
 
 export const Home: React.FC<TNavProps> = () => {
   const navigation = useNavigation<any>();
@@ -35,6 +40,10 @@ export const Home: React.FC<TNavProps> = () => {
   const isAr = i18n.language?.startsWith('ar');
 
   const [userId, setUserId] = React.useState<string | null>(null);
+  const [user, setUser] = React.useState<any | null>(null);
+
+  const { fetchUserById, handleUpdateUser } = useUser();
+  const { loading: addonsLoading, addons, fetchAddons } = useAddons();
 
   const { banner, loading: bannerLoading, error: bannerError } = useBanner();
 
@@ -51,12 +60,44 @@ export const Home: React.FC<TNavProps> = () => {
   const KEY_HOME_AD = HOME_AD_SEEN;
   const [showAd, setShowAd] = React.useState(false);
 
+  const [showLocationModal, setShowLocationModal] = React.useState(false);
+  const [locationUpdating, setLocationUpdating] = React.useState(false);
+
   React.useEffect(() => {
     (async () => {
       const u = await getUserData();
       setUserId(u?.id || null);
     })();
   }, []);
+
+  React.useEffect(() => {
+    fetchAddons();
+  }, [fetchAddons]);
+
+  React.useEffect(() => {
+    if (!userId) return;
+
+    (async () => {
+      try {
+        const data = await fetchUserById(userId);
+        setUser(data);
+
+        const needsLocation =
+          (!data.city || data.city.trim() === '') &&
+          (!data.location ||
+            data.location.latitude === 0 ||
+            data.location.longitude === 0);
+
+        if (needsLocation) {
+          setShowLocationModal(true);
+        } else {
+          await setAuth({ user: data });
+        }
+      } catch (e) {
+        console.log('Failed to fetch user by id', e);
+      }
+    })();
+  }, [userId, fetchUserById]);
 
   React.useEffect(() => {
     (async () => {
@@ -113,20 +154,15 @@ export const Home: React.FC<TNavProps> = () => {
     (all: any) => {
       let list = [...all];
 
-      // SEARCH
       if (search.trim()) {
         const s = search.toLowerCase();
-        list = list.filter((p) =>
-          p.name?.toLowerCase().includes(s)
-        );
+        list = list.filter((p) => p.name?.toLowerCase().includes(s));
       }
 
-      // FILTER BY NAMES
       if (selectedFilterNames.length) {
         list = list.filter((p) => selectedFilterNames.includes(p.name));
       }
 
-      // SORT
       if (selectedSort === 'price_asc') {
         list.sort((a, b) => (a.fixedPrice || 0) - (b.fixedPrice || 0));
       } else if (selectedSort === 'price_desc') {
@@ -144,7 +180,7 @@ export const Home: React.FC<TNavProps> = () => {
 
   React.useEffect(() => {
     applyFilters(packages);
-  }, [search, packages, selectedFilterNames, selectedSort]);
+  }, [search, packages, selectedFilterNames, selectedSort, applyFilters]);
 
   React.useEffect(() => {
     const sub = DeviceEventEmitter.addListener('HOME_FILTERS', ({ sortBy, names }) => {
@@ -155,12 +191,10 @@ export const Home: React.FC<TNavProps> = () => {
     return () => sub.remove();
   }, []);
 
-  const getPackagePriceLabel = (pkg: any, car: any) => {
-    if (!car) return 'Vehicle based pricing';
+  const getPackagePriceLabel = (pkg: any, carData: any) => {
+    if (!carData) return 'Vehicle based pricing';
 
-    // ✅ handle both: car.type = "id"  OR car.type = { id: "id", ... }
-    const carTypeId =
-      typeof car.type === 'string' ? car.type : car.type?.id;
+    const carTypeId = typeof carData.type === 'string' ? carData.type : carData.type?.id;
 
     if (!carTypeId) return 'Vehicle based pricing';
 
@@ -177,6 +211,99 @@ export const Home: React.FC<TNavProps> = () => {
     }
 
     return 'Vehicle based pricing';
+  };
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location Permission',
+          message: 'We need your location to show services near you.',
+          buttonPositive: 'OK',
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+
+  const getCurrentPosition = (): Promise<{ latitude: number; longitude: number }> => {
+    return new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        (pos: { coords: { latitude: number; longitude: number } }) => {
+          resolve({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
+        },
+        (err: { code: number; message: string }) => {
+          console.log('Geolocation error', err);
+          reject(err);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 10000,
+        }
+      );
+    });
+  };
+
+  const handleUseCurrentLocation = async () => {
+    if (!userId || !user) return;
+
+    try {
+      setLocationUpdating(true);
+
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        Alert.alert('Permission required', 'Please enable location to continue.');
+        return;
+      }
+
+      const { latitude, longitude } = await getCurrentPosition();
+
+      const payload = {
+        location: { latitude, longitude }, // 👈 only location now, no city
+      };
+
+      console.log('Location payload', payload);
+
+      const updated = await handleUpdateUser(userId, payload);
+      setUser(updated);
+
+      await setAuth({ user: updated });
+
+      // if backend sets city itself, store it
+      if (updated?.city) {
+        await AsyncStorage.setItem(SELECTED_CITY, updated.city);
+      }
+
+      setShowLocationModal(false);
+    } catch (e: any) {
+      console.log('Failed to update location', e);
+
+      if (e?.response) {
+        console.log('Update user error response', e.response.data);
+        Alert.alert(
+          'Error',
+          e.response.data?.message ||
+          'Unable to update your location. Please try again.'
+        );
+      } else if (e?.code === 2) {
+        Alert.alert(
+          'Turn on Location',
+          'Please turn on Location / GPS in your device settings and try again.'
+        );
+      } else if (e?.code === 3) {
+        Alert.alert('Timeout', 'Unable to get your location. Please try again.');
+      } else {
+        Alert.alert('Error', 'Unable to update your location. Please try again.');
+      }
+    } finally {
+      setLocationUpdating(false);
+    }
   };
 
   return (
@@ -203,6 +330,159 @@ export const Home: React.FC<TNavProps> = () => {
           <DealCard />
         </View>
 
+        {/* Add-ons strip */}
+        <View className="px-5 mt-6">
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 4,
+            }}
+          >
+            <Text className="text-black text-lg font-semibold">Add-ons</Text>
+            <Text
+              style={{
+                fontSize: 11,
+                color: '#6B7280',
+              }}
+              numberOfLines={1}
+            >
+              Make your wash extra special ✨
+            </Text>
+          </View>
+
+          {addonsLoading ? (
+            <ActivityIndicator />
+          ) : addons.length ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingRight: 8, paddingTop: 4 }}
+            >
+              {addons.map((addon) => (
+                <View
+                  key={addon.id}
+                  style={{
+                    width: 220,
+                    marginRight: 14,
+                    borderRadius: 20,
+                    backgroundColor: '#F9FAFB',
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(34,54,113,0.08)',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.06,
+                    shadowRadius: 10,
+                    shadowOffset: { width: 0, height: 4 },
+                    elevation: 3,
+                    marginBottom: 4
+                  }}
+                >
+                  {/* Top: image / icon + price pill */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: '#E5E7EB',
+                        overflow: 'hidden',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 8,
+                      }}
+                    >
+                      {addon.mediaPath ? (
+                        <Image
+                          source={{ uri: `${BACKEND_URL}${addon.mediaPath}` }}
+                          style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
+                        />
+                      ) : (
+                        <Ionicons name="sparkles-outline" size={20} color="#223671" />
+                      )}
+                    </View>
+
+                    <View
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 999,
+                        backgroundColor: '#22367115',
+                        marginLeft: 'auto',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '700',
+                          color: '#223671',
+                        }}
+                      >
+                        SAR {addon.price}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Name */}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: '#111827',
+                    }}
+                    numberOfLines={1}
+                  >
+                    {addon.name}
+                  </Text>
+
+                  {/* Description */}
+                  {addon.description ? (
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: '#6B7280',
+                        marginTop: 4,
+                        lineHeight: 16,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {addon.description}
+                    </Text>
+                  ) : null}
+
+                  {/* Tiny "Perfect for..." footer */}
+                  <View
+                    style={{
+                      marginTop: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Ionicons name="thumbs-up-outline" size={14} color="#9CA3AF" />
+                    <Text
+                      style={{
+                        marginLeft: 4,
+                        fontSize: 11,
+                        color: '#9CA3AF',
+                      }}
+                      numberOfLines={1}
+                    >
+                      Popular choice
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
+        </View>
+
         {/* Packages */}
         <View className="px-5 mt-6 mb-6">
           <Text className="text-black text-lg font-semibold mb-3">
@@ -224,16 +504,21 @@ export const Home: React.FC<TNavProps> = () => {
                     marginBottom: 16,
                     padding: 18,
                     borderRadius: 20,
-                    backgroundColor: "#ffffff",
-                    shadowColor: "#000",
+                    backgroundColor: '#ffffff',
+                    shadowColor: '#000',
                     shadowOpacity: 0.08,
                     shadowRadius: 12,
                     shadowOffset: { width: 0, height: 4 },
                     elevation: 3,
                   }}
                 >
-                  {/* Top row: Title + Price */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
                     <Text
                       className="text-black font-semibold"
                       style={{ fontSize: 17, flex: 1, marginRight: 10 }}
@@ -242,25 +527,29 @@ export const Home: React.FC<TNavProps> = () => {
                       {pkg.name}
                     </Text>
 
-                    {/* Price pill */}
                     <View
                       style={{
-                        backgroundColor: "#22367115",
+                        backgroundColor: '#22367115',
                         paddingHorizontal: 12,
                         paddingVertical: 6,
                         borderRadius: 12,
                       }}
                     >
-                      <Text style={{ color: "#223671", fontWeight: "700", fontSize: 14 }}>
+                      <Text
+                        style={{
+                          color: '#223671',
+                          fontWeight: '700',
+                          fontSize: 14,
+                        }}
+                      >
                         {getPackagePriceLabel(pkg, car)}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Description */}
                   <Text
                     style={{
-                      color: "#6B7280",
+                      color: '#6B7280',
                       fontSize: 12,
                       marginTop: 6,
                       lineHeight: 16,
@@ -270,27 +559,31 @@ export const Home: React.FC<TNavProps> = () => {
                     {pkg.description}
                   </Text>
 
-                  {/* Divider */}
                   <View
                     style={{
                       height: 1,
-                      backgroundColor: "#E5E7EB",
+                      backgroundColor: '#E5E7EB',
                       marginVertical: 12,
                       opacity: 0.6,
                     }}
                   />
 
-                  {/* Services Included */}
-                  <Text style={{ color: "#111827", fontWeight: "600", marginBottom: 6 }}>
+                  <Text
+                    style={{
+                      color: '#111827',
+                      fontWeight: '600',
+                      marginBottom: 6,
+                    }}
+                  >
                     Includes:
                   </Text>
 
-                  <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                     {pkg.servicesIncluded?.slice(0, 6).map((s: any) => (
                       <View
                         key={s.id}
                         style={{
-                          backgroundColor: "#22367110",
+                          backgroundColor: '#22367110',
                           paddingHorizontal: 10,
                           paddingVertical: 5,
                           borderRadius: 999,
@@ -298,24 +591,35 @@ export const Home: React.FC<TNavProps> = () => {
                           marginBottom: 6,
                         }}
                       >
-                        <Text style={{ fontSize: 11, color: "#223671" }}>{s.name}</Text>
+                        <Text style={{ fontSize: 11, color: '#223671' }}>
+                          {s.name}
+                        </Text>
                       </View>
                     ))}
                   </View>
 
-                  {/* Button */}
                   <TouchableOpacity
                     activeOpacity={0.8}
                     style={{
                       marginTop: 12,
-                      backgroundColor: "#223671",
+                      backgroundColor: '#223671',
                       paddingVertical: 10,
                       borderRadius: 14,
-                      alignItems: "center",
+                      alignItems: 'center',
                     }}
-                    onPress={() => navigation.navigate("PackageDetails", { packageId: pkg.id })}
+                    onPress={() =>
+                      navigation.navigate('PackageDetails', {
+                        packageId: pkg.id,
+                      })
+                    }
                   >
-                    <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+                    <Text
+                      style={{
+                        color: '#fff',
+                        fontWeight: '600',
+                        fontSize: 14,
+                      }}
+                    >
                       View Details
                     </Text>
                   </TouchableOpacity>
@@ -350,23 +654,45 @@ export const Home: React.FC<TNavProps> = () => {
         <Ionicons name="options-outline" size={30} color="#fff" />
       </TouchableOpacity>
 
-      {/* Ad Modal */}
+      {/* Ad Modal – only show after / if location modal is done */}
       <Modal
-        visible={showAd}
+        visible={showAd && !showLocationModal}
         transparent
         animationType="fade"
         onRequestClose={() => setShowAd(false)}
       >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.45)' }}>
-          <View style={{ width: '88%', maxWidth: 420, backgroundColor: '#00163B', borderRadius: 16, padding: 14 }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.45)',
+          }}
+        >
+          <View
+            style={{
+              width: '88%',
+              maxWidth: 420,
+              backgroundColor: '#00163B',
+              borderRadius: 16,
+              padding: 14,
+            }}
+          >
             <TouchableOpacity
               onPress={() => setShowAd(false)}
               style={{
-                position: 'absolute', top: 10, right: 10,
-                width: 28, height: 28, borderRadius: 8,
-                backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-                zIndex: 10
-              }}>
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                backgroundColor: '#fff',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+              }}
+            >
               <Ionicons name="close" size={18} color="#00163B" />
             </TouchableOpacity>
 
@@ -376,7 +702,12 @@ export const Home: React.FC<TNavProps> = () => {
               ) : banner?.isActive && banner.mediaPath ? (
                 <Image
                   source={{ uri: `${BACKEND_URL}${banner.mediaPath}` }}
-                  style={{ width: 260, height: 200, borderRadius: 12, resizeMode: 'contain' }}
+                  style={{
+                    width: 260,
+                    height: 200,
+                    borderRadius: 12,
+                    resizeMode: 'contain',
+                  }}
                 />
               ) : (
                 <Text style={{ color: '#fff', textAlign: 'center' }}>
@@ -384,6 +715,82 @@ export const Home: React.FC<TNavProps> = () => {
                 </Text>
               )}
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Location Modal */}
+      <Modal
+        visible={showLocationModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { }}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.6)',
+          }}
+        >
+          <View
+            style={{
+              width: '88%',
+              maxWidth: 420,
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 20,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '600',
+                marginBottom: 8,
+                color: '#111827',
+                textAlign: 'center',
+              }}
+            >
+              Use your current location
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+                color: '#4B5563',
+                textAlign: 'center',
+                marginBottom: 18,
+              }}
+            >
+              We use your city & location to show the best wash packages
+              available near you.
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleUseCurrentLocation}
+              disabled={locationUpdating}
+              style={{
+                backgroundColor: '#223671',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              {locationUpdating ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text
+                  style={{
+                    color: '#ffffff',
+                    fontWeight: '600',
+                    fontSize: 15,
+                  }}
+                >
+                  Allow & use my current location
+                </Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -433,13 +840,22 @@ const DealCard = () => {
         onMomentumScrollEnd={onMomentumEnd}
       >
         {slides.map((s) => (
-          <View key={s.id} style={{ width: cardW }} className="flex-row px-4 justify-center items-center">
+          <View
+            key={s.id}
+            style={{ width: cardW }}
+            className="flex-row px-4 justify-center items-center"
+          >
             <View className="flex-1 justify-center">
-              <Image source={s.img} style={{ width: '100%', height: 150, resizeMode: 'contain' }} />
+              <Image
+                source={s.img}
+                style={{ width: '100%', height: 150, resizeMode: 'contain' }}
+              />
             </View>
 
             <View className="flex-1 items-center justify-center pr-2">
-              <Text className="text-black text-lg font-semibold text-center leading-6">{s.title}</Text>
+              <Text className="text-black text-lg font-semibold text-center leading-6">
+                {s.title}
+              </Text>
               <View className="rounded-full px-4 py-2 mt-2 bg-[#223671]">
                 <Text className="text-white text-sm">{s.badge}</Text>
               </View>
@@ -448,7 +864,6 @@ const DealCard = () => {
         ))}
       </ScrollView>
 
-      {/* dots */}
       <View className="absolute bottom-4 left-0 right-0 flex-row justify-center items-center">
         {slides.map((_, i) => (
           <View

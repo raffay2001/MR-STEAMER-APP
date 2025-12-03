@@ -8,7 +8,10 @@ import {
     ActivityIndicator,
     TextInput,
     Alert,
+    PermissionsAndroid,
+    Platform,
 } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { usePackage } from '../../hooks/usePackage';
@@ -65,6 +68,12 @@ const YourBooking: React.FC = () => {
 
     const [checkoutLoading, setCheckoutLoading] = React.useState(false);
 
+    const [locLoading, setLocLoading] = React.useState(false);
+
+    const [batterySize, setBatterySize] = React.useState('');
+    const [batteryType, setBatteryType] = React.useState('');
+    const [batteryBrand, setBatteryBrand] = React.useState('');
+
     const { createBooking } = useBooking();
 
     const defaultRegion = {
@@ -97,7 +106,31 @@ const YourBooking: React.FC = () => {
                 const c = await getCarProfile();
                 setCar(c);
 
-                const u = await getUserData();
+                const u: any = await getUserData();
+
+                if (u) {
+                    if (u.mobileNumber) setMobileNumber(u.mobileNumber);
+                    if (u.email) setEmail(u.email);
+
+                    if (u.address) {
+                        setAddress(u.address);
+                    } else if (u.city) {
+                        setAddress(u.city);
+                    }
+
+                    const lat = u.location?.latitude ?? u.location?.lat;
+                    const lng = u.location?.longitude ?? u.location?.lng;
+
+                    if (
+                        typeof lat === 'number' &&
+                        typeof lng === 'number' &&
+                        (lat !== 0 || lng !== 0)
+                    ) {
+                        setLatitude(lat);
+                        setLongitude(lng);
+                    }
+                }
+
                 if (u?.id && packageId) {
                     const ownRes = await checkIfUserOwnsPackage(u.id as string, packageId);
                     const first = ownRes?.results?.[0];
@@ -152,6 +185,69 @@ const YourBooking: React.FC = () => {
             ? `SAR ${pkg.fixedPrice}`
             : 'Vehicle based pricing';
 
+    const isBatteryPackage =
+        pkg?.name?.toLowerCase().includes('battery');
+
+    const requestLocationPermission = async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message: 'We need your location to select your address.',
+                    buttonPositive: 'OK',
+                },
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+        }
+        return true;
+    };
+
+    const handleUseCurrentLocation = async () => {
+        try {
+            setLocLoading(true);
+            const ok = await requestLocationPermission();
+            if (!ok) {
+                Alert.alert('Permission required', 'Please enable location to continue.');
+                setLocLoading(false);
+                return;
+            }
+
+            Geolocation.getCurrentPosition(
+                async pos => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    setLatitude(lat);
+                    setLongitude(lng);
+
+                    try {
+                        const resp = await fetch(
+                            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}&language=en`,
+                        );
+                        const geo = await resp.json();
+                        const formatted = geo?.results?.[0]?.formatted_address;
+                        if (formatted) {
+                            setAddress(formatted);
+                        }
+                    } catch (err) {
+                        console.log('Reverse geocode error', err);
+                    } finally {
+                        setLocLoading(false);
+                    }
+                },
+                err => {
+                    console.log('Geolocation error', err);
+                    setLocLoading(false);
+                    Alert.alert('Error', 'Unable to get current location. Please try again.');
+                },
+                { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 },
+            );
+        } catch (e) {
+            console.log('Current location error', e);
+            setLocLoading(false);
+        }
+    };
+
     const updateAddonQty = (addonId: string, delta: number) => {
         setSelectedAddons(prev => {
             const current = prev[addonId] ?? 0;
@@ -188,6 +284,9 @@ const YourBooking: React.FC = () => {
         0,
     );
 
+    const addonsVat = addonsTotal * 0.15;
+    const addonsTotalWithVat = addonsTotal + addonsVat;
+
     const handleMapPress = (e: MapPressEvent) => {
         const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
         setLatitude(lat);
@@ -203,7 +302,11 @@ const YourBooking: React.FC = () => {
         specialInstructions.trim().length > 0 &&
         address.trim().length > 0 &&
         latitude !== null &&
-        longitude !== null;
+        longitude !== null &&
+        (!isBatteryPackage ||
+            (batterySize.trim().length > 0 &&
+                batteryType.trim().length > 0 &&
+                batteryBrand.trim().length > 0));
 
     if (loading || !pkg) {
         return (
@@ -555,8 +658,8 @@ const YourBooking: React.FC = () => {
                                         color: BRAND,
                                         marginTop: 2,
                                     }}
-                                    numberOfLines={1}>
-                                    Add-ons total: SAR {addonsTotal}
+                                    numberOfLines={2}>
+                                    Add-ons: SAR {addonsTotal.toFixed(2)} | VAT 15%: SAR {addonsVat.toFixed(2)} | Total: SAR {addonsTotalWithVat.toFixed(2)}
                                 </Text>
                             )}
                         </View>
@@ -738,7 +841,7 @@ const YourBooking: React.FC = () => {
                                             color: BRAND,
                                             fontWeight: '700',
                                         }}>
-                                        SAR {addonsTotal}
+                                        SAR {addonsTotal.toFixed(2)}
                                     </Text>
                                 </View>
                             )}
@@ -845,6 +948,94 @@ const YourBooking: React.FC = () => {
                             }}
                         />
                     </View>
+
+                    {isBatteryPackage && (
+                        <>
+                            <View style={{ marginTop: 12 }}>
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        fontWeight: '500',
+                                        color: '#111827',
+                                        marginBottom: 4,
+                                    }}>
+                                    Battery Size *
+                                </Text>
+                                <TextInput
+                                    value={batterySize}
+                                    onChangeText={setBatterySize}
+                                    placeholder="E.g. 55 Ah"
+                                    placeholderTextColor="#9CA3AF"
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: '#E5E7EB',
+                                        borderRadius: 10,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 10,
+                                        fontSize: 14,
+                                        color: '#111827',
+                                        backgroundColor: '#F9FAFB',
+                                    }}
+                                />
+                            </View>
+
+                            <View style={{ marginTop: 10 }}>
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        fontWeight: '500',
+                                        color: '#111827',
+                                        marginBottom: 4,
+                                    }}>
+                                    Battery Type *
+                                </Text>
+                                <TextInput
+                                    value={batteryType}
+                                    onChangeText={setBatteryType}
+                                    placeholder="E.g. AGM / Lead-acid"
+                                    placeholderTextColor="#9CA3AF"
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: '#E5E7EB',
+                                        borderRadius: 10,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 10,
+                                        fontSize: 14,
+                                        color: '#111827',
+                                        backgroundColor: '#F9FAFB',
+                                    }}
+                                />
+                            </View>
+
+                            <View style={{ marginTop: 10 }}>
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        fontWeight: '500',
+                                        color: '#111827',
+                                        marginBottom: 4,
+                                    }}>
+                                    Battery Brand *
+                                </Text>
+                                <TextInput
+                                    value={batteryBrand}
+                                    onChangeText={setBatteryBrand}
+                                    placeholder="E.g. AC Delco"
+                                    placeholderTextColor="#9CA3AF"
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: '#E5E7EB',
+                                        borderRadius: 10,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 10,
+                                        fontSize: 14,
+                                        color: '#111827',
+                                        backgroundColor: '#F9FAFB',
+                                    }}
+                                />
+                            </View>
+                        </>
+                    )}
                 </View>
 
                 {/* Address + lat/lng preview */}
@@ -926,6 +1117,38 @@ const YourBooking: React.FC = () => {
                                 <Ionicons name="close" size={20} color="#6B7280" />
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity
+                            onPress={handleUseCurrentLocation}
+                            disabled={locLoading}
+                            style={{
+                                marginTop: 8,
+                                marginBottom: 10,
+                                alignSelf: 'flex-start',
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                borderRadius: 999,
+                                backgroundColor: '#EEF2FF',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}>
+                            {locLoading ? (
+                                <ActivityIndicator size="small" color={BRAND} />
+                            ) : (
+                                <>
+                                    <Ionicons name="locate-outline" size={16} color={BRAND} />
+                                    <Text
+                                        style={{
+                                            marginLeft: 6,
+                                            fontSize: 13,
+                                            color: BRAND,
+                                            fontWeight: '500',
+                                        }}>
+                                        Use my current location
+                                    </Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
 
                         {/* Google Places (NO ScrollView wrapper here) */}
                         <GooglePlacesAutocomplete
@@ -1099,6 +1322,11 @@ const YourBooking: React.FC = () => {
                                 address,
                                 location: { latitude, longitude },
                                 specialInstructions,
+                                ...(isBatteryPackage && {
+                                    batterySize,
+                                    batteryType,
+                                    batteryBrand,
+                                }),
                             };
 
                             const response = await createBooking(payload);

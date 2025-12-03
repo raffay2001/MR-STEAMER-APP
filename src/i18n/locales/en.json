@@ -105,7 +105,7 @@
   },
   "drawer": {
     "becomeStreamer": "Become Mr.Streamer",
-    "choosePackages": "Choose Packages",
+    "choosePackages": "My Packages",
     "hireUs": "Hire us",
     "ourFeatures": "Our Features",
     "aboutUs": "About Us",
@@ -263,7 +263,7 @@
         }
     },
     "choosePackages": {
-    "title": "Choose Packages",
+    "title": "My Packages",
     "helper": "Choose a package for the best service",
     "noItems": "No items.",
     "steamIt": "Steam it"

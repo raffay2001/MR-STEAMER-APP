@@ -50,10 +50,26 @@ const PackageDetails: React.FC = () => {
 
     const isLoading = loading || localLoading || !data;
 
+    const isFixed = data?.pricingType === 'fixed';
+    const basePrice =
+        isFixed && typeof data.fixedPriceWithoutVAT === 'number'
+            ? data.fixedPriceWithoutVAT
+            : null;
+    const totalPrice =
+        isFixed && typeof data.fixedPrice === 'number'
+            ? data.fixedPrice
+            : null;
+    const vatAmount =
+        isFixed && basePrice != null && totalPrice != null
+            ? totalPrice - basePrice
+            : null;
+
     const priceLabel =
-        data?.pricingType === 'fixed'
-            ? `SAR ${data.fixedPrice}`
+        isFixed && totalPrice != null
+            ? `SAR ${totalPrice}`
             : 'Vehicle based pricing';
+
+    const isAvailable = data?.isAvailable !== false;
 
     if (isLoading) {
         return (
@@ -210,6 +226,50 @@ const PackageDetails: React.FC = () => {
                             {data.description}
                         </Text>
                     ) : null}
+
+                    {isFixed && basePrice != null && totalPrice != null && (
+                        <View
+                            style={{
+                                marginTop: 12,
+                                padding: 12,
+                                borderRadius: 12,
+                                backgroundColor: '#F9FAFB',
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    color: '#374151',
+                                    marginBottom: 2,
+                                }}
+                            >
+                                Price (excl. VAT):{' '}
+                                <Text style={{ fontWeight: '600' }}>SAR {basePrice}</Text>
+                            </Text>
+                            {vatAmount != null && (
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        color: '#374151',
+                                        marginBottom: 2,
+                                    }}
+                                >
+                                    VAT 15%:{' '}
+                                    <Text style={{ fontWeight: '600' }}>SAR {vatAmount}</Text>
+                                </Text>
+                            )}
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    color: '#111827',
+                                    fontWeight: '700',
+                                    marginTop: 4,
+                                }}
+                            >
+                                Total (incl. VAT): SAR {totalPrice}
+                            </Text>
+                        </View>
+                    )}
 
                     {/* Usage / Expiry row */}
                     <View
@@ -397,19 +457,21 @@ const PackageDetails: React.FC = () => {
 
                 {/* Bottom CTA */}
                 <TouchableOpacity
-                    activeOpacity={0.85}
+                    activeOpacity={isAvailable ? 0.85 : 1}
+                    disabled={!isAvailable}
                     style={{
                         marginTop: 4,
-                        backgroundColor: BRAND,
+                        backgroundColor: isAvailable ? BRAND : '#9CA3AF',
                         paddingVertical: 14,
                         borderRadius: 999,
                         alignItems: 'center',
                     }}
                     onPress={() => {
+                        if (!isAvailable) return;
                         if (owns) {
-                            navigation.navigate("YourBooking", { packageId });
+                            navigation.navigate('YourBooking', { packageId });
                         } else {
-                            navigation.navigate("BuyPackage", { packageId });
+                            navigation.navigate('BuyPackage', { packageId });
                         }
                     }}
                 >
@@ -420,7 +482,7 @@ const PackageDetails: React.FC = () => {
                             fontWeight: '600',
                         }}
                     >
-                        {owns ? "Steam It" : "Buy Now"}
+                        {isAvailable ? (owns ? 'Steam It' : 'Buy Now') : 'Not available right now'}
                     </Text>
                 </TouchableOpacity>
             </ScrollView>
