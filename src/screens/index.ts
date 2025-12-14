@@ -8,6 +8,10 @@ import Package from './Package';
 import YourBooking from './YourBooking';
 import Success from './Success'
 import BookingDetailsPage from './BookingDetailsPage';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsAndConditions from './TermsAndConditions';
+import RefundPolicy from './RefundPolicy';
+import ContactUs from './ContactUs';
 import {SignUpOnBoarding} from './SignUpOnBoarding';
 import {Login} from './Login';
 import {CheckOut} from './CheckOut';
@@ -25,4 +29,8 @@ export {
   YourBooking,
   Success,
   BookingDetailsPage,
+  PrivacyPolicy,
+  TermsAndConditions,
+  RefundPolicy,
+  ContactUs,
 };

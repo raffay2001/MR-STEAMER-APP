@@ -18,6 +18,10 @@ const DrawerItems = (t: any) => ([
   { text: t('drawer.ourFeatures'), route: 'OurFeatures' },
   { text: t('drawer.aboutUs'), route: 'AboutUs' },
   { text: t('drawer.bookingDetail'), route: 'BookingDetails' },
+  { text: t('drawer.contactUs'), route: 'ContactUs' },
+  { text: t('drawer.privacyPolicy'), route: 'PrivacyPolicy' },
+  { text: t('drawer.terms'), route: 'TermsAndConditions' },
+  { text: t('drawer.refundPolicy'), route: 'RefundPolicy' },
 ]);
 
 export const CustomDrawerComponent = (props: any) => {
@@ -81,6 +85,19 @@ const DrawerHeader: React.FC<TNavProps> = ({ navigation /*, route*/ }) => {
     navigation.navigate('Home');
   };
 
+  const getInitials = (fullName?: string) => {
+    const name = (fullName || '').trim();
+    if (!name) return 'G';
+
+    const parts = name.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || '';
+    const second = parts.length > 1 ? parts[parts.length - 1]?.[0] || '' : (parts[0]?.[1] || '');
+
+    return (first + second).toUpperCase();
+  };
+
+  const initials = getInitials(user?.name);
+
   React.useEffect(() => {
     (async () => {
       const u = await getUserData();
@@ -95,17 +112,31 @@ const DrawerHeader: React.FC<TNavProps> = ({ navigation /*, route*/ }) => {
     >
       <View className="justify-between items-center" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
         <TouchableOpacity
-          className="gap-x-0.5 items-center"
+          className="gap-x-1 items-center"
           style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
           onPress={() => {
             navigation.dispatch(DrawerActions.closeDrawer());
             navigation.navigate('Profile');
           }}
         >
-          <Image
+          {/* <Image
             source={user?.picture ? { uri: user.picture } : ProfileImage}
             style={{ width: 48, height: 48, borderRadius: 24 }}
-          />
+          /> */}
+          <View
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: '#1f3a8a',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+              {initials}
+            </Text>
+          </View>
           <View className="gap-y-0" style={{ marginLeft: isAr ? 0 : 8, marginRight: isAr ? 8 : 0 }}>
             <Text className="text-white text-xl font-semibold" style={{ textAlign: isAr ? 'right' : 'left' }}>
               {user?.name || 'Guest'}

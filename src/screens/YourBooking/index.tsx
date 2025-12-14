@@ -26,6 +26,7 @@ import type { AddonItem } from '../../api/addon/addon.api';
 import { useBooking } from '../../hooks/useBooking';
 import MapView, { MapPressEvent, Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const GOOGLE_API_KEY = 'AIzaSyApI2bRWLV7R3ID776FLL1N51MtN9f34Uw';
 
@@ -51,9 +52,10 @@ const YourBooking: React.FC = () => {
 
     const { loading: slotsLoading, fetchSlotsByDay } = useSlots();
     const [selectedDay, setSelectedDay] = React.useState<string>('');
-    const [daysToShow, setDaysToShow] = React.useState<string[]>([]);
     const [slots, setSlots] = React.useState<SlotItem[]>([]);
     const [selectedSlot, setSelectedSlot] = React.useState<SlotItem | null>(null);
+    const [bookingDate, setBookingDate] = React.useState<Date>(new Date());
+    const [showDatePicker, setShowDatePicker] = React.useState(false);
 
     const { loading: addonsLoading, addons, fetchAddons } = useAddons();
     const [selectedAddons, setSelectedAddons] = React.useState<Record<string, number>>({});
@@ -75,6 +77,16 @@ const YourBooking: React.FC = () => {
     const [batteryBrand, setBatteryBrand] = React.useState('');
 
     const { createBooking } = useBooking();
+
+    const toYMD = (d: Date) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
+    const toDayName = (d: Date) =>
+        d.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
     const defaultRegion = {
         latitude: 24.7136, // Riyadh
@@ -145,36 +157,19 @@ const YourBooking: React.FC = () => {
     }, [packageId]);
 
     React.useEffect(() => {
-        const all = [
-            'monday',
-            'tuesday',
-            'wednesday',
-            'thursday',
-            'friday',
-            'saturday',
-            'sunday',
-        ];
-
-        const jsDay = new Date().getDay(); // 0 = Sun ... 6 = Sat
-        const startIdx = (jsDay + 6) % 7; // 0 = Mon ... 6 = Sun
-
-        const ordered = all.slice(startIdx);
-        setDaysToShow(ordered);
-        setSelectedDay(all[startIdx]);
-    }, []);
-
-    React.useEffect(() => {
-        if (!selectedDay) return;
+        if (!packageId) return;
         (async () => {
             try {
-                const res = await fetchSlotsByDay({ day: selectedDay, limit: 50 });
+                const day = toDayName(bookingDate);
+                setSelectedDay(day);
+
+                const res = await fetchSlotsByDay({ day, packageId, limit: 50 });
                 setSlots(res.results || []);
             } catch (e) {
-                console.log('[YourBooking] fetch slots error:', e);
                 setSlots([]);
             }
         })();
-    }, [selectedDay, fetchSlotsByDay]);
+    }, [bookingDate, packageId, fetchSlotsByDay]);
 
     React.useEffect(() => {
         fetchAddons();
@@ -427,6 +422,44 @@ const YourBooking: React.FC = () => {
 
                     <TouchableOpacity
                         activeOpacity={0.85}
+                        onPress={() => setShowDatePicker(true)}
+                        style={{
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#E5E7EB',
+                            backgroundColor: '#fff',
+                            paddingVertical: 12,
+                            paddingHorizontal: 14,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Text style={{ fontSize: 14, color: '#111827', fontWeight: '500' }}>
+                            {toYMD(bookingDate)}
+                        </Text>
+                        <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
+                    </TouchableOpacity>
+
+                    {showDatePicker && (
+                        <DateTimePicker
+                            value={bookingDate}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            minimumDate={new Date()} // ✅ blocks yesterday
+                            onChange={(_, date) => {
+                                setShowDatePicker(false);
+                                if (!date) return;
+                                setBookingDate(date);
+                                setSelectedDay(toDayName(date)); // ✅ immediate UI update
+                                setSelectedSlot(null);
+                            }}
+                        />
+                    )}
+
+                    <TouchableOpacity
+                        activeOpacity={0.85}
                         onPress={() => slotSheetRef.current?.open()}
                         style={{
                             borderRadius: 12,
@@ -448,10 +481,10 @@ const YourBooking: React.FC = () => {
                                 }}
                                 numberOfLines={1}>
                                 {selectedSlot
-                                    ? `${selectedSlot.day ?? selectedDay} • ${selectedSlot.time}`
+                                    ? `${selectedDay} • ${selectedSlot.time}`
                                     : slotsLoading
                                         ? 'Loading slots...'
-                                        : 'Tap to choose day & time'}
+                                        : 'Tap to choose time'}
                             </Text>
                             {selectedSlot && (
                                 <Text
@@ -485,27 +518,22 @@ const YourBooking: React.FC = () => {
                             paddingBottom: 24,
                         },
                     }}>
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 8,
-                        }}>
-                        <Text
-                            style={{
-                                fontSize: 16,
-                                fontWeight: '600',
-                                color: '#111827',
-                            }}>
-                            Choose day & time
-                        </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <View>
+                            <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>
+                                Choose time
+                            </Text>
+                            <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                                {toYMD(bookingDate)} • {selectedDay}
+                            </Text>
+                        </View>
+
                         <TouchableOpacity onPress={() => slotSheetRef.current?.close()}>
                             <Ionicons name="close" size={20} color="#6B7280" />
                         </TouchableOpacity>
                     </View>
 
-                    {daysToShow.length > 0 && (
+                    {/* {daysToShow.length > 0 && (
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
@@ -548,7 +576,7 @@ const YourBooking: React.FC = () => {
                                 );
                             })}
                         </ScrollView>
-                    )}
+                    )} */}
 
                     {slotsLoading ? (
                         <View
@@ -1316,6 +1344,7 @@ const YourBooking: React.FC = () => {
                                 userPackageId: userPackageId!,
                                 packageId,
                                 slotId: selectedSlot.id,
+                                bookingDate: toYMD(bookingDate),
                                 additionalAddOns,
                                 mobileNumber,
                                 email,

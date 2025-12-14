@@ -15,9 +15,10 @@ import {
   Alert,
   PermissionsAndroid,
   Platform,
+  AppState,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Geolocation from '@react-native-community/geolocation';
 import { TNavProps } from '../../services/types/drawerscreens.types';
@@ -30,6 +31,7 @@ import { BACKEND_URL } from '../../api';
 import { getCarProfile } from '../../hooks/useCarStorage';
 import { getUserData, setAuth } from '../../hooks/useAuthStorage';
 import { useUser } from '../../hooks/useUser';
+import { usePromoCode } from '../../hooks/usePromoCode';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { useAddons } from '../../hooks/useAddons';
@@ -44,6 +46,7 @@ export const Home: React.FC<TNavProps> = () => {
 
   const { fetchUserById, handleUpdateUser } = useUser();
   const { loading: addonsLoading, addons, fetchAddons } = useAddons();
+  const { loading: promoLoading, promos } = usePromoCode();
 
   const { banner, loading: bannerLoading, error: bannerError } = useBanner();
 
@@ -121,15 +124,29 @@ export const Home: React.FC<TNavProps> = () => {
     };
   }, []);
 
+  // show whenever Home screen gets focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!showLocationModal) setShowAd(true);
+      return () => { };
+    }, [showLocationModal])
+  );
+
+  const isFocused = useIsFocused();
+  const appStateRef = React.useRef(AppState.currentState);
+
+  // show whenever app returns to foreground AND Home is focused
   React.useEffect(() => {
-    (async () => {
-      const seen = await AsyncStorage.getItem(KEY_HOME_AD);
-      if (!seen) {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      const wasBg = /inactive|background/.test(appStateRef.current);
+      if (wasBg && nextState === 'active' && isFocused) {
         setShowAd(true);
-        await AsyncStorage.setItem(KEY_HOME_AD, '1');
       }
-    })();
-  }, []);
+      appStateRef.current = nextState;
+    });
+
+    return () => sub.remove();
+  }, [isFocused]);
 
   const loadPackages = React.useCallback(async () => {
     setRefreshing(true);
@@ -327,7 +344,7 @@ export const Home: React.FC<TNavProps> = () => {
         </View>
 
         <View className="px-5 mt-6">
-          <DealCard />
+          <DealCard promos={promos} promoLoading={promoLoading} banner={banner} />
         </View>
 
         {/* Add-ons strip */}
@@ -798,21 +815,61 @@ export const Home: React.FC<TNavProps> = () => {
   );
 };
 
-const DealCard = () => {
-  const slides = React.useMemo(
-    () => [
-      { id: '1', img: BlackCar, title: 'Enjoy our Aug\nDeals', badge: '30% off' },
-      { id: '2', img: BlackCar, title: 'Premium wash\nanytime', badge: 'Save 20%' },
-      { id: '3', img: BlackCar, title: 'Detailing & Wax\nSpecial', badge: 'From $19' },
-    ],
-    []
-  );
+const DealCard = ({
+  promos,
+  promoLoading,
+  banner,
+}: {
+  promos: any[];
+  promoLoading: boolean;
+  banner: any | null;
+}) => {
+  const slides = React.useMemo(() => {
+    // ✅ promo codes -> carousel
+    if (Array.isArray(promos) && promos.length) {
+      return promos.map((p: any) => {
+        const off =
+          p.discountType === 'percentage'
+            ? `${p.discountValue}% OFF`
+            : `SAR ${p.discountValue} OFF`;
+
+        return {
+          id: p.id || p.code,
+          type: 'promo',
+          code: p.code,
+          title: p.description,
+          badge: off,
+          expiryDate: p.expiryDate,
+        };
+      });
+    }
+
+    // ✅ no promo -> single banner ONLY
+    if (banner?.isActive && banner?.mediaPath) {
+      return [
+        {
+          id: 'banner',
+          type: 'banner',
+          mediaUri: `${BACKEND_URL}${banner.mediaPath}`,
+        },
+      ];
+    }
+
+    // ✅ if nothing at all -> render nothing
+    return [];
+  }, [promos, banner]);
 
   const scrollRef = React.useRef<ScrollView>(null);
   const [index, setIndex] = React.useState(0);
   const cardW = Dimensions.get('window').width - 40;
 
   React.useEffect(() => {
+    setIndex(0);
+    scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [slides.length]);
+
+  React.useEffect(() => {
+    if (slides.length <= 1) return;
     const id = setInterval(() => {
       const next = (index + 1) % slides.length;
       scrollRef.current?.scrollTo({ x: next * cardW, animated: true });
@@ -827,6 +884,26 @@ const DealCard = () => {
     setIndex(i);
   };
 
+  const formatExpiry = (iso?: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return `Valid till ${d.toLocaleDateString()}`;
+  };
+
+  if (promoLoading) {
+    return (
+      <View
+        style={{ width: cardW, height: 189 }}
+        className="bg-[#F5F7FA] rounded-3xl items-center justify-center"
+      >
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!slides.length) return null;
+
   return (
     <View
       style={{ width: cardW, height: 189, overflow: 'hidden' }}
@@ -839,45 +916,83 @@ const DealCard = () => {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
       >
-        {slides.map((s) => (
+        {slides.map((s: any) => (
           <View
             key={s.id}
-            style={{ width: cardW }}
-            className="flex-row px-4 justify-center items-center"
+            style={{ width: cardW, paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center' }}
           >
-            <View className="flex-1 justify-center">
+            {s.type === 'banner' ? (
               <Image
-                source={s.img}
-                style={{ width: '100%', height: 150, resizeMode: 'contain' }}
+                source={{ uri: s.mediaUri }}
+                style={{ width: '100%', height: 189, borderRadius: 24, resizeMode: 'cover' }}
               />
-            </View>
+            ) : (
+              <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                {!!s.code && (
+                  <View
+                    style={{
+                      backgroundColor: '#fff',
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderWidth: 1,
+                      borderColor: '#E5E7EB',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Text style={{ color: '#111', fontWeight: '800', fontSize: 13 }}>
+                      {s.code}
+                    </Text>
+                  </View>
+                )}
 
-            <View className="flex-1 items-center justify-center pr-2">
-              <Text className="text-black text-lg font-semibold text-center leading-6">
-                {s.title}
-              </Text>
-              <View className="rounded-full px-4 py-2 mt-2 bg-[#223671]">
-                <Text className="text-white text-sm">{s.badge}</Text>
+                <Text
+                  style={{
+                    color: '#111827',
+                    fontSize: 16,
+                    fontWeight: '700',
+                    textAlign: 'center',
+                    lineHeight: 22,
+                    paddingHorizontal: 10,
+                  }}
+                  numberOfLines={3}
+                >
+                  {s.title}
+                </Text>
+
+                {!!s.badge && (
+                  <View className="rounded-full px-4 py-2 mt-3 bg-[#223671]">
+                    <Text className="text-white text-sm font-semibold">{s.badge}</Text>
+                  </View>
+                )}
+
+                {!!s.expiryDate && (
+                  <Text style={{ marginTop: 10, fontSize: 11, color: '#6B7280', textAlign: 'center' }}>
+                    {formatExpiry(s.expiryDate)}
+                  </Text>
+                )}
               </View>
-            </View>
+            )}
           </View>
         ))}
       </ScrollView>
 
-      <View className="absolute bottom-4 left-0 right-0 flex-row justify-center items-center">
-        {slides.map((_, i) => (
-          <View
-            key={i}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              marginHorizontal: 4,
-              backgroundColor: i === index ? '#223671' : '#D1D5DB',
-            }}
-          />
-        ))}
-      </View>
+      {slides.length > 1 && (
+        <View className="absolute bottom-4 left-0 right-0 flex-row justify-center items-center">
+          {slides.map((_: any, i: number) => (
+            <View
+              key={i}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                marginHorizontal: 4,
+                backgroundColor: i === index ? '#223671' : '#D1D5DB',
+              }}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 };

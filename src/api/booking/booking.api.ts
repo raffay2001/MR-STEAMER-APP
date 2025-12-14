@@ -7,6 +7,8 @@ export type CreateBookingPayload = {
   packageId: string;
   slotId: string;
 
+   bookingDate: string;
+
   additionalAddOns?: Array<{
     addOnId: string;
     quantity: number;

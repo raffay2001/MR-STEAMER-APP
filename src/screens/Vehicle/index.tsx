@@ -486,7 +486,10 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                     return (
                       <Pressable
                         key={b.id}
-                        onPress={() => setSelectedBrandId(b.id)}
+                        onPress={() => {
+                          setSelectedBrandId(b.id);
+                          setOpenBrand(false);
+                        }}
                         style={{
                           paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
                           borderWidth: 1, borderColor: active ? '#111' : '#ddd',

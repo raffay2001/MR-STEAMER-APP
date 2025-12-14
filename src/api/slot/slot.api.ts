@@ -3,6 +3,7 @@ import { getAccessToken } from '../../hooks/useAuthStorage';
 
 export type GetSlotsByDayParams = {
   day: string;          // "monday"
+  packageId: string; 
   page?: number;
   limit?: number;
 };

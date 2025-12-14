@@ -7,7 +7,6 @@ import Icons from '../assets/svgs/icons';
 import { SvgWrapper } from '../common/SvgWrapper';
 import { CustomDrawerComponent } from '../components/DrawerComponents';
 import { DrawerStackParamList } from '../services/types/drawerscreens.types';
-import { HireUs } from '../screens/HireUs';
 import BookingDetailsPage from '../screens/BookingDetailsPage';
 import { getUserData } from '../hooks/useAuthStorage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -24,6 +23,11 @@ import RBSheet from 'react-native-raw-bottom-sheet';
 import { getCarProfile, setCarProfile } from '../hooks/useCarStorage';
 import { useCar } from '../hooks/useCar';
 import { useNavigation } from '@react-navigation/native';
+import PrivacyPolicy from '../screens/PrivacyPolicy';
+import TermsAndConditions from '../screens/TermsAndConditions';
+import RefundPolicy from '../screens/RefundPolicy';
+import ContactUs from '../screens/ContactUs';
+import HireUs from '../screens/HireUs';
 
 const Drawer = createDrawerNavigator<DrawerStackParamList>();
 
@@ -186,13 +190,6 @@ const MyDrawer = () => {
           })}
         />
         <Drawer.Screen
-          name="HireUs"
-          component={HireUs}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Drawer.Screen
           name="OurFeatures"
           component={OurFeatures}
           options={({ navigation }) => ({
@@ -243,6 +240,81 @@ const MyDrawer = () => {
           options={({ navigation }) => ({
             headerShown: true,
             title: isAr ? 'تفاصيل الحجز' : 'Booking Details',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Ionicons name="arrow-back" size={22} color="#111" />
+              </TouchableOpacity>
+            ),
+            headerRight: () => null,
+          })}
+        />
+        <Drawer.Screen
+          name="HireUs"
+          component={HireUs}
+          options={({ navigation }) => ({
+            headerShown: true,
+            title: isAr ? 'استأجرنا' : 'Hire Us',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Ionicons name="arrow-back" size={22} color="#111" />
+              </TouchableOpacity>
+            ),
+            headerRight: () => null,
+          })}
+        />
+        <Drawer.Screen
+          name="PrivacyPolicy"
+          component={PrivacyPolicy}
+          options={({ navigation }) => ({
+            headerShown: true,
+            title: isAr ? 'سياسة الخصوصية' : 'Privacy Policy',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Ionicons name="arrow-back" size={22} color="#111" />
+              </TouchableOpacity>
+            ),
+            headerRight: () => null,
+          })}
+        />
+        <Drawer.Screen
+          name="TermsAndConditions"
+          component={TermsAndConditions}
+          options={({ navigation }) => ({
+            headerShown: true,
+            title: isAr ? 'الشروط والأحكام' : 'Terms & Conditions',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Ionicons name="arrow-back" size={22} color="#111" />
+              </TouchableOpacity>
+            ),
+            headerRight: () => null,
+          })}
+        />
+        <Drawer.Screen
+          name="RefundPolicy"
+          component={RefundPolicy}
+          options={({ navigation }) => ({
+            headerShown: true,
+            title: isAr ? 'سياسة الاسترجاع' : 'Refund Policy',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                <Ionicons name="arrow-back" size={22} color="#111" />
+              </TouchableOpacity>
+            ),
+            headerRight: () => null,
+          })}
+        />
+        <Drawer.Screen
+          name="ContactUs"
+          component={ContactUs}
+          options={({ navigation }) => ({
+            headerShown: true,
+            title: isAr ? 'تواصل معنا' : 'Contact Us',
             headerTitleAlign: 'center',
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>

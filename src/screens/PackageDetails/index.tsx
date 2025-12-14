@@ -482,7 +482,7 @@ const PackageDetails: React.FC = () => {
                             fontWeight: '600',
                         }}
                     >
-                        {isAvailable ? (owns ? 'Steam It' : 'Buy Now') : 'Not available right now'}
+                        {isAvailable ? (owns ? 'Wash It' : 'Buy Now') : 'Not available right now'}
                     </Text>
                 </TouchableOpacity>
             </ScrollView>

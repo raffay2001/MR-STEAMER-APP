@@ -1,38 +1,37 @@
+// src/hooks/useServices.ts
 import { useCallback, useState } from 'react';
-import { getServices as apiGetServices, getPackagesByService as apiGetPackagesByService, } from '../api/service/service.api';
+import { getAllServices, ServiceItem, ServicesListParams, ServicesListResponse } from '../api/service/service.api';
 
 export const useServices = () => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [meta, setMeta] = useState<Omit<ServicesListResponse, 'results'> | null>(null);
 
-  const fetchServices = useCallback(async (params?: {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    name?: string;
-  }): Promise<any> => {
+  const fetchServices = useCallback(async (params?: ServicesListParams) => {
     setLoading(true);
+    setError(null);
+
     try {
-      const res = await apiGetServices(params);
-      return res.data;
+      const res = await getAllServices(params);
+      setServices(res?.results || []);
+      setMeta({
+        page: res.page,
+        limit: res.limit,
+        totalPages: res.totalPages,
+        totalResults: res.totalResults,
+      });
+      return res;
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Failed to load services';
+      setError(msg);
+      setServices([]);
+      setMeta(null);
+      throw e;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const fetchPackagesByService = useCallback(
-    async (
-      serviceId: string,
-      params?: { page?: number; limit?: number; sortBy?: string; vehicleType?: string }
-    ): Promise<any> => {
-      setLoading(true);
-      try {
-        const res = await apiGetPackagesByService(serviceId, params);
-        return res.data;
-      } finally {
-        setLoading(false);
-      }
-    },
-  [],);
-
-  return { loading, fetchServices, fetchPackagesByService };
+  return { fetchServices, services, meta, loading, error, setError };
 };

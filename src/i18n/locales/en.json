@@ -110,8 +110,120 @@
     "ourFeatures": "Our Features",
     "aboutUs": "About Us",
     "bookingDetail": "Booking Detail",
-    "logout": "Logout"
+    "logout": "Logout",
+    "privacyPolicy": "Privacy Policy",
+  "terms": "Terms & Conditions",
+  "refundPolicy": "Refund Policy",
+  "contactUs": "Contact Us"
   },
+  "legal": {
+  "privacy": {
+    "title": "Privacy Policy",
+    "sections": {
+      "introTitle": "1. Introduction",
+      "introBody": "This Privacy Policy describes how Mister Streamer (\"we\", \"us\", \"our\") collects, uses, discloses, and protects your personal information when you use our application and services. This policy is designed in accordance with the Personal Data Protection Law and related regulations of the Kingdom of Saudi Arabia.",
+
+      "collectTitle": "2. Information We Collect",
+      "collectItems": [
+        "Personal Information: Name, contact details, address, and payment information provided during registration or booking.",
+        "Usage Data: Information about how you use our app, including service history and preferences.",
+        "Device Information: Device type, operating system, and unique device identifiers.",
+        "Location Data: With your consent, we may collect and use your location to provide services."
+      ],
+
+      "useTitle": "3. How We Use Your Information",
+      "useItems": [
+        "To provide and improve our services.",
+        "To process bookings and payments.",
+        "To communicate with you regarding your account or services.",
+        "To comply with legal obligations under Saudi law."
+      ],
+
+      "shareTitle": "4. Sharing and Disclosure",
+      "shareBody": "We do not sell your personal information. We may share your data with service providers, payment processors, or government authorities as required by law or to fulfill our services.",
+
+      "securityTitle": "5. Data Security",
+      "securityBody": "We implement appropriate technical and organizational measures to protect your personal data from unauthorized access, loss, or misuse.",
+
+      "rightsTitle": "6. Your Rights",
+      "rightsBody": "You have the right to access, correct, or request deletion of your personal data, subject to applicable Saudi laws. To exercise your rights, please contact us at info@mistersteamer.com.",
+
+      "changesTitle": "7. Changes to This Policy",
+      "changesBody": "We may update this Privacy Policy from time to time. The latest version will always be available in the app.",
+
+      "contactTitle": "8. Contact Us",
+      "contactBody": "If you have any questions about this Privacy Policy, please contact us at info@mistersteamer.com."
+    }
+  },
+  "terms": {
+    "title": "Terms & Conditions",
+    "sections": {
+      "acceptanceTitle": "1. Acceptance of Terms",
+      "acceptanceBody": "By using Mister Steamer (\"we\", \"us\", \"our\") services and application, you agree to these Terms and Conditions, which are governed by the laws of the Kingdom of Saudi Arabia.",
+      "servicesTitle": "2. Services",
+      "servicesBody": "We provide car wash and related services as described in our app. Service availability may vary by location and time.",
+      "responsibilitiesTitle": "3. User Responsibilities",
+      "responsibilitiesItems": [
+        "Provide accurate and complete information when booking services.",
+        "Ensure access to your vehicle at the scheduled time and location.",
+        "Comply with all applicable laws and regulations."
+      ],
+      "paymentTitle": "4. Payment",
+      "paymentBody": "Payment must be made through the app using approved methods. All fees are due at the time of booking unless otherwise stated.",
+      "cancelTitle": "5. Cancellations and Refunds",
+      "cancelBody": "Please refer to our Refund Policy for details on cancellations and refunds.",
+      "liabilityTitle": "6. Limitation of Liability",
+      "liabilityBody": "We are not liable for any indirect, incidental, or consequential damages arising from your use of our services, except as required by Saudi law.",
+      "changesTitle": "7. Changes to Terms",
+      "changesBody": "We may update these Terms and Conditions at any time. The latest version will be available in the app.",
+      "contactTitle": "8. Contact Us",
+      "contactBody": "For questions about these Terms and Conditions, contact us at info@mistersteamer.com."
+    }
+  },
+  "refund": {
+    "title": "Refund Policy",
+    "sections": {
+      "purposeTitle": "1. Purpose",
+      "purposeBody": "This Refund Policy outlines the circumstances under which Mister Streamer (\"we\", \"us\", \"our\") will issue refunds for services booked through our application and governs the procedure for requesting a refund. This policy is designed in accordance with the Consumer Protection Law and the E-Commerce Law and its Implementing Regulations of the Kingdom of Saudi Arabia, under the supervision of the Ministry of Commerce.",
+      "eligibilityTitle": "2. Eligibility for Refund",
+      "eligibilityItems": [
+        "Service Not Rendered: If a confirmed and paid service booking was not performed by the service provider due to their cancellation, no-show, or failure to arrive within a reasonable timeframe from the scheduled appointment without prior acceptable rescheduling.",
+        "Defective or Substandard Service Quality: If the service received is demonstrably defective, incomplete, or significantly below the standards described in the service booking (non-conforming service). Claims must be submitted within 12 hours of the service completion time and must be accompanied by clear photographic or video evidence supporting the claim. Our team will investigate the claim based on KSA regulations to determine eligibility on a case-by-case basis.",
+        "Billing Error: In case of verified accidental double billing or incorrect charges due to a technical error within the application.",
+        "Cancellation by User (within allowed timeframe): If the user cancels the booking before the service provider has commenced travel to the location or before any stated non-refundable cancellation window (e.g., more than 2 hours before the scheduled time). Please refer to our Cancellation Policy for specific details and potential cancellation fees.",
+        "Technical Issues: If a service could not be completed or properly initiated due to a verifiable technical malfunction originating solely from the Mister Streamer application, preventing the service delivery."
+      ],
+      "lawTitle": "7. Governing Law",
+      "lawBody": "This Refund Policy is governed by and construed in accordance with the laws and regulations of the Kingdom of Saudi Arabia.",
+      "contactTitle": "8. Contact Us",
+      "contactBody": "If you have any questions about this Refund Policy, please contact us via the support section in the Mister Streamer app or at info@mistersteamer.com."
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Send us your question or feedback and our team will get back to you as soon as possible.",
+    "fields": {
+      "name": "Full Name",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "query": "Your Message"
+    },
+    "placeholders": {
+      "name": "e.g., Ali Khan",
+      "phone": "e.g., +9665412254178",
+      "email": "e.g., ali@gmail.com",
+      "query": "Write your message here..."
+    },
+    "send": "Send",
+    "sending": "Sending…",
+    "missingTitle": "Missing",
+    "missingBody": "Please fill all fields.",
+    "successTitle": "Sent",
+    "successBody": "Your message has been submitted.",
+    "errorTitle": "Error",
+    "errorBody": "Failed to submit. Please try again."
+  }
+},
   "home": {
     "searchPlaceholder": "Search...",
     "services": {
@@ -278,5 +390,9 @@
       "5": { "title": "User Friendly", "desc": "Simple booking and clear pricing." },
       "6": { "title": "24/7 Availability", "desc": "Book any time that works for you." }
     }
-  }
+  },
+  "hireUs": {
+  "title": "Hire Us",
+  "body": "This is dummy content. Want a custom service or bulk booking? Contact us and we will get back to you with pricing and availability."
+}
 }

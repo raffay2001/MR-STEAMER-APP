@@ -10,6 +10,11 @@ export type DrawerStackParamList = {
   Profile: undefined;
   BecomeStreamer: undefined;
   RegisterSteamer: undefined;
+
+  PrivacyPolicy: undefined;
+  TermsAndConditions: undefined;
+  RefundPolicy: undefined;
+  ContactUs: undefined;
 };
 
 type ScreenProps<T extends keyof DrawerStackParamList> = NativeStackScreenProps<

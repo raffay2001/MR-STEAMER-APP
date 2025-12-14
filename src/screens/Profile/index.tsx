@@ -37,6 +37,18 @@ const Profile: React.FC = () => {
     const email = user?.email || '—';
     const name = user?.name || 'Guest';
 
+    const getInitials = (fullName?: string) => {
+        const n = (fullName || '').trim();
+        if (!n) return 'G';
+        const parts = n.split(/\s+/).filter(Boolean);
+        const first = parts[0]?.[0] || '';
+        const second =
+            parts.length > 1 ? (parts[parts.length - 1]?.[0] || '') : (parts[0]?.[1] || '');
+        return (first + second).toUpperCase();
+    };
+
+    const initials = getInitials(user?.name);
+
     const onSubmitChange = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
             Alert.alert('Missing info', 'Please fill all fields.');
@@ -61,10 +73,22 @@ const Profile: React.FC = () => {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#2D4795' }}>
             <View style={{ backgroundColor: '#2D4795', height: 180 }}>
                 <View style={{ alignItems: 'center', paddingHorizontal: 16, marginTop: 20 }}>
-                    <Image
-                        source={ProfileImage}
-                        style={{ width: 80, height: 80, borderRadius: 40 }}
-                    />
+                    <View
+                        style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: 40,
+                            backgroundColor: 'rgba(255,255,255,0.18)',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 2,
+                            borderColor: 'rgba(255,255,255,0.35)',
+                        }}
+                    >
+                        <Text style={{ color: '#fff', fontSize: 26, fontWeight: '800' }}>
+                            {initials}
+                        </Text>
+                    </View>
                     <Text style={{ color: '#fff', fontWeight: '700', fontSize: 20 }}>
                         {name}
                     </Text>
@@ -104,12 +128,12 @@ const Profile: React.FC = () => {
                     }}
                 >
                     {/* Wallet row */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={{ color: '#000', fontSize: 16, fontWeight: '500' }}>Wallet</Text>
                         <Text style={{ color: '#000', fontSize: 14, fontWeight: '400' }}>{pts}pts</Text>
                     </View>
 
-                    <View style={{ height: 1, backgroundColor: '#E7E7E7', marginVertical: 12 }} />
+                    <View style={{ height: 1, backgroundColor: '#E7E7E7', marginVertical: 12 }} /> */}
 
                     {/* Username row */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -127,7 +151,7 @@ const Profile: React.FC = () => {
                 </View>
 
                 {/* Card 2: Remaining Balance */}
-                <View
+                {/* <View
                     style={{
                         backgroundColor: '#fff',
                         borderRadius: 12,
@@ -163,7 +187,7 @@ const Profile: React.FC = () => {
                     >
                         <Text style={{ color: '#fff', fontWeight: '700' }}>Send gifts</Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 <TouchableOpacity
                     onPress={() => Alert.alert('Share App', 'Coming soon')}
