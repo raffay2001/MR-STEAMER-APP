@@ -17,7 +17,7 @@ import { TVehicleProps } from './types';
 import { useEnums } from '../../hooks/useEnums';
 import { useCar } from '../../hooks/useCar';
 import { BACKEND_URL } from '../../api';
-import { getAccessToken, clearAuth } from '../../hooks/useAuthStorage';
+import { getAccessToken, clearAuth, getUserData } from '../../hooks/useAuthStorage';
 import { setCarProfile } from '../../hooks/useCarStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -26,6 +26,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import type { AppNavStackParamList } from '../../navigation/navigation.types';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
+import { getCarsByUserId, type CarItem } from '../../api/car/car.api';
 
 const SWATCHES = [
   '#000000', '#FFFFFF', '#FF0000', '#0000FF', '#008000',
@@ -70,6 +71,10 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   const [openBrand, setOpenBrand] = React.useState(false);
   const [openName, setOpenName] = React.useState(false);   // NEW
   const [openNumber, setOpenNumber] = React.useState(false);
+
+  const [carMode, setCarMode] = React.useState<'new' | 'existing'>('new');
+  const [userCars, setUserCars] = React.useState<CarItem[]>([]);
+  const [carsLoading, setCarsLoading] = React.useState(false);
 
   const toArabicDesc = React.useCallback((d: string) => {
     const s = d?.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -177,6 +182,24 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
     setOpenName(false);
     setOpenNumber(false);
 
+    setCarMode('existing');
+    setUserCars([]);
+    setCarsLoading(true);
+    try {
+      const u = await getUserData();
+      const uid = u?.id;
+      if (uid) {
+        const cars = await getCarsByUserId(uid);
+        setUserCars(cars || []);
+        setCarMode((cars?.length || 0) > 0 ? 'existing' : 'new');
+      }
+    } catch (e) {
+      setUserCars([]);
+      setCarMode('new');
+    } finally {
+      setCarsLoading(false);
+    }
+
     if (brandsCacheRef.current.length) {
       setBrandList(brandsCacheRef.current);
       return;
@@ -192,7 +215,20 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
     } finally {
       setBrandLoading(false);
     }
-  }, [fetchEnumsByType]);
+  }, [fetchEnumsByType, getUserData, getCarsByUserId]);
+
+  const onPickExistingCar = React.useCallback(async (car: any) => {
+    await setCarProfile(car);
+    DeviceEventEmitter.emit('CAR_CHANGED', car);
+
+    if (car?.city) {
+      setSelectedCity(car.city);
+      await AsyncStorage.setItem(CITY_KEY, car.city);
+    }
+
+    setShowModal(false);
+    navigation.navigate('Drawer', { screen: 'Home' });
+  }, [navigation]);
 
   const onSubmit = React.useCallback(async () => {
     if (!pickedType?.id) return;
@@ -386,188 +422,247 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
             </Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Car Color */}
-              <Row
-                title={t('vehicle.fields.color')}
-                right={
-                  <View
+              {(carsLoading || userCars.length > 0) && (
+                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', gap: 10, marginBottom: 12 }}>
+                  <Pressable
+                    onPress={() => setCarMode('existing')}
                     style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: 9,
-                      backgroundColor: color || '#ddd',
-                      borderWidth: 1,
-                      borderColor: '#ccc',
-                    }}
-                  />
-                }
-                onPress={() => {
-                  setOpenColor(v => !v);
-                  setOpenBrand(false);
-                  setOpenName(false);
-                  setOpenNumber(false);
-                }}
-              />
-              {openColor && (
-                <>
-                  {/* Preset swatches */}
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                      gap: 12,
-                      marginBottom: 12,
+                      flex: 1, height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+                      borderWidth: 1, borderColor: carMode === 'existing' ? '#111' : '#ddd',
+                      backgroundColor: carMode === 'existing' ? '#111' : '#fff',
                     }}
                   >
-                    {SWATCHES.map(c => {
-                      const active = color?.toLowerCase() === c.toLowerCase();
-                      return (
-                        <TouchableOpacity
-                          key={c}
-                          onPress={() => setColor(c)}
-                          style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 17,
-                            backgroundColor: c,
-                            borderWidth: active ? 3 : 1,
-                            borderColor: active ? '#111' : '#ddd',
-                          }}
-                        />
-                      );
-                    })}
-                  </View>
+                    <Text style={{ color: carMode === 'existing' ? '#fff' : '#111', fontWeight: '600' }}>
+                      Use Existing
+                    </Text>
+                  </Pressable>
 
-                  {/* Custom color input (hex or name) */}
-                  <TextInput
-                    placeholder="e.g. #FFFFFF or Red"
-                    placeholderTextColor="#888"
-                    value={color}
-                    onChangeText={setColor}
-                    autoCapitalize="none"
+                  <Pressable
+                    onPress={() => setCarMode('new')}
                     style={{
-                      height: 48,
-                      borderWidth: 1,
-                      borderColor: '#eee',
-                      backgroundColor: '#F5F7FA',
-                      borderRadius: 12,
-                      paddingHorizontal: 14,
-                      color: '#111',
-                      marginBottom: 12,
-                      textAlign: isAr ? 'right' : 'left',
+                      flex: 1, height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+                      borderWidth: 1, borderColor: carMode === 'new' ? '#111' : '#ddd',
+                      backgroundColor: carMode === 'new' ? '#111' : '#fff',
                     }}
-                  />
-                </>
+                  >
+                    <Text style={{ color: carMode === 'new' ? '#fff' : '#111', fontWeight: '600' }}>
+                      Add New
+                    </Text>
+                  </Pressable>
+                </View>
               )}
 
-              {/* Brand */}
-              <Row
-                title={t('vehicle.fields.brand')}
-                right={
-                  <Text style={{ color: '#333' }}>
-                    {selectedBrandId
-                      ? (brandList.find(b => b.id === selectedBrandId)?.displayName ||
-                        brandList.find(b => b.id === selectedBrandId)?.name || '')
-                      : ''}
-                  </Text>
-                }
-                onPress={() => { setOpenBrand(v => !v); setOpenColor(false); setOpenName(false); setOpenNumber(false); }}
-              />
-              {openBrand && (brandLoading ? (
-                <ActivityIndicator style={{ marginVertical: 8 }} />
-              ) : brandList.length === 0 ? (
-                <Text style={{ color: '#666', marginBottom: 12, textAlign: isAr ? 'right' : 'left' }}>
-                  {t('vehicle.noBrands')}
-                </Text>
-              ) : (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
-                  {brandList.map(b => {
-                    const active = selectedBrandId === b.id;
-                    return (
+              {carMode === 'existing' && (
+                carsLoading ? (
+                  <ActivityIndicator style={{ marginVertical: 10 }} />
+                ) : (
+                  <View style={{ gap: 10, marginBottom: 12 }}>
+                    {userCars.map((c: CarItem) => (
                       <Pressable
-                        key={b.id}
-                        onPress={() => {
-                          setSelectedBrandId(b.id);
-                          setOpenBrand(false);
-                        }}
-                        style={{
-                          paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
-                          borderWidth: 1, borderColor: active ? '#111' : '#ddd',
-                          backgroundColor: active ? '#111' : '#fff',
-                          marginRight: 8, marginBottom: 8,
-                        }}
+                        key={c.id}
+                        onPress={() => onPickExistingCar(c)}
+                        style={{ padding: 12, borderRadius: 14, borderWidth: 1, borderColor: '#eee', backgroundColor: '#F5F7FA' }}
                       >
-                        <Text style={{ color: active ? '#fff' : '#111' }}>
-                          {b.displayName || b.name}
+                        <Text style={{ color: '#111', fontWeight: '700', textAlign: isAr ? 'right' : 'left' }}>
+                          {c.name}
+                        </Text>
+                        <Text style={{ color: '#444', marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                          {(c.brand?.displayName || c.brand?.name)} • {(c.type?.displayName || c.type?.name)}
+                        </Text>
+                        <Text style={{ color: '#666', marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                          {c.number} • {c.city}
                         </Text>
                       </Pressable>
-                    );
-                  })}
-                </View>
-              )
+                    ))}
+                  </View>
+                )
               )}
+              {carMode === 'new' && (
+                <>
+                  {/* Car Color */}
+                  <Row
+                    title={t('vehicle.fields.color')}
+                    right={
+                      <View
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 9,
+                          backgroundColor: color || '#ddd',
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                        }}
+                      />
+                    }
+                    onPress={() => {
+                      setOpenColor(v => !v);
+                      setOpenBrand(false);
+                      setOpenName(false);
+                      setOpenNumber(false);
+                    }}
+                  />
+                  {openColor && (
+                    <>
+                      {/* Preset swatches */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          gap: 12,
+                          marginBottom: 12,
+                        }}
+                      >
+                        {SWATCHES.map(c => {
+                          const active = color?.toLowerCase() === c.toLowerCase();
+                          return (
+                            <TouchableOpacity
+                              key={c}
+                              onPress={() => setColor(c)}
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: 17,
+                                backgroundColor: c,
+                                borderWidth: active ? 3 : 1,
+                                borderColor: active ? '#111' : '#ddd',
+                              }}
+                            />
+                          );
+                        })}
+                      </View>
 
-              {/* Car name (model) */}
-              <Row
-                title={t('vehicle.fields.name')}
-                right={<Text style={{ color: '#333' }}>{carName || ''}</Text>}
-                onPress={() => { setOpenName(v => !v); setOpenColor(false); setOpenBrand(false); setOpenNumber(false); }}
-              />
-              {openName && (
-                <TextInput
-                  placeholder={t('vehicle.placeholders.name')}
-                  placeholderTextColor="#888"
-                  value={carName}
-                  onChangeText={setCarName}
-                  style={{
-                    height: 48, borderWidth: 1, borderColor: '#eee',
-                    backgroundColor: '#F5F7FA', borderRadius: 12,
-                    paddingHorizontal: 14, color: '#111', marginBottom: 12,
-                    textAlign: isAr ? 'right' : 'left'
-                  }}
-                />
-              )}
-
-              {/* Car number */}
-              <Row
-                title={t('vehicle.fields.number')}
-                right={<Text style={{ color: '#333' }}>{carNumber || ''}</Text>}
-                onPress={() => { setOpenNumber(v => !v); setOpenColor(false); setOpenBrand(false); setOpenName(false); }}
-              />
-              {openNumber && (
-                <TextInput
-                  placeholder={t('vehicle.placeholders.number')}
-                  placeholderTextColor="#888"
-                  value={carNumber}
-                  onChangeText={setCarNumber}
-                  autoCapitalize="characters"
-                  style={{
-                    height: 48, borderWidth: 1, borderColor: '#eee',
-                    backgroundColor: '#F5F7FA', borderRadius: 12,
-                    paddingHorizontal: 14, color: '#111', marginBottom: 12,
-                    textAlign: isAr ? 'right' : 'left'
-                  }}
-                />
-              )}
-
-              {/* Submit */}
-              <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 4 }}>
-                <Pressable
-                  onPress={onSubmit}
-                  disabled={!canSubmit || creating}
-                  style={{
-                    backgroundColor: (!canSubmit || creating) ? '#9e9e9e' : '#2e7d32',
-                    paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999,
-                    minWidth: 140, alignItems: 'center',
-                  }}
-                >
-                  {creating ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={{ color: '#fff', fontWeight: '600' }}>{t('vehicle.submit')}</Text>
+                      {/* Custom color input (hex or name) */}
+                      <TextInput
+                        placeholder="e.g. #FFFFFF or Red"
+                        placeholderTextColor="#888"
+                        value={color}
+                        onChangeText={setColor}
+                        autoCapitalize="none"
+                        style={{
+                          height: 48,
+                          borderWidth: 1,
+                          borderColor: '#eee',
+                          backgroundColor: '#F5F7FA',
+                          borderRadius: 12,
+                          paddingHorizontal: 14,
+                          color: '#111',
+                          marginBottom: 12,
+                          textAlign: isAr ? 'right' : 'left',
+                        }}
+                      />
+                    </>
                   )}
-                </Pressable>
-              </View>
+
+                  {/* Brand */}
+                  <Row
+                    title={t('vehicle.fields.brand')}
+                    right={
+                      <Text style={{ color: '#333' }}>
+                        {selectedBrandId
+                          ? (brandList.find(b => b.id === selectedBrandId)?.displayName ||
+                            brandList.find(b => b.id === selectedBrandId)?.name || '')
+                          : ''}
+                      </Text>
+                    }
+                    onPress={() => { setOpenBrand(v => !v); setOpenColor(false); setOpenName(false); setOpenNumber(false); }}
+                  />
+                  {openBrand && (brandLoading ? (
+                    <ActivityIndicator style={{ marginVertical: 8 }} />
+                  ) : brandList.length === 0 ? (
+                    <Text style={{ color: '#666', marginBottom: 12, textAlign: isAr ? 'right' : 'left' }}>
+                      {t('vehicle.noBrands')}
+                    </Text>
+                  ) : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
+                      {brandList.map(b => {
+                        const active = selectedBrandId === b.id;
+                        return (
+                          <Pressable
+                            key={b.id}
+                            onPress={() => {
+                              setSelectedBrandId(b.id);
+                              setOpenBrand(false);
+                            }}
+                            style={{
+                              paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+                              borderWidth: 1, borderColor: active ? '#111' : '#ddd',
+                              backgroundColor: active ? '#111' : '#fff',
+                              marginRight: 8, marginBottom: 8,
+                            }}
+                          >
+                            <Text style={{ color: active ? '#fff' : '#111' }}>
+                              {b.displayName || b.name}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )
+                  )}
+
+                  {/* Car name (model) */}
+                  <Row
+                    title={t('vehicle.fields.name')}
+                    right={<Text style={{ color: '#333' }}>{carName || ''}</Text>}
+                    onPress={() => { setOpenName(v => !v); setOpenColor(false); setOpenBrand(false); setOpenNumber(false); }}
+                  />
+                  {openName && (
+                    <TextInput
+                      placeholder={t('vehicle.placeholders.name')}
+                      placeholderTextColor="#888"
+                      value={carName}
+                      onChangeText={setCarName}
+                      style={{
+                        height: 48, borderWidth: 1, borderColor: '#eee',
+                        backgroundColor: '#F5F7FA', borderRadius: 12,
+                        paddingHorizontal: 14, color: '#111', marginBottom: 12,
+                        textAlign: isAr ? 'right' : 'left'
+                      }}
+                    />
+                  )}
+
+                  {/* Car number */}
+                  <Row
+                    title={t('vehicle.fields.number')}
+                    right={<Text style={{ color: '#333' }}>{carNumber || ''}</Text>}
+                    onPress={() => { setOpenNumber(v => !v); setOpenColor(false); setOpenBrand(false); setOpenName(false); }}
+                  />
+                  {openNumber && (
+                    <TextInput
+                      placeholder={t('vehicle.placeholders.number')}
+                      placeholderTextColor="#888"
+                      value={carNumber}
+                      onChangeText={setCarNumber}
+                      autoCapitalize="characters"
+                      style={{
+                        height: 48, borderWidth: 1, borderColor: '#eee',
+                        backgroundColor: '#F5F7FA', borderRadius: 12,
+                        paddingHorizontal: 14, color: '#111', marginBottom: 12,
+                        textAlign: isAr ? 'right' : 'left'
+                      }}
+                    />
+                  )}
+
+                  {/* Submit */}
+                  <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 4 }}>
+                    <Pressable
+                      onPress={onSubmit}
+                      disabled={!canSubmit || creating}
+                      style={{
+                        backgroundColor: (!canSubmit || creating) ? '#9e9e9e' : '#2e7d32',
+                        paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999,
+                        minWidth: 140, alignItems: 'center',
+                      }}
+                    >
+                      {creating ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={{ color: '#fff', fontWeight: '600' }}>{t('vehicle.submit')}</Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </>
+              )}
             </ScrollView>
           </View>
         </View>

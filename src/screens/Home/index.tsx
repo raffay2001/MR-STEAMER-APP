@@ -343,9 +343,16 @@ export const Home: React.FC<TNavProps> = () => {
           />
         </View>
 
-        <View className="px-5 mt-6">
-          <DealCard promos={promos} promoLoading={promoLoading} banner={banner} />
-        </View>
+        {(promoLoading || promos?.length || bannerLoading || (banner?.isActive && banner?.mediaPath)) ? (
+          <View className="px-5 mt-6">
+            <DealCard
+              promos={promos}
+              promoLoading={promoLoading}
+              banner={banner}
+              bannerLoading={bannerLoading}
+            />
+          </View>
+        ) : null}
 
         {/* Add-ons strip */}
         <View className="px-5 mt-6">
@@ -819,10 +826,12 @@ const DealCard = ({
   promos,
   promoLoading,
   banner,
+  bannerLoading,
 }: {
   promos: any[];
   promoLoading: boolean;
   banner: any | null;
+  bannerLoading: boolean;
 }) => {
   const slides = React.useMemo(() => {
     // ✅ promo codes -> carousel
@@ -891,7 +900,9 @@ const DealCard = ({
     return `Valid till ${d.toLocaleDateString()}`;
   };
 
-  if (promoLoading) {
+  const isLoading = promoLoading || (!promos?.length && bannerLoading);
+
+  if (isLoading) {
     return (
       <View
         style={{ width: cardW, height: 189 }}
