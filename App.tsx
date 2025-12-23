@@ -12,6 +12,7 @@ import toastConfig from './src/utils/toastConfig';
 
 import './src/i18n';
 import { applyRtlIfNeeded } from './src/utils/i18nRtl';
+import { LangRefreshProvider } from './src/context/LangRefreshContext';
 
 function App(): React.JSX.Element {
 
@@ -27,7 +28,9 @@ function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <Main />
+        <LangRefreshProvider>
+          <Main />
+        </LangRefreshProvider>
       </PersistGate>
       <Toast config={toastConfig} />
     </Provider>

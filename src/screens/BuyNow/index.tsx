@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     SafeAreaView,
     View,
@@ -7,6 +7,9 @@ import {
     TouchableOpacity,
     TextInput,
     ActivityIndicator,
+    I18nManager,
+    TextStyle,
+    ViewStyle,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,24 +17,46 @@ import { usePackage } from '../../hooks/usePackage';
 import { usePromoCode } from '../../hooks/usePromoCode';
 import { useUserPackage } from '../../hooks/useUserPackage';
 import { getCarProfile } from '../../hooks/useCarStorage';
+import i18n from '../../i18n';
 
 const BRAND = '#223671';
 
-const BuyNow = () => {
+const BuyNow: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const packageId = route.params?.packageId as string;
+
     const { validate, loading: promoLoading } = usePromoCode();
     const { purchase, loading: purchaseLoading } = useUserPackage();
+    const { fetchPackageById } = usePackage();
+
     const [car, setCar] = useState<any>(null);
     const [promoError, setPromoError] = useState('');
     const [promoSuccess, setPromoSuccess] = useState('');
     const [purchaseError, setPurchaseError] = useState('');
 
-    const { fetchPackageById } = usePackage();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [promo, setPromo] = useState('');
+
+    const isRTL = useMemo(() => {
+        return I18nManager.isRTL || i18n.language?.startsWith('ar');
+    }, []);
+
+    const rowDir: ViewStyle = useMemo(
+        () => ({ flexDirection: isRTL ? 'row-reverse' : 'row' }),
+        [isRTL]
+    );
+
+    const textAlignStyle: TextStyle = useMemo(
+        () => ({ textAlign: isRTL ? 'right' : 'left' }),
+        [isRTL]
+    );
+
+    const inputAlignStyle: TextStyle = useMemo(
+        () => ({ textAlign: isRTL ? 'right' : 'left' }),
+        [isRTL]
+    );
 
     useEffect(() => {
         (async () => {
@@ -51,48 +76,43 @@ const BuyNow = () => {
                 setLoading(false);
             }
         })();
-    }, [packageId]);
+    }, [packageId, fetchPackageById]);
 
-    const vehicleTypeId =
-        typeof car?.type === 'string' ? car.type : car?.type?.id;
+    const vehicleTypeId = typeof car?.type === 'string' ? car.type : car?.type?.id;
 
     const handlePromoValidate = async () => {
         try {
             setPromoError('');
             setPromoSuccess('');
 
-            // console.log('promo code: ', promo)
-            // console.log('package id: ', packageId)
-
-            const res = await validate(promo, packageId);
-            setPromoSuccess('Promo applied ✔️');
+            await validate(promo, packageId);
+            setPromoSuccess(i18n.t('buyNow.promoApplied'));
         } catch (e: any) {
-            setPromoError(e?.response?.data?.message || 'Invalid promo code');
+            setPromoError(e?.response?.data?.message || i18n.t('buyNow.invalidPromo'));
         }
     };
 
     const handlePurchase = async () => {
         if (!car) {
-            setPurchaseError('Please select a vehicle first.');
+            setPurchaseError(i18n.t('buyNow.selectVehicleFirst'));
             return;
         }
 
         try {
             setPurchaseError('');
-            const res = await purchase(packageId, vehicleTypeId, promo || undefined);
-
+            await purchase(packageId, vehicleTypeId, promo || undefined);
             navigation.replace('PackageDetails', { packageId });
         } catch (e: any) {
-            setPurchaseError(e?.response?.data?.message || 'Purchase failed.');
+            setPurchaseError(e?.response?.data?.message || i18n.t('buyNow.purchaseFailed'));
         }
     };
 
     if (loading || !data) {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-                <View style={{ padding: 16 }}>
+                <View style={[{ padding: 16, alignItems: 'center' }, rowDir]}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Ionicons name="arrow-back" size={22} color={BRAND} />
+                        <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={22} color={BRAND} />
                     </TouchableOpacity>
                 </View>
 
@@ -107,34 +127,40 @@ const BuyNow = () => {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
             {/* Header */}
             <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 16,
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E7EB',
-                }}
+                style={[
+                    {
+                        alignItems: 'center',
+                        padding: 16,
+                        backgroundColor: '#fff',
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#E5E7EB',
+                    },
+                    rowDir,
+                ]}
             >
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={22} color={BRAND} />
+                    <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={22} color={BRAND} />
                 </TouchableOpacity>
+
                 <Text
-                    style={{
-                        marginLeft: 12,
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: '#111827',
-                    }}
+                    style={[
+                        {
+                            marginLeft: isRTL ? 0 : 12,
+                            marginRight: isRTL ? 12 : 0,
+                            fontSize: 18,
+                            fontWeight: '600',
+                            color: '#111827',
+                            flex: 1,
+                        },
+                        textAlignStyle,
+                    ]}
+                    numberOfLines={1}
                 >
-                    Buy Package
+                    {i18n.t('buyNow.title')}
                 </Text>
             </View>
 
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-            >
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
                 {/* Package card */}
                 <View
                     style={{
@@ -148,55 +174,56 @@ const BuyNow = () => {
                         elevation: 2,
                     }}
                 >
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>
+                    <Text style={[{ fontSize: 18, fontWeight: '700', color: '#111827' }, textAlignStyle]}>
                         {data.name}
                     </Text>
 
                     <Text
-                        style={{
-                            marginTop: 8,
-                            fontSize: 14,
-                            color: '#6B7280',
-                            lineHeight: 20,
-                        }}
+                        style={[
+                            { marginTop: 8, fontSize: 14, color: '#6B7280', lineHeight: 20 },
+                            textAlignStyle,
+                        ]}
                     >
                         {data.description}
                     </Text>
 
-                    <Text
-                        style={{
-                            marginTop: 14,
-                            fontSize: 17,
-                            fontWeight: '700',
-                            color: BRAND,
-                        }}
-                    >
+                    <Text style={[{ marginTop: 14, fontSize: 17, fontWeight: '700', color: BRAND }, textAlignStyle]}>
                         {data.pricingType === 'fixed'
                             ? `SAR ${data.fixedPrice}`
-                            : 'Vehicle based pricing'}
+                            : i18n.t('buyNow.vehicleBasedPricing')}
                     </Text>
                 </View>
 
                 {/* Promo code */}
                 <View style={{ marginBottom: 20 }}>
-                    <Text style={{ fontSize: 15, fontWeight: '600', marginBottom: 8, color: '#000', }}>
-                        Promo Code
+                    <Text
+                        style={[
+                            { fontSize: 15, fontWeight: '600', marginBottom: 8, color: '#000' },
+                            textAlignStyle,
+                        ]}
+                    >
+                        {i18n.t('buyNow.promoTitle')}
                     </Text>
+
                     <TextInput
-                        placeholder="Enter promo code"
+                        placeholder={i18n.t('buyNow.promoPlaceholder')}
                         value={promo}
                         onChangeText={setPromo}
-                        style={{
-                            backgroundColor: '#fff',
-                            padding: 14,
-                            borderRadius: 12,
-                            borderWidth: 1,
-                            borderColor: '#E5E7EB',
-                            fontSize: 15,
-                            color: '#000',
-                        }}
-                        placeholderTextColor={"#ccc"}
+                        style={[
+                            {
+                                backgroundColor: '#fff',
+                                padding: 14,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                                fontSize: 15,
+                                color: '#000',
+                            },
+                            inputAlignStyle,
+                        ]}
+                        placeholderTextColor="#ccc"
                     />
+
                     <TouchableOpacity
                         onPress={handlePromoValidate}
                         style={{
@@ -210,21 +237,18 @@ const BuyNow = () => {
                         }}
                     >
                         <Text style={{ color: BRAND, fontWeight: '600' }}>
-                            {promoLoading ? 'Checking...' : 'Apply Promo'}
+                            {promoLoading ? i18n.t('buyNow.checking') : i18n.t('buyNow.applyPromo')}
                         </Text>
                     </TouchableOpacity>
 
-                    {promoError ? (
-                        <Text style={{ color: 'red', marginTop: 6 }}>{promoError}</Text>
-                    ) : null}
-
-                    {promoSuccess ? (
-                        <Text style={{ color: 'green', marginTop: 6 }}>{promoSuccess}</Text>
-                    ) : null}
+                    {!!promoError && <Text style={[{ color: 'red', marginTop: 6 }, textAlignStyle]}>{promoError}</Text>}
+                    {!!promoSuccess && (
+                        <Text style={[{ color: 'green', marginTop: 6 }, textAlignStyle]}>{promoSuccess}</Text>
+                    )}
                 </View>
 
                 {/* Buy button */}
-                {promo.length === 0 && (
+                {promo.length === 0 ? (
                     <TouchableOpacity
                         activeOpacity={0.85}
                         style={{
@@ -237,20 +261,18 @@ const BuyNow = () => {
                         onPress={handlePurchase}
                     >
                         <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
-                            {purchaseLoading ? 'Processing...' : 'Confirm Purchase'}
+                            {purchaseLoading ? i18n.t('buyNow.processing') : i18n.t('buyNow.confirmPurchase')}
                         </Text>
                     </TouchableOpacity>
-                )}
-
-                {promo.length > 0 && (
+                ) : (
                     <Text style={{ textAlign: 'center', marginTop: 6, color: '#6B7280' }}>
-                        Apply promo or clear it to continue
+                        {i18n.t('buyNow.applyPromoOrClear')}
                     </Text>
                 )}
 
-                {purchaseError ? (
-                    <Text style={{ color: 'red', marginTop: 8 }}>{purchaseError}</Text>
-                ) : null}
+                {!!purchaseError && (
+                    <Text style={[{ color: 'red', marginTop: 8 }, textAlignStyle]}>{purchaseError}</Text>
+                )}
             </ScrollView>
         </SafeAreaView>
     );

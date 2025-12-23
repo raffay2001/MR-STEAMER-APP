@@ -8,6 +8,7 @@ import {
   getMyUserPackages as apiGetMyUserPackages,
   type UserPackageListResponse,
 } from '../api/package/package.api';
+import i18n from '../i18n';
 
 export const usePackage = () => {
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ export const usePackage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   const fetchPackages = useCallback(
     async (): Promise<PackageListResponse> => {
@@ -31,9 +32,7 @@ export const usePackage = () => {
       } finally {
         setLoading(false);
       }
-    },
-    []
-  );
+    }, [i18n.language]);
 
   const checkIfUserOwnsPackage = useCallback(
     async (userId: string, packageId: string) => {
@@ -51,9 +50,7 @@ export const usePackage = () => {
       } finally {
         setLoading(false);
       }
-    },
-    []
-  );
+    }, [i18n.language]);
 
   return {
     loading,

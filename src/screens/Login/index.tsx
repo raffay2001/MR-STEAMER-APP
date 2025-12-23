@@ -13,10 +13,12 @@ import { persistAuthResponse } from '../../hooks/useAuthStorage';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useLangRefresh } from '../../context/LangRefreshContext';
 
 export const Login: React.FC<TLoginProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const { loading, handleLogin } = useAuth();
+  const { bumpLangVersion } = useLangRefresh();
 
   const [formErrors, setFormErrors] = useState({ emailError: false, passwordError: false });
   const [email, setEmail] = useState('');
@@ -53,6 +55,7 @@ export const Login: React.FC<TLoginProps> = ({ navigation }) => {
   const toggleLanguage = async () => {
     const next = i18n.language?.startsWith('ar') ? 'en' : 'ar';
     await i18n.changeLanguage(next);
+    bumpLangVersion();
   };
   const isAr = i18n.language?.startsWith('ar');
 

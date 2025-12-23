@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { validatePromoCode, fetchPromoCodes, type PromoCode } from '../api/promocode/promocode.api';
+import i18n from '../i18n';
 
 export const usePromoCode = () => {
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export const usePromoCode = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   useEffect(() => {
     load();

@@ -5,6 +5,7 @@ import {
   type CreateCarPayload,
   type CarItem,
 } from '../api/car/car.api';
+import i18n from '../i18n';
 
 export const useCar = () => {
   const [loading, setLoading] = useState(false);
@@ -28,9 +29,7 @@ export const useCar = () => {
       } finally {
         setLoading(false);
       }
-    },
-    []
-  );
+    }, [i18n.language]);
 
   return { loading, createCar, fetchCarsByUserId };
 };

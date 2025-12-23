@@ -6,6 +6,7 @@ import {
   updateUserById,
   type UpdateUserPayload,
 } from '../api/user/user.api';
+import i18n from '../i18n';
 
 export const useUser = () => {
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ export const useUser = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   /* 🔹 NEW: update user by id */
   const handleUpdateUser = useCallback(

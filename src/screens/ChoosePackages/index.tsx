@@ -5,6 +5,7 @@ import {
     Text,
     ActivityIndicator,
     ScrollView,
+    TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePackage } from '../../hooks/usePackage';
@@ -38,6 +39,17 @@ const ChoosePackages: React.FC = () => {
         })();
     }, [fetchMyUserPackages]);
 
+    const pickLang = (val: any) => {
+        if (!val) return '';
+        if (typeof val === 'string' || typeof val === 'number') return String(val);
+        if (typeof val === 'object') {
+            const ar = val?.ar;
+            const en = val?.en;
+            return isAr ? (ar ?? en ?? '') : (en ?? ar ?? '');
+        }
+        return '';
+    };
+
     const formatDate = (iso?: string | null) => {
         if (!iso) return '—';
         const d = new Date(iso);
@@ -53,6 +65,12 @@ const ChoosePackages: React.FC = () => {
         if (b.isExpired) return '#EF4444';
         if ((b.status || '').toLowerCase() === 'active') return '#16A34A';
         return '#6B7280';
+    };
+
+    const goToBooking = (it: any) => {
+        const id = it?.packageId?._id || it?.packageId?.id || it?.packageId;
+        if (!id) return;
+        navigation.navigate('YourBooking', { packageId: id });
     };
 
     return (
@@ -87,15 +105,17 @@ const ChoosePackages: React.FC = () => {
                 ) : (
                     items.map((it) => {
                         const pkg = it.packageId || {};
-                        const title = pkg.name || '—';
-                        const desc = pkg.description || '';
+                        const title = pickLang(pkg.name) || '—';
+                        const desc = pickLang(pkg.description) || '';
                         const remaining = it.remainingUsage ?? 0;
                         const limit = pkg.usageLimit ?? null;
                         const pricePaid = it.pricePaid ?? pkg.fixedPrice ?? 0;
 
                         return (
-                            <View
-                                key={it.id}
+                            <TouchableOpacity
+                                key={it.id || it._id}
+                                activeOpacity={0.85}
+                                onPress={() => goToBooking(it)}
                                 style={{
                                     marginTop: 16,
                                     backgroundColor: '#FFFFFF',
@@ -209,7 +229,7 @@ const ChoosePackages: React.FC = () => {
                                                 textAlign: isAr ? 'right' : 'left',
                                             }}
                                         >
-                                            {`SAR ${pricePaid}`}
+                                            {`SAR ${Number(pricePaid).toFixed(2)}`}
                                         </Text>
                                     </View>
 
@@ -232,9 +252,7 @@ const ChoosePackages: React.FC = () => {
                                                 textAlign: isAr ? 'right' : 'left',
                                             }}
                                         >
-                                            {limit != null
-                                                ? `${remaining} / ${limit}`
-                                                : `${remaining}`}
+                                            {limit != null ? `${remaining} / ${limit}` : `${remaining}`}
                                         </Text>
                                     </View>
                                 </View>
@@ -287,13 +305,11 @@ const ChoosePackages: React.FC = () => {
                                                 textAlign: isAr ? 'right' : 'left',
                                             }}
                                         >
-                                            {pkg.hasExpiry
-                                                ? formatDate(it.expiryDate)
-                                                : t('choosePackages.noExpiry', 'No expiry')}
+                                            {pkg.hasExpiry ? formatDate(it.expiryDate) : t('choosePackages.noExpiry', 'No expiry')}
                                         </Text>
                                     </View>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                         );
                     })
                 )}

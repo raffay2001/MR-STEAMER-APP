@@ -5,6 +5,7 @@ import {
   type SlotItem,
   type SlotsByDayResponse,
 } from '../api/slot/slot.api';
+import i18n from '../i18n';
 
 export const useSlots = () => {
   const [loading, setLoading] = useState(false);
@@ -18,9 +19,7 @@ export const useSlots = () => {
       } finally {
         setLoading(false);
       }
-    },
-    []
-  );
+    }, [i18n.language]);
 
   return { loading, fetchSlotsByDay };
 };

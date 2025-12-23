@@ -71,7 +71,7 @@ export const Home: React.FC<TNavProps> = () => {
       const u = await getUserData();
       setUserId(u?.id || null);
     })();
-  }, []);
+  }, [i18n.language]);
 
   React.useEffect(() => {
     fetchAddons();
@@ -107,7 +107,7 @@ export const Home: React.FC<TNavProps> = () => {
       const storedCar = await getCarProfile();
       setCar(storedCar);
     })();
-  }, []);
+  }, [i18n.language]);
 
   React.useEffect(() => {
     (async () => {
@@ -358,13 +358,13 @@ export const Home: React.FC<TNavProps> = () => {
         <View className="px-5 mt-6">
           <View
             style={{
-              flexDirection: 'row',
+              flexDirection: isAr ? 'row-reverse' : 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: 4,
             }}
           >
-            <Text className="text-black text-lg font-semibold">Add-ons</Text>
+            <Text className="text-black text-lg font-semibold">{t('home.addons.title')}</Text>
             <Text
               style={{
                 fontSize: 11,
@@ -372,7 +372,7 @@ export const Home: React.FC<TNavProps> = () => {
               }}
               numberOfLines={1}
             >
-              Make your wash extra special ✨
+              {t('home.addons.subtitle')}
             </Text>
           </View>
 
@@ -510,14 +510,14 @@ export const Home: React.FC<TNavProps> = () => {
         {/* Packages */}
         <View className="px-5 mt-6 mb-6">
           <Text className="text-black text-lg font-semibold mb-3">
-            {t('home.packagesTitle', 'Our Packages')}
+            {t('home.packagesTitle')}
           </Text>
 
           {packagesLoading ? (
             <ActivityIndicator />
           ) : !packages.length ? (
             <Text className="text-gray-500 text-sm">
-              {t('home.noPackages', 'No packages available right now.')}
+              {t('home.noPackages')}
             </Text>
           ) : (
             <View>
@@ -599,10 +599,10 @@ export const Home: React.FC<TNavProps> = () => {
                       marginBottom: 6,
                     }}
                   >
-                    Includes:
+                    {t('home.includes')}
                   </Text>
 
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', flexWrap: 'wrap' }}>
                     {pkg.servicesIncluded?.slice(0, 6).map((s: any) => (
                       <View
                         key={s.id}
@@ -611,7 +611,8 @@ export const Home: React.FC<TNavProps> = () => {
                           paddingHorizontal: 10,
                           paddingVertical: 5,
                           borderRadius: 999,
-                          marginRight: 6,
+                          marginRight: isAr ? 0 : 6,
+                          marginLeft: isAr ? 6 : 0,
                           marginBottom: 6,
                         }}
                       >
@@ -644,7 +645,7 @@ export const Home: React.FC<TNavProps> = () => {
                         fontSize: 14,
                       }}
                     >
-                      View Details
+                      {t('home.viewDetails')}
                     </Text>
                   </TouchableOpacity>
                 </View>

@@ -1,6 +1,7 @@
 // src/hooks/useServices.ts
 import { useCallback, useState } from 'react';
 import { getAllServices, ServiceItem, ServicesListParams, ServicesListResponse } from '../api/service/service.api';
+import i18n from '../i18n';
 
 export const useServices = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,7 @@ export const useServices = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   return { fetchServices, services, meta, loading, error, setError };
 };

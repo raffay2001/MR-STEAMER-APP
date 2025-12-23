@@ -433,7 +433,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                     }}
                   >
                     <Text style={{ color: carMode === 'existing' ? '#fff' : '#111', fontWeight: '600' }}>
-                      Use Existing
+                      {t('vehicle.useExisting')}
                     </Text>
                   </Pressable>
 
@@ -446,7 +446,7 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
                     }}
                   >
                     <Text style={{ color: carMode === 'new' ? '#fff' : '#111', fontWeight: '600' }}>
-                      Add New
+                      {t('vehicle.addNew')}
                     </Text>
                   </Pressable>
                 </View>

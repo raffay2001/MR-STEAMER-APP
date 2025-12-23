@@ -10,6 +10,7 @@ import { DrawerActions } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useLangRefresh } from '../context/LangRefreshContext';
 
 const DrawerItems = (t: any) => ([
   { text: t('drawer.becomeStreamer'), route: 'BecomeStreamer' },
@@ -26,10 +27,12 @@ const DrawerItems = (t: any) => ([
 
 export const CustomDrawerComponent = (props: any) => {
   const { t } = useTranslation();
+  const { bumpLangVersion } = useLangRefresh();
   const isAr = i18n.language?.startsWith('ar');
   const toggleLanguage = async () => {
     const next = isAr ? 'en' : 'ar';
     await i18n.changeLanguage(next);
+    bumpLangVersion();
   };
 
   const handleLogout = async () => {

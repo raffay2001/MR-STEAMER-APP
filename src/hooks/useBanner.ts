@@ -1,6 +1,7 @@
 // ⬆️ keep existing imports
 import { useState, useEffect, useCallback } from 'react';
 import { fetchActiveBanner, type Banner } from '../api/banner/banner.api';
+import i18n from '../i18n';
 
 export const useBanner = () => {
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ export const useBanner = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   useEffect(() => {
     loadBanner();

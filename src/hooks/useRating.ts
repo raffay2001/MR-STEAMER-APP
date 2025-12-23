@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { getRatingsByPackageName, createRating, type CreateRatingPayload } from '../api/rating/rating.api';
+import i18n from '../i18n';
 
 export const useRating = () => {
     const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export const useRating = () => {
         } finally {
         setLoading(false);
         }
-    }, []);
+    }, [i18n.language]);
 
     const submitRating = useCallback(async (payload: CreateRatingPayload) => {
         setCreating(true);

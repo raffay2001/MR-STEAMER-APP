@@ -5,6 +5,7 @@ import {
   getBookingById as apiGetBookingById,
   type CreateBookingPayload,
 } from '../api/booking/booking.api';
+import i18n from '../i18n';
 
 export const useBooking = () => {
   const [loading, setLoading] = useState(false);
@@ -28,9 +29,7 @@ export const useBooking = () => {
       } finally {
         setLoading(false);
       }
-    },
-    []
-  );
+    }, [i18n.language]);
 
   const fetchBookingById = useCallback(async (id: string) => {
     setLoading(true);
@@ -40,7 +39,7 @@ export const useBooking = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   return { loading, createBooking, fetchBookingsByUserId, fetchBookingById };
 };

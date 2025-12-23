@@ -5,7 +5,8 @@
     "changeLanguage": "العربية",
     "or": "or",
     "sar": "SAR",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "ok": "OK"
   },
   "welcome": {
     "title": "Premium Car Services At Your Doorstep",
@@ -87,6 +88,8 @@
   },
   "vehicle": {
     "selectType": "Select Vehicle Type",
+    "useExisting": "Use Existing",
+    "addNew": "Add New",
     "noTypes": "No vehicle types found.",
     "searchArea": "Search Area",
     "modal": { "title": "Car Information" },
@@ -248,7 +251,15 @@
       "tomorrow": "Tomorrow",
       "pickTime": "Pick a time",
       "noSlots": "No slots available for this date."
-    }
+    },
+    "addons": {
+  "title": "Add-ons",
+  "subtitle": "Make your wash extra special"
+},
+"packagesTitle": "Our Packages",
+"noPackages": "No packages available right now.",
+"includes": "Includes:",
+"viewDetails": "View Details"
   },
   "filters": {
     "title": "Filters",
@@ -310,7 +321,11 @@
         "successful": "Successful!",
         "tip": "Tip: take a screenshot of this page to save your booking confirmation.",
         "detailsBtn": "Booking Details",
-        "backHome": "Back to Home"
+        "backHome": "Back to Home",
+         "loadingDetails": "Loading booking details...",
+    "missingBookingId": "Booking ID missing. Please go back and try again.",
+    "couldNotLoadBooking": "Could not load booking details. Please try again.",
+    "retry": "Retry"
     },
     "bookingDetails": {
         "title": "Your recent bookings",
@@ -375,11 +390,16 @@
         }
     },
     "choosePackages": {
-    "title": "My Packages",
-    "helper": "Choose a package for the best service",
-    "noItems": "No items.",
-    "steamIt": "Steam it"
-  },
+  "title": "My Packages",
+  "helper": "Choose a package for the best service",
+  "noItems": "No items.",
+  "steamIt": "Steam it",
+  "pricePaid": "Price paid",
+  "remainingUsage": "Remaining usage",
+  "purchaseDate": "Purchase date",
+  "expiresOn": "Expires on",
+  "noExpiry": "No expiry"
+},
    "features": {
     "title": "Our Features",
     "items": {
@@ -397,5 +417,142 @@
 },
 "about": {
   "body": "Now you are just one tap away from an eco-friendly car wash. No matter where you are, book your Mr. Steamer and enjoy premium car washing without interrupting your household chores or office work. We employ only highly qualified specialists and use high-quality cleaning products, equipment, and premium materials."
-}
+},
+"headers": {
+    "filters": "Filters",
+    "carService": "Car Service",
+    "packages": "Packages",
+    "yourBooking": "Your Booking",
+    "successBooking": "Successful Booking",
+    "bookingDetails": "Booking Details",
+    "vehicle": "Vehicle"
+  },
+  "packageDetails": {
+    "title": "Package Details",
+    "fixedPricePackage": "Fixed price package",
+    "vehicleBasedPricing": "Vehicle based pricing",
+    "priceExclVat": "Price (excl. VAT):",
+    "vat15": "VAT 15%:",
+    "totalInclVat": "Total (incl. VAT):",
+    "usageLimit": "Usage limit:",
+    "unlimited": "Unlimited",
+    "expires": "Expires",
+    "noExpiry": "No expiry",
+    "na": "N/A",
+    "servicesIncluded": "Services Included",
+    "addOnsIncluded": "Add-ons Included",
+    "washIt": "Wash It",
+    "buyNow": "Buy Now",
+    "notAvailable": "Not available right now"
+  },
+  "buyNow": {
+    "title": "Buy Package",
+    "vehicleBasedPricing": "Vehicle based pricing",
+    "promoTitle": "Promo Code",
+    "promoPlaceholder": "Enter promo code",
+    "checking": "Checking...",
+    "applyPromo": "Apply Promo",
+    "promoApplied": "Promo applied",
+    "invalidPromo": "Invalid promo code",
+    "selectVehicleFirst": "Please select a vehicle first.",
+    "processing": "Processing...",
+    "confirmPurchase": "Confirm Purchase",
+    "purchaseFailed": "Purchase failed.",
+    "applyPromoOrClear": "Apply promo or clear it to continue"
+  },
+  "bookingnew": {
+  "fixedPricePackage": "Fixed price package",
+  "vehicleBasedPricing": "Vehicle based pricing",
+  "usageLimit": "Usage limit:",
+  "unlimited": "Unlimited",
+  "expires": "Expires: {{date}}",
+  "noExpiry": "No expiry",
+  "na": "N/A",
+
+  "chooseSlot": "Choose Slot *",
+  "loadingSlots": "Loading slots...",
+  "tapToChooseTime": "Tap to choose time",
+  "changeSlot": "Change slot",
+  "chooseTime": "Choose time",
+  "noSlotsForDay": "No slots available for this day.",
+  "minutes": "{{count}} min",
+
+  "additionalAddons": "Additional Add-ons",
+  "selectedAddonsCount": "Selected {{count}} add-on(s)",
+  "tapToAddExtras": "Tap to add extras to your wash",
+  "addonsLabel": "Add-ons",
+  "vat15": "VAT 15%",
+  "total": "Total",
+  "chooseAddons": "Choose Add-ons",
+  "noAddons": "No add-ons available.",
+  "addonsTotal": "Add-ons Total",
+
+  "mobileNumber": "Mobile Number *",
+  "mobilePlaceholder": "+9665...",
+  "email": "Email *",
+  "emailPlaceholder": "you@example.com",
+  "specialInstructions": "Special Instructions *",
+  "specialInstructionsPlaceholder": "E.g. Come near the bakery",
+
+  "batterySize": "Battery Size *",
+  "batterySizePlaceholder": "E.g. 55 Ah",
+  "batteryType": "Battery Type *",
+  "batteryTypePlaceholder": "E.g. AGM / Lead-acid",
+  "batteryBrand": "Battery Brand *",
+  "batteryBrandPlaceholder": "E.g. AC Delco",
+
+  "address": "Address *",
+  "tapToChooseAddress": "Tap to choose address",
+  "lat": "Lat",
+  "lng": "Lng",
+
+  "selectAddress": "Select Address",
+  "useMyCurrentLocation": "Use my current location",
+  "searchYourAddress": "Search your address",
+  "selectedLocation": "Selected location",
+  "useThisLocation": "Use This Location",
+
+  "locationPermissionTitle": "Location Permission",
+  "locationPermissionMessage": "We need your location to select your address.",
+  "permissionRequired": "Permission required",
+  "enableLocation": "Please enable location to continue.",
+  "error": "Error",
+  "unableToGetLocation": "Unable to get current location. Please try again.",
+  "selectAddressTitle": "Select address",
+  "selectAddressMsg": "Please choose address and location on map.",
+  "fillRequired": "Please fill all required fields.",
+  "createBookingFailed": "Could not create booking, please try again.",
+  "checkout": "Checkout",
+  "package": "Package",
+    "car": "Car",
+    "date": "Date",
+    "slot": "Slot"
+},
+"profile": {
+    "guest": "Guest",
+    "username": "Username",
+    "changePassword": "Change Password",
+    "shareApp": "Share App",
+    "shareAppTitle": "Share App",
+    "comingSoon": "Coming soon",
+
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "enterOldPassword": "Enter old password",
+    "enterNewPassword": "Enter new password",
+    "reenterNewPassword": "Re-enter new password",
+
+    "cancel": "Cancel",
+    "update": "Update",
+
+    "missingInfoTitle": "Missing info",
+    "missingInfoMsg": "Please fill all fields.",
+    "mismatchTitle": "Mismatch",
+    "mismatchMsg": "New password and confirm password do not match.",
+    "successTitle": "Success",
+    "passwordUpdated": "Password updated successfully.",
+    "errorTitle": "Error",
+    "passwordUpdateFailed": "Failed to update password."
+  }
 }

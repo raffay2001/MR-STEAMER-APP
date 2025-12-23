@@ -17,10 +17,12 @@ import { VEHICLE_SETUP_DONE } from '../constants';
 import i18n from '../i18n';
 import PackageDetails from '../screens/PackageDetails';
 import BuyNow from '../screens/BuyNow';
+import { useTranslation } from 'react-i18next';
 
 const Stack = createNativeStackNavigator<AppNavStackParamList>();
 
 const App_Screens: React.FC = () => {
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [firstRoute, setFirstRoute] = useState<'Vehicle' | 'Drawer'>('Vehicle');
 
@@ -45,7 +47,8 @@ const App_Screens: React.FC = () => {
         name="Filters"
         component={Filters}
         options={{
-          title: i18n.language?.startsWith('ar') ? 'الفلاتر' : 'Filters',
+          // title: i18n.language?.startsWith('ar') ? 'الفلاتر' : 'Filters',
+          title: t('headers.filters'),
           headerTitleAlign: 'center',
         }}
       />
@@ -63,7 +66,8 @@ const App_Screens: React.FC = () => {
         name="PrePackage"
         component={PrePackage}
         options={{
-          title: i18n.language?.startsWith('ar') ? 'خدمة السيارة' : 'Car Service',
+          // title: i18n.language?.startsWith('ar') ? 'خدمة السيارة' : 'Car Service',
+          title: t('headers.carService'),
           headerTitleAlign: 'center',
         }}
       />
@@ -71,20 +75,26 @@ const App_Screens: React.FC = () => {
         name="Package"
         component={Package}
         options={{
-          title: i18n.language?.startsWith('ar') ? 'الباقات' : 'Packages',
+          // title: i18n.language?.startsWith('ar') ? 'الباقات' : 'Packages',
+          title: t('headers.packages'),
           headerTitleAlign: 'center',
         }}
       />
       <Stack.Screen
         name="YourBooking"
         component={YourBooking}
-        options={{ title: i18n.language?.startsWith('ar') ? 'حجزك' : 'Your Booking', headerTitleAlign: 'center' }}
+        options={{
+          // title: i18n.language?.startsWith('ar') ? 'حجزك' : 'Your Booking',
+          title: t('headers.yourBooking'),
+          headerTitleAlign: 'center'
+        }}
       />
       <Stack.Screen
         name="Success"
         component={Success}
         options={{
-          title: i18n.language?.startsWith('ar') ? 'حجز ناجح' : 'Successful Booking',
+          // title: i18n.language?.startsWith('ar') ? 'حجز ناجح' : 'Successful Booking',
+          title: t('headers.successBooking'),
           headerTitleAlign: 'center',
           headerBackVisible: false,
           gestureEnabled: false,
@@ -94,7 +104,8 @@ const App_Screens: React.FC = () => {
         name="BookingDetailsPage"
         component={BookingDetailsPage}
         options={{
-          title: i18n.language?.startsWith('ar') ? 'تفاصيل الحجز' : 'Booking Details',
+          // title: i18n.language?.startsWith('ar') ? 'تفاصيل الحجز' : 'Booking Details',
+          title: t('headers.bookingDetails'),
           headerTitleAlign: 'center',
         }}
       />
@@ -103,7 +114,8 @@ const App_Screens: React.FC = () => {
         component={Vehicle}
         options={{
           headerTitleAlign: 'center',
-          title: i18n.language?.startsWith('ar') ? 'المركبة' : 'Vehicle',
+          // title: i18n.language?.startsWith('ar') ? 'المركبة' : 'Vehicle',
+          title: t('headers.vehicle'),
         }}
       />
       <Stack.Screen

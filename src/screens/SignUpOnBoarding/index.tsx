@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { LoginManager, AccessToken, Settings } from 'react-native-fbsdk-next';
+import { useLangRefresh } from '../../context/LangRefreshContext';
 
 export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation }) => {
 
@@ -24,9 +25,11 @@ export const SignUpOnBoarding: React.FC<TSignUpOnBoardingProps> = ({ navigation 
 
   const { t } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const { bumpLangVersion } = useLangRefresh();
   const toggleLanguage = async () => {
     const next = isAr ? 'en' : 'ar';
     await i18n.changeLanguage(next);
+    bumpLangVersion();
   };
 
   const [formErrors, setFormErrors] = useState({

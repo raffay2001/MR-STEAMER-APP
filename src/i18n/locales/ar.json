@@ -5,7 +5,8 @@
     "changeLanguage": "English",
     "or": "أو",
     "sar": "ر.س",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "ok": "موافق"
   },
   "welcome": {
     "title": "خدمات سيارات فاخرة إلى باب منزلك",
@@ -87,6 +88,8 @@
   },
   "vehicle": {
     "selectType": "اختر نوع المركبة",
+    "useExisting": "استخدم الموجود",
+    "addNew": "إضافة جديد",
     "noTypes": "لم يتم العثور على أنواع مركبات.",
     "searchArea": "ابحث عن المنطقة",
     "modal": { "title": "معلومات السيارة" },
@@ -248,7 +251,15 @@
       "tomorrow": "غدًا",
       "pickTime": "اختر وقتًا",
       "noSlots": "لا توجد مواعيد متاحة لهذا التاريخ."
-    }
+    },
+    "addons": {
+  "title": "الإضافات",
+  "subtitle": "اجعل غسيلتك مميزة أكثر"
+},
+"packagesTitle": "باقاتنا",
+"noPackages": "لا توجد باقات متاحة الآن.",
+"includes": "يشمل:",
+"viewDetails": "عرض التفاصيل"
   },
   "filters": {
     "title": "الفلاتر",
@@ -310,7 +321,11 @@
         "successful": "تم بنجاح!",
         "tip": "نصيحة: التقط لقطة شاشة لهذه الصفحة للاحتفاظ بتأكيد حجزك.",
         "detailsBtn": "تفاصيل الحجز",
-        "backHome": "العودة إلى الرئيسية"
+        "backHome": "العودة إلى الرئيسية",
+          "loadingDetails": "جاري تحميل تفاصيل الحجز...",
+    "missingBookingId": "معرّف الحجز غير موجود. الرجاء الرجوع والمحاولة مرة أخرى.",
+    "couldNotLoadBooking": "تعذر تحميل تفاصيل الحجز. الرجاء المحاولة مرة أخرى.",
+    "retry": "إعادة المحاولة"
     },
     "bookingDetails": {
         "title": "حجوزاتك الأخيرة",
@@ -375,11 +390,16 @@
     }
   },
   "choosePackages": {
-    "title": "الباقات الخاصة بي",
-    "helper": "اختر باقة للحصول على أفضل خدمة",
-    "noItems": "لا توجد عناصر.",
-    "steamIt": "ابدأ التبخير"
-  },
+  "title": "الباقات الخاصة بي",
+  "helper": "اختر باقة للحصول على أفضل خدمة",
+  "noItems": "لا توجد عناصر.",
+  "steamIt": "ابدأ التبخير",
+  "pricePaid": "المبلغ المدفوع",
+  "remainingUsage": "الاستخدام المتبقي",
+  "purchaseDate": "تاريخ الشراء",
+  "expiresOn": "تاريخ الانتهاء",
+  "noExpiry": "بدون انتهاء"
+},
   "features": {
     "title": "مميزاتنا",
     "items": {
@@ -397,5 +417,142 @@
 },
 "about": {
   "body": "أنت الآن على بُعد نقرة واحدة فقط من غسيل سيارات صديق للبيئة. أينما كنت، احجز Mr. Steamer واستمتع بغسيل سيارات فاخر دون أي انقطاع في أعمالك المنزلية أو عملك في المكتب. نحن نوظّف مختصين مؤهلين ونستخدم منتجات تنظيف ومعدات ومواد عالية الجودة."
-}
+},
+"headers": {
+    "filters": "الفلاتر",
+    "carService": "خدمة السيارة",
+    "packages": "الباقات",
+    "yourBooking": "حجزك",
+    "successBooking": "حجز ناجح",
+    "bookingDetails": "تفاصيل الحجز",
+    "vehicle": "المركبة"
+  },
+  "packageDetails": {
+    "title": "تفاصيل الباقة",
+    "fixedPricePackage": "باقة بسعر ثابت",
+    "vehicleBasedPricing": "تسعير حسب نوع المركبة",
+    "priceExclVat": "السعر (بدون ضريبة):",
+    "vat15": "ضريبة 15%:",
+    "totalInclVat": "الإجمالي (مع الضريبة):",
+    "usageLimit": "حد الاستخدام:",
+    "unlimited": "غير محدود",
+    "expires": "ينتهي",
+    "noExpiry": "بدون انتهاء",
+    "na": "غير متوفر",
+    "servicesIncluded": "الخدمات المشمولة",
+    "addOnsIncluded": "الإضافات المشمولة",
+    "washIt": "اغسلها",
+    "buyNow": "اشتر الآن",
+    "notAvailable": "غير متاح حالياً"
+  },
+  "buyNow": {
+    "title": "شراء الباقة",
+    "vehicleBasedPricing": "تسعير حسب نوع المركبة",
+    "promoTitle": "كود الخصم",
+    "promoPlaceholder": "أدخل كود الخصم",
+    "checking": "جارِ التحقق...",
+    "applyPromo": "تطبيق الكود",
+    "promoApplied": "تم تطبيق الكود",
+    "invalidPromo": "كود الخصم غير صالح",
+    "selectVehicleFirst": "يرجى اختيار مركبة أولاً.",
+    "processing": "جارِ المعالجة...",
+    "confirmPurchase": "تأكيد الشراء",
+    "purchaseFailed": "فشل الشراء.",
+    "applyPromoOrClear": "طبّق كود الخصم أو امسحه للمتابعة"
+  },
+  "bookingnew": {
+  "fixedPricePackage": "باقة بسعر ثابت",
+  "vehicleBasedPricing": "تسعير حسب نوع المركبة",
+  "usageLimit": "حد الاستخدام:",
+  "unlimited": "غير محدود",
+  "expires": "ينتهي: {{date}}",
+  "noExpiry": "بدون انتهاء",
+  "na": "غير متاح",
+
+  "chooseSlot": "اختر الموعد *",
+  "loadingSlots": "جارِ تحميل المواعيد...",
+  "tapToChooseTime": "اضغط لاختيار الوقت",
+  "changeSlot": "تغيير الموعد",
+  "chooseTime": "اختر الوقت",
+  "noSlotsForDay": "لا توجد مواعيد متاحة لهذا اليوم.",
+  "minutes": "{{count}} دقيقة",
+
+  "additionalAddons": "إضافات إضافية",
+  "selectedAddonsCount": "تم اختيار {{count}} إضافة",
+  "tapToAddExtras": "اضغط لإضافة خدمات إضافية",
+  "addonsLabel": "الإضافات",
+  "vat15": "ضريبة 15%",
+  "total": "الإجمالي",
+  "chooseAddons": "اختر الإضافات",
+  "noAddons": "لا توجد إضافات متاحة.",
+  "addonsTotal": "إجمالي الإضافات",
+
+  "mobileNumber": "رقم الجوال *",
+  "mobilePlaceholder": "+9665...",
+  "email": "البريد الإلكتروني *",
+  "emailPlaceholder": "you@example.com",
+  "specialInstructions": "ملاحظات خاصة *",
+  "specialInstructionsPlaceholder": "مثال: بالقرب من المخبز",
+
+  "batterySize": "حجم البطارية *",
+  "batterySizePlaceholder": "مثال: 55 Ah",
+  "batteryType": "نوع البطارية *",
+  "batteryTypePlaceholder": "مثال: AGM / رصاص",
+  "batteryBrand": "ماركة البطارية *",
+  "batteryBrandPlaceholder": "مثال: AC Delco",
+
+  "address": "العنوان *",
+  "tapToChooseAddress": "اضغط لاختيار العنوان",
+  "lat": "خط العرض",
+  "lng": "خط الطول",
+
+  "selectAddress": "اختيار العنوان",
+  "useMyCurrentLocation": "استخدم موقعي الحالي",
+  "searchYourAddress": "ابحث عن عنوانك",
+  "selectedLocation": "الموقع المحدد",
+  "useThisLocation": "استخدم هذا الموقع",
+
+  "locationPermissionTitle": "إذن الموقع",
+  "locationPermissionMessage": "نحتاج موقعك لتحديد العنوان.",
+  "permissionRequired": "الإذن مطلوب",
+  "enableLocation": "يرجى تفعيل الموقع للمتابعة.",
+  "error": "خطأ",
+  "unableToGetLocation": "تعذر الحصول على الموقع الحالي. حاول مرة أخرى.",
+  "selectAddressTitle": "اختيار العنوان",
+  "selectAddressMsg": "يرجى اختيار العنوان وتحديد الموقع على الخريطة.",
+  "fillRequired": "يرجى تعبئة جميع الحقول المطلوبة.",
+  "createBookingFailed": "تعذر إنشاء الحجز، حاول مرة أخرى.",
+  "checkout": "الدفع",
+   "package": "الباقة",
+    "car": "السيارة",
+    "date": "التاريخ",
+    "slot": "الموعد"
+},
+"profile": {
+    "guest": "ضيف",
+    "username": "اسم المستخدم",
+    "changePassword": "تغيير كلمة المرور",
+    "shareApp": "مشاركة التطبيق",
+    "shareAppTitle": "مشاركة التطبيق",
+    "comingSoon": "قريباً",
+
+    "oldPassword": "كلمة المرور القديمة",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "enterOldPassword": "أدخل كلمة المرور القديمة",
+    "enterNewPassword": "أدخل كلمة المرور الجديدة",
+    "reenterNewPassword": "أعد إدخال كلمة المرور الجديدة",
+
+    "cancel": "إلغاء",
+    "update": "تحديث",
+
+    "missingInfoTitle": "معلومات ناقصة",
+    "missingInfoMsg": "يرجى تعبئة جميع الحقول.",
+    "mismatchTitle": "عدم تطابق",
+    "mismatchMsg": "كلمة المرور الجديدة وتأكيدها غير متطابقتين.",
+    "successTitle": "تم",
+    "passwordUpdated": "تم تحديث كلمة المرور بنجاح.",
+    "errorTitle": "خطأ",
+    "passwordUpdateFailed": "فشل تحديث كلمة المرور."
+  }
 }

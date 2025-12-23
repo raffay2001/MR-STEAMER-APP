@@ -1,5 +1,6 @@
 import { useState, useCallback  } from 'react';
 import { getEnums, getEnumsByType as apiGetEnumsByType, getEnumById as apiGetEnumById, } from '../api/enum/enum.api';
+import i18n from '../i18n';
 
 export const useEnums = () => {
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ export const useEnums = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   const fetchEnumsByType = useCallback(async (
     enumType: string,
@@ -33,7 +34,7 @@ export const useEnums = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   return {
     loading,

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getAddons, type AddonItem } from '../api/addon/addon.api';
+import i18n from '../i18n'; 
 
 export const useAddons = () => {
   const [loading, setLoading] = useState(false);
@@ -15,7 +16,7 @@ export const useAddons = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   return { loading, addons, fetchAddons };
 };
