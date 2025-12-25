@@ -403,52 +403,51 @@ export const Home: React.FC<TNavProps> = () => {
                     marginBottom: 4
                   }}
                 >
-                  {/* Top: image / icon + price pill */}
+                  {/* Top: big image + price pill overlay */}
                   <View
                     style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
+                      width: '100%',
+                      height: 120,
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      backgroundColor: '#E5E7EB',
                       marginBottom: 10,
+                      position: 'relative',
                     }}
                   >
-                    <View
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 20,
-                        backgroundColor: '#E5E7EB',
-                        overflow: 'hidden',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 8,
-                      }}
-                    >
-                      {addon.mediaPath ? (
-                        <Image
-                          source={{ uri: `${BACKEND_URL}${addon.mediaPath}` }}
-                          style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
-                        />
-                      ) : (
-                        <Ionicons name="sparkles-outline" size={20} color="#223671" />
-                      )}
-                    </View>
-
-                    <View
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 999,
-                        backgroundColor: '#22367115',
-                        marginLeft: 'auto',
-                      }}
-                    >
-                      <Text
+                    {addon.mediaPath ? (
+                      <Image
+                        source={{ uri: `${BACKEND_URL}${addon.mediaPath}` }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
                         style={{
-                          fontSize: 12,
-                          fontWeight: '700',
-                          color: '#223671',
+                          flex: 1,
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
+                        <Ionicons name="sparkles-outline" size={28} color="#223671" />
+                      </View>
+                    )}
+
+                    {/* Price pill overlay */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 999,
+                        backgroundColor: 'rgba(255,255,255,0.92)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(34,54,113,0.12)',
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#223671' }}>
                         SAR {addon.price}
                       </Text>
                     </View>
@@ -480,27 +479,6 @@ export const Home: React.FC<TNavProps> = () => {
                       {addon.description}
                     </Text>
                   ) : null}
-
-                  {/* Tiny "Perfect for..." footer */}
-                  <View
-                    style={{
-                      marginTop: 10,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Ionicons name="thumbs-up-outline" size={14} color="#9CA3AF" />
-                    <Text
-                      style={{
-                        marginLeft: 4,
-                        fontSize: 11,
-                        color: '#9CA3AF',
-                      }}
-                      numberOfLines={1}
-                    >
-                      Popular choice
-                    </Text>
-                  </View>
                 </View>
               ))}
             </ScrollView>
@@ -919,7 +897,7 @@ const DealCard = ({
   return (
     <View
       style={{ width: cardW, height: 189, overflow: 'hidden' }}
-      className="bg-[#F5F7FA] rounded-3xl"
+      className="bg-[#e8f1ff] rounded-3xl"
     >
       <ScrollView
         ref={scrollRef}
