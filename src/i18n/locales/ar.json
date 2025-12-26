@@ -491,7 +491,7 @@
   "mobilePlaceholder": "+9665...",
   "email": "البريد الإلكتروني *",
   "emailPlaceholder": "you@example.com",
-  "specialInstructions": "ملاحظات خاصة *",
+  "specialInstructions": "ملاحظات خاصة",
   "specialInstructionsPlaceholder": "مثال: بالقرب من المخبز",
 
   "batterySize": "حجم البطارية *",

@@ -370,7 +370,6 @@ export const Home: React.FC<TNavProps> = () => {
                 fontSize: 11,
                 color: '#6B7280',
               }}
-              numberOfLines={1}
             >
               {t('home.addons.subtitle')}
             </Text>
@@ -474,7 +473,6 @@ export const Home: React.FC<TNavProps> = () => {
                         marginTop: 4,
                         lineHeight: 16,
                       }}
-                      numberOfLines={2}
                     >
                       {addon.description}
                     </Text>

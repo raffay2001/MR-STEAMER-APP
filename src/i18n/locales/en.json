@@ -491,7 +491,7 @@
   "mobilePlaceholder": "+9665...",
   "email": "Email *",
   "emailPlaceholder": "you@example.com",
-  "specialInstructions": "Special Instructions *",
+  "specialInstructions": "Special Instructions",
   "specialInstructionsPlaceholder": "E.g. Come near the bakery",
 
   "batterySize": "Battery Size *",

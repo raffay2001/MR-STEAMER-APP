@@ -27,6 +27,7 @@ import type { AppNavStackParamList } from '../../navigation/navigation.types';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { getCarsByUserId, type CarItem } from '../../api/car/car.api';
+import { useLangRefresh } from '../../context/LangRefreshContext';
 
 const SWATCHES = [
   '#000000', '#FFFFFF', '#FF0000', '#0000FF', '#008000',
@@ -45,6 +46,16 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
   const { loading: creating, createCar } = useCar();
 
   const { t } = useTranslation();
+
+  const { bumpLangVersion } = useLangRefresh();
+  const isAr = i18n.language?.startsWith('ar');
+  const CITY_OPTIONS = isAr ? SAUDI_CITIES_AR : SAUDI_CITIES;
+
+  const toggleLanguage = async () => {
+    const next = isAr ? 'en' : 'ar';
+    await i18n.changeLanguage(next);
+    bumpLangVersion();
+  };
 
   const [items, setItems] = React.useState<any[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -296,10 +307,31 @@ const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
         className="bg-white"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <View className="px-6 py-4 mb-7 bg-[#F5F7FA]">
+        <View
+          className="px-6 py-4 mb-7 bg-[#F5F7FA] flex justify-between items-center"
+          style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+        >
           <Text className="text-black text-sm" style={{ textAlign: isAr ? 'right' : 'left' }}>
             {t('vehicle.selectType')}
           </Text>
+
+          <TouchableOpacity
+            onPress={toggleLanguage}
+            style={{
+              alignSelf: isAr ? 'flex-start' : 'flex-end',
+              marginTop: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: '#1f3a8a',
+              backgroundColor: '#fff',
+            }}
+          >
+            <Text style={{ color: '#1f3a8a', fontWeight: '600' }}>
+              {t('common.changeLanguage')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {loading && !refreshing ? (

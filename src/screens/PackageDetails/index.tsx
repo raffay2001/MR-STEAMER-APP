@@ -6,8 +6,10 @@ import {
     ScrollView,
     TouchableOpacity,
     SafeAreaView,
-    I18nManager,
+    Platform,
+    StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { usePackage } from '../../hooks/usePackage';
@@ -34,6 +36,9 @@ const PackageDetails: React.FC = () => {
     const { loading, fetchPackageById } = usePackage();
     const [data, setData] = React.useState<any>(null);
     const [localLoading, setLocalLoading] = React.useState(true);
+
+    const insets = useSafeAreaInsets();
+    const headerTop = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : insets.top;
 
     React.useEffect(() => {
         (async () => {
@@ -91,7 +96,8 @@ const PackageDetails: React.FC = () => {
                         flexDirection: dirRow,
                         alignItems: 'center',
                         paddingHorizontal: 16,
-                        paddingVertical: 12,
+                        paddingTop: headerTop,
+                        paddingBottom: 12,
                         borderBottomWidth: 1,
                         borderBottomColor: '#E5E7EB',
                     }}
@@ -130,7 +136,8 @@ const PackageDetails: React.FC = () => {
                     flexDirection: dirRow,
                     alignItems: 'center',
                     paddingHorizontal: 16,
-                    paddingVertical: 12,
+                    paddingTop: headerTop,
+                    paddingBottom: 12,
                     backgroundColor: '#fff',
                     borderBottomWidth: 1,
                     borderBottomColor: '#E5E7EB',

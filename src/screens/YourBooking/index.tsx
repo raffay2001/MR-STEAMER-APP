@@ -302,7 +302,6 @@ const YourBooking: React.FC = () => {
         !!selectedSlot &&
         mobileNumber.trim().length > 0 &&
         email.trim().length > 0 &&
-        specialInstructions.trim().length > 0 &&
         address.trim().length > 0 &&
         latitude !== null &&
         longitude !== null &&
@@ -1206,7 +1205,7 @@ const YourBooking: React.FC = () => {
                                 email,
                                 address,
                                 location: { latitude, longitude },
-                                specialInstructions,
+                                specialInstructions: specialInstructions.trim() || undefined,
                                 ...(isBatteryPackage && {
                                     batterySize,
                                     batteryType,

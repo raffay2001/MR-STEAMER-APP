@@ -10,7 +10,10 @@ import {
     I18nManager,
     TextStyle,
     ViewStyle,
+    Platform,
+    StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { usePackage } from '../../hooks/usePackage';
@@ -25,6 +28,9 @@ const BuyNow: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const packageId = route.params?.packageId as string;
+
+    const insets = useSafeAreaInsets();
+    const headerTop = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : insets.top;
 
     const { validate, loading: promoLoading } = usePromoCode();
     const { purchase, loading: purchaseLoading } = useUserPackage();
@@ -110,7 +116,7 @@ const BuyNow: React.FC = () => {
     if (loading || !data) {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-                <View style={[{ padding: 16, alignItems: 'center' }, rowDir]}>
+                <View style={[{ paddingTop: headerTop, paddingHorizontal: 16, paddingBottom: 12, alignItems: 'center' }, rowDir]}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
                         <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={22} color={BRAND} />
                     </TouchableOpacity>
@@ -130,7 +136,9 @@ const BuyNow: React.FC = () => {
                 style={[
                     {
                         alignItems: 'center',
-                        padding: 16,
+                        paddingTop: headerTop,
+                        paddingHorizontal: 16,
+                        paddingBottom: 12,
                         backgroundColor: '#fff',
                         borderBottomWidth: 1,
                         borderBottomColor: '#E5E7EB',

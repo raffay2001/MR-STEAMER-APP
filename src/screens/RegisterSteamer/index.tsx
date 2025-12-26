@@ -13,6 +13,7 @@ import {
     Platform,
     ScrollView,
     StyleSheet,
+    Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -32,6 +33,8 @@ const COLORS = {
     primary: '#ffffff',
     disabled: '#bbbbbb',
 };
+
+const TERMS_URL = 'https://mr-steamer-rider.vercel.app/terms';
 
 const RegisterSteamer: React.FC = () => {
     const { top } = useSafeAreaInsets();
@@ -83,6 +86,16 @@ const RegisterSteamer: React.FC = () => {
             Alert.alert(t('registerSteamer.success.title'), t('registerSteamer.success.body'));
         } catch (e: any) {
             Alert.alert(t('registerSteamer.error.title'), e?.response?.data?.message || t('registerSteamer.error.body'));
+        }
+    };
+
+    const openTerms = async () => {
+        try {
+            const ok = await Linking.canOpenURL(TERMS_URL);
+            if (!ok) return Alert.alert('Error', 'Unable to open link');
+            await Linking.openURL(TERMS_URL);
+        } catch {
+            Alert.alert('Error', 'Unable to open link');
         }
     };
 
@@ -186,6 +199,18 @@ const RegisterSteamer: React.FC = () => {
                             {loading ? t('registerSteamer.btn.registering') : t('registerSteamer.btn.register')}
                         </Text>
                     </TouchableOpacity>
+
+                    <View style={{ marginTop: 14, alignItems: 'center' }}>
+                        <Text style={{ color: COLORS.textMuted, fontSize: 12 }}>
+                            By registering, you agree to our{' '}
+                            <Text
+                                onPress={openTerms}
+                                style={{ color: COLORS.white, fontWeight: '700', textDecorationLine: 'underline' }}
+                            >
+                                Terms & Conditions
+                            </Text>
+                        </Text>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
 
