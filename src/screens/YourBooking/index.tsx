@@ -11,6 +11,8 @@ import {
     PermissionsAndroid,
     Platform,
     I18nManager,
+    Modal,
+    Pressable
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -27,7 +29,7 @@ import type { AddonItem } from '../../api/addon/addon.api';
 import { useBooking } from '../../hooks/useBooking';
 import MapView, { MapPressEvent, Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from "react-native-calendars";
 import i18n from '../../i18n';
 
 const GOOGLE_API_KEY = 'AIzaSyApI2bRWLV7R3ID776FLL1N51MtN9f34Uw';
@@ -35,6 +37,8 @@ const GOOGLE_API_KEY = 'AIzaSyApI2bRWLV7R3ID776FLL1N51MtN9f34Uw';
 const BRAND = '#223671';
 
 type RouteParams = { packageId: string };
+
+type AddonQtyMap = Record<string, number>;
 
 const YourBooking: React.FC = () => {
     const isRTL = I18nManager.isRTL || i18n.language?.startsWith('ar');
@@ -62,7 +66,7 @@ const YourBooking: React.FC = () => {
     const [slots, setSlots] = React.useState<SlotItem[]>([]);
     const [selectedSlot, setSelectedSlot] = React.useState<SlotItem | null>(null);
     const [bookingDate, setBookingDate] = React.useState<Date>(new Date());
-    const [showDatePicker, setShowDatePicker] = React.useState(false);
+    const [calendarOpen, setCalendarOpen] = React.useState(false);
 
     const { loading: addonsLoading, addons, fetchAddons } = useAddons();
     const [selectedAddons, setSelectedAddons] = React.useState<Record<string, number>>({});
@@ -266,10 +270,12 @@ const YourBooking: React.FC = () => {
         });
     };
 
+    const selectedAddonsEntries = Object.entries(selectedAddons) as [string, number][];
+
     const additionalAddOns =
         addons.length === 0
             ? []
-            : Object.entries(selectedAddons)
+            : selectedAddonsEntries
                 .filter(([, qty]) => qty > 0)
                 .map(([addonId, quantity]) => {
                     const addon = addons.find(a => a.id === addonId);
@@ -280,7 +286,7 @@ const YourBooking: React.FC = () => {
                         price: addon.price,
                     };
                 })
-                .filter(Boolean) as { addOnId: string; quantity: number; price: number }[];
+                .filter((x): x is { addOnId: string; quantity: number; price: number } => x !== null);
 
     const addonsTotal = additionalAddOns.reduce(
         (sum, item) => sum + item.price * item.quantity,
@@ -438,7 +444,7 @@ const YourBooking: React.FC = () => {
 
                     <TouchableOpacity
                         activeOpacity={0.85}
-                        onPress={() => setShowDatePicker(true)}
+                        onPress={() => setCalendarOpen(true)}
                         style={{
                             borderRadius: 12,
                             borderWidth: 1,
@@ -457,21 +463,41 @@ const YourBooking: React.FC = () => {
                         <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
                     </TouchableOpacity>
 
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={bookingDate}
-                            mode="date"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            minimumDate={new Date()} // ✅ blocks yesterday
-                            onChange={(_, date) => {
-                                setShowDatePicker(false);
-                                if (!date) return;
-                                setBookingDate(date);
-                                setSelectedDay(toDayLabel(date)); // UI label only
-                                setSelectedSlot(null);
+                    <Modal
+                        visible={calendarOpen}
+                        transparent
+                        animationType="fade"
+                        onRequestClose={() => setCalendarOpen(false)}
+                    >
+                        <Pressable
+                            style={{
+                                flex: 1,
+                                backgroundColor: "rgba(0,0,0,0.45)",
+                                justifyContent: "center",
+                                padding: 16,
                             }}
-                        />
-                    )}
+                            onPress={() => setCalendarOpen(false)}
+                        >
+                            <Pressable
+                                style={{ backgroundColor: "#fff", borderRadius: 16, overflow: "hidden" }}
+                                onPress={() => { }}
+                            >
+                                <Calendar
+                                    minDate={toYMD(new Date())}
+                                    markedDates={{
+                                        [toYMD(bookingDate)]: { selected: true },
+                                    }}
+                                    onDayPress={(day) => {
+                                        const picked = new Date(day.dateString + "T00:00:00");
+                                        setBookingDate(picked);
+                                        setSelectedDay(toDayLabel(picked));
+                                        setSelectedSlot(null);
+                                        setCalendarOpen(false);
+                                    }}
+                                />
+                            </Pressable>
+                        </Pressable>
+                    </Modal>
 
                     <TouchableOpacity
                         activeOpacity={0.85}
