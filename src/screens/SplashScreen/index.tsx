@@ -1,62 +1,39 @@
-import React, {useEffect, useState} from 'react';
-import {View, Animated} from 'react-native';
-import {TSplashScreenProps} from './types';
-import {SvgWrapper} from '../../common/SvgWrapper';
-import {
-  // MRLogoTextSvg,
-  SplashScreenLogoSvg,
-  // SteamerLogoTextSvg,
-  // blueGradientSvg,
-  // voiletGradientSvg,
-} from '../../assets/svgs';
+import React, { useEffect, useState } from 'react';
+import { View, Animated, Dimensions, StatusBar } from 'react-native';
+import { TSplashScreenProps } from './types';
+import SplashScreenImg from '../../assets/svgs/SplashScreenImgNew.svg';
+import { getAccessToken } from '../../hooks/useAuthStorage';
 
-export const SplashScreen: React.FC<TSplashScreenProps> = ({navigation}) => {
+const W = 303, H = 141, ASPECT = W / H;
+
+export const SplashScreen: React.FC<TSplashScreenProps> = ({ navigation }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 2000,
-      useNativeDriver: true,
-    }).start();
+    Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }).start();
   }, [fadeAnim]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.navigate('Welcome');
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    let timer: NodeJS.Timeout | null = null;
+    (async () => {
+      const tok = await getAccessToken();
+      if (!tok) {
+        timer = setTimeout(() => navigation.navigate('Welcome'), 1200);
+      }
+    })();
+    return () => { if (timer) clearTimeout(timer); };
+  }, [navigation]);
+
+  const { width } = Dimensions.get('window');
+  const imgW = Math.min(width * 0.7, 420);
+  const imgH = Math.round(imgW / ASPECT);
 
   return (
-    <View className="flex-1 flex-row justify-center items-center bg-[#000000] relative">
-      <Animated.View
-        style={{
-          opacity: fadeAnim,
-        }}>
-        <SvgWrapper
-          xml={SplashScreenLogoSvg}
-          width={309}
-          height={91}
-          className=""
-        />
+    <View className="flex-1 items-center justify-center bg-black">
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <SplashScreenImg width={imgW} height={imgH} />
       </Animated.View>
-      {/* <View className="justify-center items-center absolute bottom-24 gap-y-4 z-10">
-        <SvgWrapper xml={MRLogoTextSvg} width={317} height={174} />
-        <SvgWrapper xml={SteamerLogoTextSvg} width={368} height={63} />
-      </View> */}
-      {/* <SvgWrapper
-        xml={voiletGradientSvg}
-        width={397}
-        height={397}
-        className="absolute top-72 -z-10"
-      />
-      <SvgWrapper
-        xml={blueGradientSvg}
-        width={280}
-        height={280}
-        className="absolute -left-24 -bottom-16"
-      /> */}
     </View>
   );
 };

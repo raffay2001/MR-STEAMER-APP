@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MrSteamerApp</string>
+
+    <string name="facebook_app_id">1378296977088677</string>
+    <string name="fb_login_protocol_scheme">fb1378296977088677</string>
+    <string name="facebook_client_token">4a00fef06718cfb79ce10e53198d02b1</string>
 </resources>

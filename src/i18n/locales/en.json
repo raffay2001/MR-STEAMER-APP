@@ -1,0 +1,558 @@
+{
+  "common": {
+    "english": "English",
+    "arabic": "العربية",
+    "changeLanguage": "العربية",
+    "or": "or",
+    "sar": "SAR",
+    "cancel": "Cancel",
+    "ok": "OK"
+  },
+  "welcome": {
+    "title": "Premium Car Services At Your Doorstep",
+    "signup": "Sign up",
+    "login": "Login"
+  },
+  "login": {
+    "title": "Welcome Back!",
+    "subtitle": "welcome back we missed you",
+    "google": "Login with Google",
+    "facebook": "Login with Facebook",
+    "or": "or",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "emailError": "Please enter a valid email address.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter Password",
+    "passwordError": "Password should contain at least one uppercase letter, one digit and one special character.",
+    "cta": "Login",
+    "loggingIn": "Logging in...",
+    "forgot": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "signup": "Signup",
+    "toastLoginFail": "Login failed. Please try again."
+  },
+  "signup": {
+    "title": "Sign up",
+    "continueGoogle": "Continue with Google",
+    "continueFacebook": "Continue with Facebook",
+    "continueApple": "Continue with Apple",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "emailError": "Please enter a valid email address.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter Name",
+    "nameError": "Name is required.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter Password",
+    "passwordError": "Password should contain at least one uppercase letter, one digit, and one special character.",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm Password",
+    "confirmPasswordError": "Passwords do not match.",
+    "cta": "Sign Up",
+    "signingUp": "Signing Up...",
+    "already": "Already have an account?",
+    "login": "Login"
+  },
+  "forgot": {
+    "title": "Forgot Password",
+    "subtitle": "Enter your account email. We’ll send a verification code.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "sending": "Sending…",
+    "sendCode": "Send Code",
+    "remembered": "Remembered your password?",
+    "login": "Login",
+    "missingTitle": "Missing",
+    "missingDesc": "Please enter your email.",
+    "errorTitle": "Error",
+    "errorFallback": "Failed to send code."
+  },
+    "reset": {
+    "title": "Reset Password",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter Email Address",
+    "codeLabel": "Verification Code",
+    "codePlaceholder": "6-digit code",
+    "passwordLabel": "New Password",
+    "passwordPlaceholder": "Enter new password",
+    "cta": "Reset Password",
+    "resetting": "Resetting…",
+    "missingTitle": "Missing",
+    "missingDesc": "Please fill all fields.",
+    "successTitle": "Success",
+    "successDesc": "Password has been reset.",
+    "ok": "OK",
+    "errorTitle": "Error",
+    "errorFallback": "Failed to reset password."
+  },
+  "vehicle": {
+    "selectType": "Select Vehicle Type",
+    "useExisting": "Use Existing",
+    "addNew": "Add New",
+    "noTypes": "No vehicle types found.",
+    "searchArea": "Search Area",
+    "modal": { "title": "Car Information" },
+    "fields": {
+      "color": "Car Color",
+      "brand": "Brand",
+      "name": "Car name",
+      "number": "Car number"
+    },
+    "noBrands": "No brands found.",
+    "placeholders": {
+      "name": "e.g., Corolla Grande",
+      "number": "Enter plate / registration"
+    },
+    "submit": "Submit"
+  },
+  "drawer": {
+    "becomeStreamer": "Become Mr.Streamer",
+    "choosePackages": "My Packages",
+    "hireUs": "Hire us",
+    "ourFeatures": "Our Features",
+    "aboutUs": "About Us",
+    "bookingDetail": "Booking Detail",
+    "logout": "Logout",
+    "privacyPolicy": "Privacy Policy",
+  "terms": "Terms & Conditions",
+  "refundPolicy": "Refund Policy",
+  "contactUs": "Contact Us"
+  },
+  "legal": {
+  "privacy": {
+    "title": "Privacy Policy",
+    "sections": {
+      "introTitle": "1. Introduction",
+      "introBody": "This Privacy Policy describes how Mister Streamer (\"we\", \"us\", \"our\") collects, uses, discloses, and protects your personal information when you use our application and services. This policy is designed in accordance with the Personal Data Protection Law and related regulations of the Kingdom of Saudi Arabia.",
+
+      "collectTitle": "2. Information We Collect",
+      "collectItems": [
+        "Personal Information: Name, contact details, address, and payment information provided during registration or booking.",
+        "Usage Data: Information about how you use our app, including service history and preferences.",
+        "Device Information: Device type, operating system, and unique device identifiers.",
+        "Location Data: With your consent, we may collect and use your location to provide services."
+      ],
+
+      "useTitle": "3. How We Use Your Information",
+      "useItems": [
+        "To provide and improve our services.",
+        "To process bookings and payments.",
+        "To communicate with you regarding your account or services.",
+        "To comply with legal obligations under Saudi law."
+      ],
+
+      "shareTitle": "4. Sharing and Disclosure",
+      "shareBody": "We do not sell your personal information. We may share your data with service providers, payment processors, or government authorities as required by law or to fulfill our services.",
+
+      "securityTitle": "5. Data Security",
+      "securityBody": "We implement appropriate technical and organizational measures to protect your personal data from unauthorized access, loss, or misuse.",
+
+      "rightsTitle": "6. Your Rights",
+      "rightsBody": "You have the right to access, correct, or request deletion of your personal data, subject to applicable Saudi laws. To exercise your rights, please contact us at info@mistersteamer.com.",
+
+      "changesTitle": "7. Changes to This Policy",
+      "changesBody": "We may update this Privacy Policy from time to time. The latest version will always be available in the app.",
+
+      "contactTitle": "8. Contact Us",
+      "contactBody": "If you have any questions about this Privacy Policy, please contact us at info@mistersteamer.com."
+    }
+  },
+  "terms": {
+    "title": "Terms & Conditions",
+    "sections": {
+      "acceptanceTitle": "1. Acceptance of Terms",
+      "acceptanceBody": "By using Mister Steamer (\"we\", \"us\", \"our\") services and application, you agree to these Terms and Conditions, which are governed by the laws of the Kingdom of Saudi Arabia.",
+      "servicesTitle": "2. Services",
+      "servicesBody": "We provide car wash and related services as described in our app. Service availability may vary by location and time.",
+      "responsibilitiesTitle": "3. User Responsibilities",
+      "responsibilitiesItems": [
+        "Provide accurate and complete information when booking services.",
+        "Ensure access to your vehicle at the scheduled time and location.",
+        "Comply with all applicable laws and regulations."
+      ],
+      "paymentTitle": "4. Payment",
+      "paymentBody": "Payment must be made through the app using approved methods. All fees are due at the time of booking unless otherwise stated.",
+      "cancelTitle": "5. Cancellations and Refunds",
+      "cancelBody": "Please refer to our Refund Policy for details on cancellations and refunds.",
+      "liabilityTitle": "6. Limitation of Liability",
+      "liabilityBody": "We are not liable for any indirect, incidental, or consequential damages arising from your use of our services, except as required by Saudi law.",
+      "changesTitle": "7. Changes to Terms",
+      "changesBody": "We may update these Terms and Conditions at any time. The latest version will be available in the app.",
+      "contactTitle": "8. Contact Us",
+      "contactBody": "For questions about these Terms and Conditions, contact us at info@mistersteamer.com."
+    }
+  },
+  "refund": {
+    "title": "Refund Policy",
+    "sections": {
+      "purposeTitle": "1. Purpose",
+      "purposeBody": "This Refund Policy outlines the circumstances under which Mister Streamer (\"we\", \"us\", \"our\") will issue refunds for services booked through our application and governs the procedure for requesting a refund. This policy is designed in accordance with the Consumer Protection Law and the E-Commerce Law and its Implementing Regulations of the Kingdom of Saudi Arabia, under the supervision of the Ministry of Commerce.",
+      "eligibilityTitle": "2. Eligibility for Refund",
+      "eligibilityItems": [
+        "Service Not Rendered: If a confirmed and paid service booking was not performed by the service provider due to their cancellation, no-show, or failure to arrive within a reasonable timeframe from the scheduled appointment without prior acceptable rescheduling.",
+        "Defective or Substandard Service Quality: If the service received is demonstrably defective, incomplete, or significantly below the standards described in the service booking (non-conforming service). Claims must be submitted within 12 hours of the service completion time and must be accompanied by clear photographic or video evidence supporting the claim. Our team will investigate the claim based on KSA regulations to determine eligibility on a case-by-case basis.",
+        "Billing Error: In case of verified accidental double billing or incorrect charges due to a technical error within the application.",
+        "Cancellation by User (within allowed timeframe): If the user cancels the booking before the service provider has commenced travel to the location or before any stated non-refundable cancellation window (e.g., more than 2 hours before the scheduled time). Please refer to our Cancellation Policy for specific details and potential cancellation fees.",
+        "Technical Issues: If a service could not be completed or properly initiated due to a verifiable technical malfunction originating solely from the Mister Streamer application, preventing the service delivery."
+      ],
+      "lawTitle": "7. Governing Law",
+      "lawBody": "This Refund Policy is governed by and construed in accordance with the laws and regulations of the Kingdom of Saudi Arabia.",
+      "contactTitle": "8. Contact Us",
+      "contactBody": "If you have any questions about this Refund Policy, please contact us via the support section in the Mister Streamer app or at info@mistersteamer.com."
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Send us your question or feedback and our team will get back to you as soon as possible.",
+    "fields": {
+      "name": "Full Name",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "query": "Your Message"
+    },
+    "placeholders": {
+      "name": "e.g., Ali Khan",
+      "phone": "e.g., +9665412254178",
+      "email": "e.g., ali@gmail.com",
+      "query": "Write your message here..."
+    },
+    "send": "Send",
+    "sending": "Sending…",
+    "missingTitle": "Missing",
+    "missingBody": "Please fill all fields.",
+    "successTitle": "Sent",
+    "successBody": "Your message has been submitted.",
+    "errorTitle": "Error",
+    "errorBody": "Failed to submit. Please try again."
+  }
+},
+  "home": {
+    "searchPlaceholder": "Search...",
+    "services": {
+      "noPackages": "No packages for this service."
+    },
+    "card": {
+      "certified": "Certified",
+      "packagesLabel": "Packages"
+    },
+    "fav": {
+      "titleSuffix": "Packages",
+      "noPackages": "No packages."
+    },
+    "vehicle": {
+      "label": "Vehicle",
+      "modalTitle": "Select vehicle type"
+    },
+    "slots": {
+      "availability": "Availability Slot",
+      "selectSlot": "Select Slot",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "pickTime": "Pick a time",
+      "noSlots": "No slots available for this date."
+    },
+    "addons": {
+  "title": "Add-ons",
+  "subtitle": "Make your wash extra special"
+},
+"packagesTitle": "Our Packages",
+"noPackages": "No packages available right now.",
+"includes": "Includes:",
+"viewDetails": "View Details"
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset",
+    "services": "Services",
+    "sortBy": "Sort By",
+    "apply": "Apply",
+    "sort": {
+      "popularity": "Popularity",
+      "rating": "Rating",
+      "discount": "Discount",
+      "price_desc": "Price",
+      "price_asc": "Price"
+    }
+  },
+    "prePackage": {
+        "fallbackName": "Package",
+        "reviews_one": "{{count}} review",
+        "reviews_other": "{{count}} reviews",
+        "avg": "Avg {{avg}} / 5",
+        "noReviews": "No reviews yet.",
+        "packageLabel": "Package",
+        "cta": "Steam It",
+        "modalTitle": "{{name}} — Packages",
+        "noPackages": "No packages."
+    },
+    "package": {
+        "title": "Packages",
+        "choose": "Choose a package for the best service",
+        "noItems": "No items.",
+        "cta": "Steam it"
+    },
+    "booking": {
+        "mobileLabel": "Mobile Number",
+        "mobilePlaceholder": "Enter mobile number",
+        "messageLabel": "Message (optional)",
+        "messagePlaceholder": "Write a message for the provider",
+        "slotTitle": "Availability Slot",
+        "selectSlot": "Select Slot",
+        "checkout": "Check out",
+        "processing": "Processing…",
+        "pickTime": "{{day}} — Pick a time",
+        "pickTimeSimple": "Pick a time",
+        "noSlots": "No slots available for this date.",
+        "errorTitle": "Missing info",
+        "errors": {
+            "noPackage": "Package not loaded yet.",
+            "noPhone": "Please enter mobile number.",
+            "noDate": "Please select a date.",
+            "noSlot": "Please select a time slot.",
+            "createFail": "Failed to create booking. Please try again."
+        }
+    },
+    "success": {
+        "bookingId": "Booking ID",
+        "email": "Email",
+        "payment": "Payment",
+        "paymentOnSite": "On-Site",
+        "successful": "Successful!",
+        "tip": "Tip: take a screenshot of this page to save your booking confirmation.",
+        "detailsBtn": "Booking Details",
+        "backHome": "Back to Home",
+         "loadingDetails": "Loading booking details...",
+    "missingBookingId": "Booking ID missing. Please go back and try again.",
+    "couldNotLoadBooking": "Could not load booking details. Please try again.",
+    "retry": "Retry"
+    },
+    "bookingDetails": {
+        "title": "Your recent bookings",
+        "empty": "No bookings found.",
+        "timeSlot": "Time Slot",
+        "bookingId": "Booking ID",
+        "to": "to",
+        "rated": "Rated",
+        "ratePrompt": "Rate this package",
+        "reviewPlaceholder": "Write a short review (optional)",
+        "submit": "Submit Rating",
+        "processing": "Processing…",
+        "loadMore": "Load more",
+        "errTitle": "Error",
+        "errMissingPkg": "Missing package id",
+        "ratingTitle": "Rating",
+        "errMinStar": "Please select at least 1 star.",
+        "thanksTitle": "Thank you!",
+        "thanksMsg": "Your rating has been submitted.",
+        "errSubmit": "Failed to submit rating."
+    },
+    "become": {
+        "title": "Become Mr. Steamer",
+        "body": "Join our team and grow your business with professional steam services. Apply now and we’ll guide you through a quick onboarding process.",
+        "register": "Register"
+    },
+    "registerSteamer": {
+        "title": "Register With Us",
+        "fields": {
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone Number",
+            "password": "Password",
+            "type": "Individual / Company"
+        },
+        "placeholders": {
+            "name": "Enter Name",
+            "email": "Enter Email",
+            "phone": "Enter Phone Number",
+            "password": "Enter Password"
+        },
+        "select": "Select",
+        "companyType": {
+            "individual": "Individual",
+            "company": "Company"
+        },
+        "btn": {
+            "register": "Register",
+            "registering": "Registering…"
+        },
+        "missing": {
+            "title": "Missing info",
+            "body": "Please fill all fields."
+        },
+        "success": {
+            "title": "Success",
+            "body": "Steamer registered successfully!"
+        },
+        "error": {
+            "title": "Error",
+            "body": "Failed to register."
+        }
+    },
+    "choosePackages": {
+  "title": "My Packages",
+  "helper": "Choose a package for the best service",
+  "noItems": "No items.",
+  "steamIt": "Steam it",
+  "pricePaid": "Price paid",
+  "remainingUsage": "Remaining usage",
+  "purchaseDate": "Purchase date",
+  "expiresOn": "Expires on",
+  "noExpiry": "No expiry"
+},
+   "features": {
+    "title": "Our Features",
+    "items": {
+      "1": { "title": "Eco Friendly", "desc": "We use high-quality agents, equipment, and premium materials." },
+      "2": { "title": "Water Conservative", "desc": "Steam cleaning saves water without compromising results." },
+      "3": { "title": "Time Saving", "desc": "Fast, efficient service that fits your schedule." },
+      "4": { "title": "Hassle Free", "desc": "We come to you—no queues, no waiting." },
+      "5": { "title": "User Friendly", "desc": "Simple booking and clear pricing." },
+      "6": { "title": "24/7 Availability", "desc": "Book any time that works for you." }
+    }
+  },
+  "hireUs": {
+  "title": "Hire Us",
+  "body": "This is dummy content. Want a custom service or bulk booking? Contact us and we will get back to you with pricing and availability."
+},
+"about": {
+  "body": "Now you are just one tap away from an eco-friendly car wash. No matter where you are, book your Mr. Steamer and enjoy premium car washing without interrupting your household chores or office work. We employ only highly qualified specialists and use high-quality cleaning products, equipment, and premium materials."
+},
+"headers": {
+    "filters": "Filters",
+    "carService": "Car Service",
+    "packages": "Packages",
+    "yourBooking": "Your Booking",
+    "successBooking": "Successful Booking",
+    "bookingDetails": "Booking Details",
+    "vehicle": "Vehicle"
+  },
+  "packageDetails": {
+    "title": "Package Details",
+    "fixedPricePackage": "Fixed price package",
+    "vehicleBasedPricing": "Vehicle based pricing",
+    "priceExclVat": "Price (excl. VAT):",
+    "vat15": "VAT 15%:",
+    "totalInclVat": "Total (incl. VAT):",
+    "usageLimit": "Usage limit:",
+    "unlimited": "Unlimited",
+    "expires": "Expires",
+    "noExpiry": "No expiry",
+    "na": "N/A",
+    "servicesIncluded": "Services Included",
+    "addOnsIncluded": "Add-ons Included",
+    "washIt": "Wash It",
+    "buyNow": "Buy Now",
+    "notAvailable": "Not available right now"
+  },
+  "buyNow": {
+    "title": "Buy Package",
+    "vehicleBasedPricing": "Vehicle based pricing",
+    "promoTitle": "Promo Code",
+    "promoPlaceholder": "Enter promo code",
+    "checking": "Checking...",
+    "applyPromo": "Apply Promo",
+    "promoApplied": "Promo applied",
+    "invalidPromo": "Invalid promo code",
+    "selectVehicleFirst": "Please select a vehicle first.",
+    "processing": "Processing...",
+    "confirmPurchase": "Confirm Purchase",
+    "purchaseFailed": "Purchase failed.",
+    "applyPromoOrClear": "Apply promo or clear it to continue"
+  },
+  "bookingnew": {
+  "fixedPricePackage": "Fixed price package",
+  "vehicleBasedPricing": "Vehicle based pricing",
+  "usageLimit": "Usage limit:",
+  "unlimited": "Unlimited",
+  "expires": "Expires: {{date}}",
+  "noExpiry": "No expiry",
+  "na": "N/A",
+
+  "chooseSlot": "Choose Slot *",
+  "loadingSlots": "Loading slots...",
+  "tapToChooseTime": "Tap to choose time",
+  "changeSlot": "Change slot",
+  "chooseTime": "Choose time",
+  "noSlotsForDay": "No slots available for this day.",
+  "minutes": "{{count}} min",
+
+  "additionalAddons": "Additional Add-ons",
+  "selectedAddonsCount": "Selected {{count}} add-on(s)",
+  "tapToAddExtras": "Tap to add extras to your wash",
+  "addonsLabel": "Add-ons",
+  "vat15": "VAT 15%",
+  "total": "Total",
+  "chooseAddons": "Choose Add-ons",
+  "noAddons": "No add-ons available.",
+  "addonsTotal": "Add-ons Total",
+
+  "mobileNumber": "Mobile Number *",
+  "mobilePlaceholder": "+9665...",
+  "email": "Email *",
+  "emailPlaceholder": "you@example.com",
+  "specialInstructions": "Special Instructions",
+  "specialInstructionsPlaceholder": "E.g. Come near the bakery",
+
+  "batterySize": "Battery Size *",
+  "batterySizePlaceholder": "E.g. 55 Ah",
+  "batteryType": "Battery Type *",
+  "batteryTypePlaceholder": "E.g. AGM / Lead-acid",
+  "batteryBrand": "Battery Brand *",
+  "batteryBrandPlaceholder": "E.g. AC Delco",
+
+  "address": "Address *",
+  "tapToChooseAddress": "Tap to choose address",
+  "lat": "Lat",
+  "lng": "Lng",
+
+  "selectAddress": "Select Address",
+  "useMyCurrentLocation": "Use my current location",
+  "searchYourAddress": "Search your address",
+  "selectedLocation": "Selected location",
+  "useThisLocation": "Use This Location",
+
+  "locationPermissionTitle": "Location Permission",
+  "locationPermissionMessage": "We need your location to select your address.",
+  "permissionRequired": "Permission required",
+  "enableLocation": "Please enable location to continue.",
+  "error": "Error",
+  "unableToGetLocation": "Unable to get current location. Please try again.",
+  "selectAddressTitle": "Select address",
+  "selectAddressMsg": "Please choose address and location on map.",
+  "fillRequired": "Please fill all required fields.",
+  "createBookingFailed": "Could not create booking, please try again.",
+  "checkout": "Checkout",
+  "package": "Package",
+    "car": "Car",
+    "date": "Date",
+    "slot": "Slot"
+},
+"profile": {
+    "guest": "Guest",
+    "username": "Username",
+    "changePassword": "Change Password",
+    "shareApp": "Share App",
+    "shareAppTitle": "Share App",
+    "comingSoon": "Coming soon",
+
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "enterOldPassword": "Enter old password",
+    "enterNewPassword": "Enter new password",
+    "reenterNewPassword": "Re-enter new password",
+
+    "cancel": "Cancel",
+    "update": "Update",
+
+    "missingInfoTitle": "Missing info",
+    "missingInfoMsg": "Please fill all fields.",
+    "mismatchTitle": "Mismatch",
+    "mismatchMsg": "New password and confirm password do not match.",
+    "successTitle": "Success",
+    "passwordUpdated": "Password updated successfully.",
+    "errorTitle": "Error",
+    "passwordUpdateFailed": "Failed to update password."
+  }
+}

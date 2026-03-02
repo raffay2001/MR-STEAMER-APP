@@ -1,72 +1,705 @@
+// src/screens/Vehicle/page.tsx
+import React from 'react';
 import {
   View,
   Text,
   ScrollView,
   Image,
   Pressable,
-  PressableProps,
+  ActivityIndicator,
+  RefreshControl,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  DeviceEventEmitter,
 } from 'react-native';
-import React from 'react';
-import SilverCar from '../../assets/images/silver-car.png';
-import RedCar from '../../assets/images/red-car.png';
-import WhiteCar from '../../assets/images/white-car.png';
-import {TVehicleProps, TcarCardProps} from './types';
+import { TVehicleProps } from './types';
+import { useEnums } from '../../hooks/useEnums';
+import { useCar } from '../../hooks/useCar';
+import { BACKEND_URL } from '../../api';
+import { getAccessToken, clearAuth, getUserData } from '../../hooks/useAuthStorage';
+import { setCarProfile } from '../../hooks/useCarStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SAUDI_CITIES, SAUDI_CITIES_AR, SELECTED_CITY } from '../../constants';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import type { AppNavStackParamList } from '../../navigation/navigation.types';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
+import { getCarsByUserId, type CarItem } from '../../api/car/car.api';
+import { useLangRefresh } from '../../context/LangRefreshContext';
 
-const vehiclesData = [
-  {
-    color: '#E1DFA4',
-    text: 'Sedan, coupe, sport, mini or similar',
-    img: SilverCar,
-  },
-  {
-    color: '#E3ECF1',
-    text: 'SUV 5 seater, short pickups or similar',
-    img: WhiteCar,
-  },
-  {
-    color: '#F4E3E5',
-    text: 'SUV 7 seater, long pickups or similar',
-    img: RedCar,
-  },
+const SWATCHES = [
+  '#000000', '#FFFFFF', '#FF0000', '#0000FF', '#008000',
+  '#FFFF00', '#FFA500', '#800080', '#808080', '#A52A2A',
 ];
 
-const Vehicle: React.FC<TVehicleProps> = ({navigation}) => {
+const isAr = i18n.language?.startsWith('ar');
+const CITY_KEY = SELECTED_CITY;
+// const CITY_OPTIONS = SAUDI_CITIES;
+const CITY_OPTIONS = isAr ? SAUDI_CITIES_AR : SAUDI_CITIES;
+
+const Vehicle: React.FC<TVehicleProps> = ({ navigation }) => {
+  const route = useRoute<RouteProp<AppNavStackParamList, 'Vehicle'>>();
+  const forceCityModal = route.params?.forceCityModal;
+  const { loading, fetchEnumsByType } = useEnums();
+  const { loading: creating, createCar } = useCar();
+
+  const { t } = useTranslation();
+
+  const { bumpLangVersion } = useLangRefresh();
+  const isAr = i18n.language?.startsWith('ar');
+  const CITY_OPTIONS = isAr ? SAUDI_CITIES_AR : SAUDI_CITIES;
+
+  const toggleLanguage = async () => {
+    const next = isAr ? 'en' : 'ar';
+    await i18n.changeLanguage(next);
+    bumpLangVersion();
+  };
+
+  const [items, setItems] = React.useState<any[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  // modal state
+  const [showModal, setShowModal] = React.useState(false);
+  const [pickedType, setPickedType] = React.useState<any>(null);
+
+  // City Modal
+  const [showCityModal, setShowCityModal] = React.useState(false);
+  const [cityQuery, setCityQuery] = React.useState('');
+  const [selectedCity, setSelectedCity] = React.useState<string | null>(null);
+
+  // form state
+  const [color, setColor] = React.useState<string>(''); // chosen swatch or custom hex/name
+  const [brandList, setBrandList] = React.useState<any[]>([]);
+  const [brandLoading, setBrandLoading] = React.useState(false);
+  const [selectedBrandId, setSelectedBrandId] = React.useState<string>('');
+  const [carNumber, setCarNumber] = React.useState<string>('');
+  const [carName, setCarName] = React.useState<string>(''); // NEW
+
+  // collapsibles
+  const [openColor, setOpenColor] = React.useState(false);
+  const [openBrand, setOpenBrand] = React.useState(false);
+  const [openName, setOpenName] = React.useState(false);   // NEW
+  const [openNumber, setOpenNumber] = React.useState(false);
+
+  const [carMode, setCarMode] = React.useState<'new' | 'existing'>('new');
+  const [userCars, setUserCars] = React.useState<CarItem[]>([]);
+  const [carsLoading, setCarsLoading] = React.useState(false);
+
+  const toArabicDesc = React.useCallback((d: string) => {
+    const s = d?.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (s.includes('sedan') && s.includes('mini')) {
+      return 'سيدان، كوبيه، رياضية، صغيرة أو ما شابه';
+    }
+    if (s.includes('suv 5') || s.includes('short pickups')) {
+      return 'سيارة SUV بخمسة مقاعد، بيك أب قصير أو ما شابه';
+    }
+    if (s.includes('suv 7') || s.includes('long pickups')) {
+      return 'سيارة SUV بسبعة مقاعد، بيك أب طويل أو ما شابه';
+    }
+    return d;
+  }, []);
+
+  // guards / caches
+  const loadedRef = React.useRef(false);
+  const brandsCacheRef = React.useRef<any[]>([]);
+
+  const cardBg = React.useCallback((raw?: string) => {
+    const name = (raw || '').trim().toLowerCase();
+    if (name === 'sedan') return '#e1dfa4';
+    if (name === 'suv 5 seater') return '#e3ecf1';
+    if (name === 'suv 7 seater') return '#f4e3e5';
+    return '#F5F7FA';
+  }, []);
+
+  const loadOnce = React.useCallback(async () => {
+    const token = await getAccessToken();
+    const url = `${BACKEND_URL}/v1/enum?enumType=VEHICLE_TYPE&page=1&limit=50`;
+
+    try {
+      const res = await fetchEnumsByType('VEHICLE_TYPE', { page: 1, limit: 50 });
+      setItems(res?.results ?? []);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      if (status === 401) {
+        await clearAuth();
+        navigation.reset({ index: 0, routes: [{ name: 'Vehicle' as never }] });
+        return;
+      }
+    }
+  }, [fetchEnumsByType, navigation]);
+
+  React.useEffect(() => {
+    (async () => {
+      if (forceCityModal) {
+        // always ask again when coming from "Add new car"
+        setShowCityModal(true);
+        setSelectedCity(null);
+        return;
+      }
+
+      const saved = await AsyncStorage.getItem(CITY_KEY);
+      if (!saved || !CITY_OPTIONS.includes(saved)) {
+        setShowCityModal(true);
+        setSelectedCity(null);
+      } else {
+        setSelectedCity(saved);
+        setShowCityModal(false);
+      }
+    })();
+  }, [forceCityModal]);
+
+  const onPickCity = React.useCallback(async (city: string) => {
+    setSelectedCity(city);
+    await AsyncStorage.setItem(CITY_KEY, city);
+    setShowCityModal(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    loadOnce();
+  }, [loadOnce]);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetchEnumsByType('VEHICLE_TYPE', { page: 1, limit: 50 });
+      setItems(res?.results ?? []);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        await clearAuth();
+        navigation.reset({ index: 0, routes: [{ name: 'Vehicle' as never }] });
+        return;
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchEnumsByType, navigation]);
+
+  // open modal -> reset fields & (cached) load brands
+  const openModalFor = React.useCallback(async (typeItem: any) => {
+    setPickedType(typeItem);
+    setShowModal(true);
+    setColor('');
+    setSelectedBrandId('');
+    setCarNumber('');
+    setCarName('');
+    setOpenColor(false);
+    setOpenBrand(false);
+    setOpenName(false);
+    setOpenNumber(false);
+
+    setCarMode('existing');
+    setUserCars([]);
+    setCarsLoading(true);
+    try {
+      const u = await getUserData();
+      const uid = u?.id;
+      if (uid) {
+        const cars = await getCarsByUserId(uid);
+        setUserCars(cars || []);
+        setCarMode((cars?.length || 0) > 0 ? 'existing' : 'new');
+      }
+    } catch (e) {
+      setUserCars([]);
+      setCarMode('new');
+    } finally {
+      setCarsLoading(false);
+    }
+
+    if (brandsCacheRef.current.length) {
+      setBrandList(brandsCacheRef.current);
+      return;
+    }
+    try {
+      setBrandLoading(true);
+      const b = await fetchEnumsByType('VEHICLE_BRAND', { page: 1, limit: 100 });
+      brandsCacheRef.current = b?.results ?? [];
+      setBrandList(brandsCacheRef.current);
+    } catch (e) {
+      console.log('🛑 [Vehicle] load brands failed:', e);
+      setBrandList([]);
+    } finally {
+      setBrandLoading(false);
+    }
+  }, [fetchEnumsByType, getUserData, getCarsByUserId]);
+
+  const onPickExistingCar = React.useCallback(async (car: any) => {
+    await setCarProfile(car);
+    DeviceEventEmitter.emit('CAR_CHANGED', car);
+
+    if (car?.city) {
+      setSelectedCity(car.city);
+      await AsyncStorage.setItem(CITY_KEY, car.city);
+    }
+
+    setShowModal(false);
+    navigation.navigate('Drawer', { screen: 'Home' });
+  }, [navigation]);
+
+  const onSubmit = React.useCallback(async () => {
+    if (!pickedType?.id) return;
+    const payload = {
+      type: pickedType.id,
+      color,
+      brand: selectedBrandId,
+      number: carNumber.trim(),
+      name: carName.trim(),
+      city: selectedCity as string,
+    };
+
+    try {
+      const created = await createCar(payload);
+      await setCarProfile(created);
+      DeviceEventEmitter.emit('CAR_CHANGED', created); // 🔹 notify app
+      setShowModal(false);
+      navigation.navigate('Drawer', { screen: 'Home' });
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        await clearAuth();
+        navigation.reset({ index: 0, routes: [{ name: 'Vehicle' as never }] });
+        return;
+      }
+    }
+  }, [pickedType, color, selectedBrandId, carNumber, carName, selectedCity, createCar, navigation]);
+
+  const canSubmit = !!(pickedType && selectedBrandId && carNumber.trim() && color && carName.trim() && selectedCity);
+
+  const Row = ({
+    title,
+    right,
+    onPress,
+  }: {
+    title: string;
+    right?: React.ReactNode;
+    onPress?: () => void;
+  }) => (
+    <Pressable
+      onPress={onPress}
+      style={{
+        backgroundColor: '#F5F7FA',
+        borderRadius: 999,
+        height: 50,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+      }}
+    >
+      <Text style={{ color: '#333', fontSize: 16, textAlign: isAr ? 'right' : 'left' }}>{title}</Text>
+      <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 }}>
+        {right}
+        <Text style={{ color: '#999', fontSize: 18 }}>▾</Text>
+      </View>
+    </Pressable>
+  );
+
   return (
     <View className="flex-1 bg-white">
-      <ScrollView showsVerticalScrollIndicator={false} className="bg-white">
-        <View className="px-6 py-4 mb-7 bg-[#F5F7FA]">
-          <Text className="text-black text-sm">Select Vehicle Type</Text>
-        </View>
-        {vehiclesData?.map((car, i) => (
-          <CarCard
-            onPress={() => {
-              navigation.navigate('Drawer', {screen: 'Home'});
-            }}
-            key={i}
-            img={car.img}
-            text={car.text}
-            color={car.color}
-          />
-        ))}
-      </ScrollView>
-    </View>
-  );
-};
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="bg-white"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View
+          className="px-6 py-4 mb-7 bg-[#F5F7FA] flex justify-between items-center"
+          style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}
+        >
+          <Text className="text-black text-sm" style={{ textAlign: isAr ? 'right' : 'left' }}>
+            {t('vehicle.selectType')}
+          </Text>
 
-const CarCard = ({
-  img,
-  text,
-  color,
-  ...props
-}: TcarCardProps & PressableProps) => {
-  return (
-    <Pressable
-      {...props}
-      style={{backgroundColor: color}}
-      className={'mb-7 rounded-xl px-9 py-4 items-center mx-6'}>
-      <Image source={img} />
-      <Text className="text-black text-xl">{text}</Text>
-    </Pressable>
+          <TouchableOpacity
+            onPress={toggleLanguage}
+            style={{
+              alignSelf: isAr ? 'flex-start' : 'flex-end',
+              marginTop: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: '#1f3a8a',
+              backgroundColor: '#fff',
+            }}
+          >
+            <Text style={{ color: '#1f3a8a', fontWeight: '600' }}>
+              {t('common.changeLanguage')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading && !refreshing ? (
+          <View className="items-center justify-center my-10">
+            <ActivityIndicator />
+          </View>
+        ) : items.length === 0 ? (
+          <View className="items-center justify-center my-10">
+            <Text className="text-black" style={{ textAlign: isAr ? 'right' : 'left' }}>
+              {t('vehicle.noTypes')}
+            </Text>
+          </View>
+        ) : (
+          items.map((it) => {
+            const imgUri = it?.mediaPath ? `${BACKEND_URL}${it.mediaPath}` : undefined;
+            const bg = cardBg(it.displayName || it.name);
+            return (
+              <Pressable
+                key={it.id}
+                onPress={() => openModalFor(it)}
+                style={{ backgroundColor: bg }}
+                className="mb-7 rounded-xl px-9 py-4 items-center mx-6"
+              >
+                {imgUri ? (
+                  <Image
+                    source={{ uri: imgUri }}
+                    style={{ width: 220, height: 100, marginBottom: 2, resizeMode: 'contain' }}
+                  />
+                ) : null}
+                {it.description ? (
+                  <Text
+                    className="text-black/60 mt-1 text-[20px] w-full"
+                    style={{ textAlign: isAr ? 'right' : 'left' }}
+                  >
+                    {isAr ? toArabicDesc(it.description) : it.description}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })
+        )}
+      </ScrollView>
+
+      {/* Full-screen City Picker Modal */}
+      <Modal
+        visible={showCityModal}
+        transparent={false}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => { /* block back: must choose a city */ }}
+      >
+        <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: 24, paddingHorizontal: 16 }}>
+          {/* Search bar */}
+          <View
+            style={{
+              backgroundColor: '#F1F5F9',
+              height: 48,
+              borderRadius: 24,
+              paddingHorizontal: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 8,
+              marginBottom: 12,
+            }}
+          >
+            <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: isAr ? 0 : 6, marginLeft: isAr ? 6 : 0 }} />
+            <TextInput
+              placeholder={t('vehicle.searchArea')}
+              placeholderTextColor="#9CA3AF"
+              value={cityQuery}
+              onChangeText={setCityQuery}
+              style={{ flex: 1, color: '#111', textAlign: isAr ? 'right' : 'left' }}
+            />
+          </View>
+
+          {/* City list */}
+          <ScrollView keyboardShouldPersistTaps="handled">
+            {CITY_OPTIONS
+              .filter(c => c.toLowerCase().includes(cityQuery.trim().toLowerCase()))
+              .map((c, idx) => (
+                <TouchableOpacity
+                  key={`${c}-${idx}`}
+                  onPress={() => onPickCity(c)}
+                  style={{ paddingVertical: 14 }}
+                >
+                  <Text style={{ color: '#111', fontSize: 16, textAlign: isAr ? 'right' : 'left' }}>{c}</Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Centered Modal */}
+      <Modal
+        visible={showModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+          {/* backdrop tap to close */}
+          <Pressable
+            style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
+            onPress={() => setShowModal(false)}
+          />
+
+          {/* card */}
+          <View
+            style={{
+              width: '92%',
+              maxWidth: 460,
+              backgroundColor: '#fff',
+              borderRadius: 16,
+              padding: 16,
+              maxHeight: '80%',
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: '600', color: '#111', textAlign: 'center', marginBottom: 16 }}>
+              {t('vehicle.modal.title')}
+            </Text>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(carsLoading || userCars.length > 0) && (
+                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', gap: 10, marginBottom: 12 }}>
+                  <Pressable
+                    onPress={() => setCarMode('existing')}
+                    style={{
+                      flex: 1, height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+                      borderWidth: 1, borderColor: carMode === 'existing' ? '#111' : '#ddd',
+                      backgroundColor: carMode === 'existing' ? '#111' : '#fff',
+                    }}
+                  >
+                    <Text style={{ color: carMode === 'existing' ? '#fff' : '#111', fontWeight: '600' }}>
+                      {t('vehicle.useExisting')}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setCarMode('new')}
+                    style={{
+                      flex: 1, height: 42, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+                      borderWidth: 1, borderColor: carMode === 'new' ? '#111' : '#ddd',
+                      backgroundColor: carMode === 'new' ? '#111' : '#fff',
+                    }}
+                  >
+                    <Text style={{ color: carMode === 'new' ? '#fff' : '#111', fontWeight: '600' }}>
+                      {t('vehicle.addNew')}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+
+              {carMode === 'existing' && (
+                carsLoading ? (
+                  <ActivityIndicator style={{ marginVertical: 10 }} />
+                ) : (
+                  <View style={{ gap: 10, marginBottom: 12 }}>
+                    {userCars.map((c: CarItem) => (
+                      <Pressable
+                        key={c.id}
+                        onPress={() => onPickExistingCar(c)}
+                        style={{ padding: 12, borderRadius: 14, borderWidth: 1, borderColor: '#eee', backgroundColor: '#F5F7FA' }}
+                      >
+                        <Text style={{ color: '#111', fontWeight: '700', textAlign: isAr ? 'right' : 'left' }}>
+                          {c.name}
+                        </Text>
+                        <Text style={{ color: '#444', marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                          {(c.brand?.displayName || c.brand?.name)} • {(c.type?.displayName || c.type?.name)}
+                        </Text>
+                        <Text style={{ color: '#666', marginTop: 2, textAlign: isAr ? 'right' : 'left' }}>
+                          {c.number} • {c.city}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )
+              )}
+              {carMode === 'new' && (
+                <>
+                  {/* Car Color */}
+                  <Row
+                    title={t('vehicle.fields.color')}
+                    right={
+                      <View
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 9,
+                          backgroundColor: color || '#ddd',
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                        }}
+                      />
+                    }
+                    onPress={() => {
+                      setOpenColor(v => !v);
+                      setOpenBrand(false);
+                      setOpenName(false);
+                      setOpenNumber(false);
+                    }}
+                  />
+                  {openColor && (
+                    <>
+                      {/* Preset swatches */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          gap: 12,
+                          marginBottom: 12,
+                        }}
+                      >
+                        {SWATCHES.map(c => {
+                          const active = color?.toLowerCase() === c.toLowerCase();
+                          return (
+                            <TouchableOpacity
+                              key={c}
+                              onPress={() => setColor(c)}
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: 17,
+                                backgroundColor: c,
+                                borderWidth: active ? 3 : 1,
+                                borderColor: active ? '#111' : '#ddd',
+                              }}
+                            />
+                          );
+                        })}
+                      </View>
+
+                      {/* Custom color input (hex or name) */}
+                      <TextInput
+                        placeholder="e.g. #FFFFFF or Red"
+                        placeholderTextColor="#888"
+                        value={color}
+                        onChangeText={setColor}
+                        autoCapitalize="none"
+                        style={{
+                          height: 48,
+                          borderWidth: 1,
+                          borderColor: '#eee',
+                          backgroundColor: '#F5F7FA',
+                          borderRadius: 12,
+                          paddingHorizontal: 14,
+                          color: '#111',
+                          marginBottom: 12,
+                          textAlign: isAr ? 'right' : 'left',
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* Brand */}
+                  <Row
+                    title={t('vehicle.fields.brand')}
+                    right={
+                      <Text style={{ color: '#333' }}>
+                        {selectedBrandId
+                          ? (brandList.find(b => b.id === selectedBrandId)?.displayName ||
+                            brandList.find(b => b.id === selectedBrandId)?.name || '')
+                          : ''}
+                      </Text>
+                    }
+                    onPress={() => { setOpenBrand(v => !v); setOpenColor(false); setOpenName(false); setOpenNumber(false); }}
+                  />
+                  {openBrand && (brandLoading ? (
+                    <ActivityIndicator style={{ marginVertical: 8 }} />
+                  ) : brandList.length === 0 ? (
+                    <Text style={{ color: '#666', marginBottom: 12, textAlign: isAr ? 'right' : 'left' }}>
+                      {t('vehicle.noBrands')}
+                    </Text>
+                  ) : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
+                      {brandList.map(b => {
+                        const active = selectedBrandId === b.id;
+                        return (
+                          <Pressable
+                            key={b.id}
+                            onPress={() => {
+                              setSelectedBrandId(b.id);
+                              setOpenBrand(false);
+                            }}
+                            style={{
+                              paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+                              borderWidth: 1, borderColor: active ? '#111' : '#ddd',
+                              backgroundColor: active ? '#111' : '#fff',
+                              marginRight: 8, marginBottom: 8,
+                            }}
+                          >
+                            <Text style={{ color: active ? '#fff' : '#111' }}>
+                              {b.displayName || b.name}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )
+                  )}
+
+                  {/* Car name (model) */}
+                  <Row
+                    title={t('vehicle.fields.name')}
+                    right={<Text style={{ color: '#333' }}>{carName || ''}</Text>}
+                    onPress={() => { setOpenName(v => !v); setOpenColor(false); setOpenBrand(false); setOpenNumber(false); }}
+                  />
+                  {openName && (
+                    <TextInput
+                      placeholder={t('vehicle.placeholders.name')}
+                      placeholderTextColor="#888"
+                      value={carName}
+                      onChangeText={setCarName}
+                      style={{
+                        height: 48, borderWidth: 1, borderColor: '#eee',
+                        backgroundColor: '#F5F7FA', borderRadius: 12,
+                        paddingHorizontal: 14, color: '#111', marginBottom: 12,
+                        textAlign: isAr ? 'right' : 'left'
+                      }}
+                    />
+                  )}
+
+                  {/* Car number */}
+                  <Row
+                    title={t('vehicle.fields.number')}
+                    right={<Text style={{ color: '#333' }}>{carNumber || ''}</Text>}
+                    onPress={() => { setOpenNumber(v => !v); setOpenColor(false); setOpenBrand(false); setOpenName(false); }}
+                  />
+                  {openNumber && (
+                    <TextInput
+                      placeholder={t('vehicle.placeholders.number')}
+                      placeholderTextColor="#888"
+                      value={carNumber}
+                      onChangeText={setCarNumber}
+                      autoCapitalize="characters"
+                      style={{
+                        height: 48, borderWidth: 1, borderColor: '#eee',
+                        backgroundColor: '#F5F7FA', borderRadius: 12,
+                        paddingHorizontal: 14, color: '#111', marginBottom: 12,
+                        textAlign: isAr ? 'right' : 'left'
+                      }}
+                    />
+                  )}
+
+                  {/* Submit */}
+                  <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 4 }}>
+                    <Pressable
+                      onPress={onSubmit}
+                      disabled={!canSubmit || creating}
+                      style={{
+                        backgroundColor: (!canSubmit || creating) ? '#9e9e9e' : '#2e7d32',
+                        paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999,
+                        minWidth: 140, alignItems: 'center',
+                      }}
+                    >
+                      {creating ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={{ color: '#fff', fontWeight: '600' }}>{t('vehicle.submit')}</Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
